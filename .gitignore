@@ -21,6 +21,9 @@ node_modules/
 /backend/storage/logs/*
 /backend/bootstrap/cache/*
 
+# Planning docs (local only, not versioned)
+/docs/
+
 # IDE / OS
 .idea/
 .DS_Store
