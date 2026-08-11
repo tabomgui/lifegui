@@ -2,8 +2,8 @@ services:
   mysql:
     image: mysql:8
     environment:
-      MYSQL_DATABASE: lifeboard
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ${DB_DATABASE:-lifeboard}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
     ports:
       - "3306:3306"
     volumes:
@@ -17,15 +17,16 @@ services:
     build: ./backend
     volumes:
       - ./backend:/var/www/html
+      - /var/www/html/vendor
     depends_on:
       mysql:
         condition: service_healthy
     environment:
       DB_HOST: mysql
-      DB_DATABASE: lifeboard
-      DB_USERNAME: root
-      DB_PASSWORD: root
-    command: sh -c "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
+      DB_DATABASE: ${DB_DATABASE:-lifeboard}
+      DB_USERNAME: ${DB_USERNAME:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-root}
+    command: sh -c "composer install --no-interaction --prefer-dist && php artisan key:generate --force && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
     ports:
       - "8000:8000"
 
