@@ -48,3 +48,10 @@ export interface HabitSummary {
   streak: number
   days: HabitDay[]
 }
+
+export interface TaskHeatmap {
+  from: string
+  to: string
+  counts: Record<string, number>
+  total: number
+}
