@@ -66,7 +66,7 @@ class TaskController extends Controller
         $from = $to->copy()->subDays(370);
 
         $counts = Task::whereNotNull('completed_at')
-            ->whereBetween('completed_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
+            ->whereBetween('completed_at', [$from, $to->copy()->endOfDay()])
             ->get()
             ->groupBy(fn ($t) => $t->completed_at->toDateString())
             ->map->count();
@@ -74,7 +74,10 @@ class TaskController extends Controller
         return response()->json(['data' => [
             'from' => $from->toDateString(),
             'to' => $to->toDateString(),
-            'counts' => $counts,
+            // Cast to stdClass so an empty result serializes as `{}` not `[]` —
+            // PHP can't distinguish an empty assoc array from an empty list,
+            // and the frontend expects a Record<string, number> object shape.
+            'counts' => (object) $counts->all(),
             'total' => $counts->sum(),
         ]]);
     }

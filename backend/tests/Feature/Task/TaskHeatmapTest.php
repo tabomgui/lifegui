@@ -30,7 +30,10 @@ test('heatmap só conta tarefas do usuário autenticado', function () {
     $response = $this->getJson('/api/tasks/heatmap')->assertOk();
 
     $response->assertJsonPath('data.total', 0);
-    $response->assertJsonPath('data.counts', []);
+    // counts must serialize as an empty JSON object ({}), not an array ([]),
+    // to match the frontend's Record<string, number> contract.
+    expect($response->json('data.counts'))->toBe([]);
+    expect($response->baseResponse->getContent())->toContain('"counts":{}');
 });
 
 test('heatmap exclui tarefas concluídas fora da janela de 370 dias', function () {
