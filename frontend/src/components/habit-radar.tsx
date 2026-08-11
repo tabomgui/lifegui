@@ -43,16 +43,17 @@ export function HabitRadarChart({ habits }: { habits: HabitStat[] }) {
           role="img"
           aria-label={ariaLabel}
         >
-          {/* grid rings */}
-          {RINGS.map((ring) => {
-            const points = axes
-              .map((a) => {
-                const p = pointAt(a.angle, (ring / 100) * RADIUS)
-                return `${p.x},${p.y}`
-              })
-              .join(' ')
-            return <polygon key={ring} points={points} className="fill-none stroke-border" strokeWidth={1} />
-          })}
+          {/* grid rings — círculos concêntricos (não degeneram com poucos eixos) */}
+          {RINGS.map((ring) => (
+            <circle
+              key={ring}
+              cx={CENTER}
+              cy={CENTER}
+              r={(ring / 100) * RADIUS}
+              className="fill-none stroke-border"
+              strokeWidth={1}
+            />
+          ))}
 
           {/* radial value labels along the top axis (straight up) */}
           {RINGS.map((ring) => (
@@ -146,33 +147,9 @@ export function HabitRadarChart({ habits }: { habits: HabitStat[] }) {
   )
 }
 
-function HabitBarList({ habits }: { habits: HabitStat[] }) {
+export function HabitRadar({ habits }: { habits: HabitStat[] }) {
   if (habits.length === 0) {
     return <p className="p-6 text-center text-sm text-muted-foreground">Nenhum hábito para exibir.</p>
-  }
-
-  return (
-    <div className="space-y-3">
-      {habits.map((habit) => (
-        <div key={habit.habit_id} className="flex items-center gap-3">
-          <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: habit.color }} />
-          <span className="w-28 shrink-0 truncate text-sm">{habit.name}</span>
-          <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full rounded-full bg-blue-500 dark:bg-blue-400"
-              style={{ width: `${habit.rate}%` }}
-            />
-          </div>
-          <span className="w-10 shrink-0 text-right text-xs text-muted-foreground">{habit.rate}%</span>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-export function HabitRadar({ habits }: { habits: HabitStat[] }) {
-  if (habits.length < 3) {
-    return <HabitBarList habits={habits} />
   }
   return <HabitRadarChart habits={habits} />
 }
