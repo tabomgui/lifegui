@@ -46,12 +46,10 @@ export function IndexRoute({ children }: { children: ReactNode }) {
   return <>{children}</>
 }
 
-// Rota de relatórios: só faz sentido com tarefas ou hábitos habilitados.
 export function ReportsRoute({ children }: { children: ReactNode }) {
   const { data, isLoading, isError } = useModules()
   if (isLoading) return <ModulesLoading />
   const enabled = enabledSet(data)
-  if (!isError && !enabled.has('tasks') && !enabled.has('habits')) {
     return <Navigate to={firstEnabledRoute(data)} replace />
   }
   return <>{children}</>

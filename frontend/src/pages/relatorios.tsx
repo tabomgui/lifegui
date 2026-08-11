@@ -15,6 +15,7 @@ import {
   Repeat,
   Target,
   Timer,
+  Wallet,
 } from 'lucide-react'
 import { AppLayout } from '@/components/app-layout'
 import { TaskHeatmap } from '@/components/task-heatmap'
@@ -919,8 +920,7 @@ export default function Relatorios() {
   const { isEnabled } = useEnabledModules()
   const tasksEnabled = isEnabled('tasks')
   const habitsEnabled = isEnabled('habits')
-  // A rota (ReportsRoute) garante que ao menos um dos dois está habilitado.
-  const defaultTab = tasksEnabled ? 'tarefas' : 'habitos'
+  // A rota (ReportsRoute) garante que ao menos um módulo relevante está habilitado.
 
   return (
     <AppLayout title="Relatórios">
@@ -939,6 +939,8 @@ export default function Relatorios() {
                     <Repeat className="h-3.5 w-3.5" /> Hábitos
                   </TabsTrigger>
                 )}
+                  </TabsTrigger>
+                )}
               </TabsList>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">Período</span>
@@ -955,6 +957,9 @@ export default function Relatorios() {
             {habitsEnabled && (
               <TabsContent value="habitos" className="mt-6">
                 <HabitosTab from={from} to={to} />
+              </TabsContent>
+            )}
+
               </TabsContent>
             )}
           </Tabs>

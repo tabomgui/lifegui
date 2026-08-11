@@ -177,20 +177,12 @@ export interface HabitReport {
 }
 
 
-  key: string
-  label: string
-  value: number
-  color: string
+// Totais de um período (atual ou anterior). Números inteiros podem chegar como
+  net: number
 }
 
-  // Mês no formato "YYYY-MM".
-  date: string
-  value: number
-}
-
-  value: number
-  changeAmount: number
-  changePercent: number
+  // null quando o total anterior é 0 (variação percentual indefinida).
+  // pontos percentuais na taxa de poupança (sempre definido).
 }
 
   // Mês no formato "YYYY-MM".
@@ -202,18 +194,20 @@ export interface HabitReport {
   color: string
   total: number
   percentage: number
+  previousTotal: number
+  // null quando previousTotal === 0 (categoria nova).
+  deltaPct: number | null
 }
 
-  name: string
-  institution: string
-  type: string
-  balance: number
-  currency: string | null
+
+  headline: string
+  bullets: string[]
 }
 
   currency: string
-  balanceDate: string
-  monthlyNet: number
+  from: string
+  to: string
+  previous: { from: string; to: string }
 }
 
 export interface TaskReport {

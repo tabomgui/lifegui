@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
-import { LayoutGrid, Kanban, Repeat, BarChart3, Wallet, Settings, Menu, X } from 'lucide-react'
+import { LayoutGrid, Kanban, Repeat, BarChart3, Settings, Menu, X } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useEnabledModules } from '@/hooks/use-modules'
 import { Button } from '@/components/ui/button'
@@ -15,7 +15,6 @@ const navClass = ({ isActive }: { isActive: boolean }) =>
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { user, logout } = useAuth()
   const { isEnabled } = useEnabledModules()
-  const showReports = isEnabled('tasks') || isEnabled('habits')
   return (
     <>
       <div className="flex h-14 items-center gap-2 border-b px-4">
@@ -33,8 +32,6 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         {isEnabled('habits') && (
           <NavLink to="/habits" className={navClass} onClick={onNavigate}>
             <Repeat className="h-4 w-4" /> Hábitos
-          </NavLink>
-        )}
           </NavLink>
         )}
         {showReports && (
