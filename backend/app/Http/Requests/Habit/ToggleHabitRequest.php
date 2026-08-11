@@ -2,6 +2,7 @@
 namespace App\Http\Requests\Habit;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Carbon;
 
 class ToggleHabitRequest extends FormRequest
 {
@@ -10,7 +11,14 @@ class ToggleHabitRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'date' => ['required', 'date_format:Y-m-d'],
+            'date' => ['required', 'date_format:Y-m-d', 'before_or_equal:'.Carbon::now()->addDay()->toDateString()],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'date.before_or_equal' => 'Não dá para marcar um dia futuro.',
         ];
     }
 }

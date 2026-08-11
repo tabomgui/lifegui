@@ -2,6 +2,7 @@
 use App\Models\Habit;
 use App\Models\HabitLog;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 
 beforeEach(fn () => $this->actingAs($this->user = User::factory()->create()));
 
@@ -48,4 +49,40 @@ test('dois toggles seguidos na mesma data voltam ao estado inicial', function ()
         ->assertOk()->assertJsonPath('data.done', true);
 
     expect(HabitLog::where('habit_id', $h->id)->where('date', '2026-08-10')->count())->toBe(1);
+});
+
+test('não permite toggle em data futura', function () {
+    Carbon::setTestNow(Carbon::parse('2026-08-11'));
+
+    $h = Habit::factory()->for($this->user)->create();
+
+    $this->postJson("/api/habits/{$h->id}/toggle", ['date' => Carbon::now()->addDays(5)->toDateString()])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('date');
+
+    Carbon::setTestNow();
+});
+
+test('permite toggle em hoje', function () {
+    Carbon::setTestNow(Carbon::parse('2026-08-11'));
+
+    $h = Habit::factory()->for($this->user)->create();
+
+    $this->postJson("/api/habits/{$h->id}/toggle", ['date' => Carbon::now()->toDateString()])
+        ->assertOk()
+        ->assertJsonPath('data.done', true);
+
+    Carbon::setTestNow();
+});
+
+test('permite toggle em amanhã (tolerância de fuso)', function () {
+    Carbon::setTestNow(Carbon::parse('2026-08-11'));
+
+    $h = Habit::factory()->for($this->user)->create();
+
+    $this->postJson("/api/habits/{$h->id}/toggle", ['date' => Carbon::now()->addDay()->toDateString()])
+        ->assertOk()
+        ->assertJsonPath('data.done', true);
+
+    Carbon::setTestNow();
 });
