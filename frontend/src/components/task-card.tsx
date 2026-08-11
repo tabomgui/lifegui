@@ -8,7 +8,7 @@ const NEXT: Record<TaskStatus, { to: TaskStatus; icon: typeof Play; label: strin
   done: [{ to: 'doing', icon: Undo2, label: 'Fazendo' }],
 }
 
-export function TaskCard({ task, tasks }: { task: Task; tasks: Task[] }) {
+export function TaskCard({ task }: { task: Task }) {
   const move = useMoveTask()
   const del = useDeleteTask()
 
@@ -20,10 +20,7 @@ export function TaskCard({ task, tasks }: { task: Task; tasks: Task[] }) {
       <div className="mt-2.5 flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 group-focus-within:opacity-100">
         {NEXT[task.status].map(({ to, icon: Icon, label }) => (
           <button key={to} aria-label={`Mover para ${label}`} title={`Mover para ${label}`}
-            onClick={() => {
-              const position = tasks.filter((t) => t.status === to).length
-              move.mutate({ id: task.id, status: to, position })
-            }}
+            onClick={() => move.mutate({ id: task.id, status: to })}
             className="rounded p-1 hover:bg-accent"><Icon className="h-3.5 w-3.5" /></button>
         ))}
         <button aria-label="Apagar tarefa" title="Apagar tarefa" onClick={() => del.mutate(task.id)} className="rounded p-1 hover:bg-accent">

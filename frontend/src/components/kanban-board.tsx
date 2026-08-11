@@ -16,8 +16,7 @@ export function KanbanBoard({ tasks }: { tasks: Task[] }) {
     const id = Number(e.dataTransfer.getData('text/plain'))
     const task = tasks.find((t) => t.id === id)
     if (!task || task.status === status) return
-    const position = tasks.filter((t) => t.status === status).length
-    move.mutate({ id, status, position })
+    move.mutate({ id, status })
   }
 
   return (
@@ -37,7 +36,7 @@ export function KanbanBoard({ tasks }: { tasks: Task[] }) {
                 onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOver(null) }}
                 onDrop={(e) => onDrop(status, e)}
                 className={`flex min-h-[140px] flex-1 flex-col gap-2 p-2 ${over === status ? 'bg-accent outline-2 outline-dashed outline-ring -outline-offset-4' : ''}`}>
-                {colTasks.map((t) => <TaskCard key={t.id} task={t} tasks={tasks} />)}
+                {colTasks.map((t) => <TaskCard key={t.id} task={t} />)}
                 {colTasks.length === 0 && (
                   <div className="flex flex-1 items-center justify-center rounded-md border border-dashed py-6 text-xs text-muted-foreground/60">
                     Solte tarefas aqui
