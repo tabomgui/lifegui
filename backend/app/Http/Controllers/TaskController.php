@@ -60,6 +60,25 @@ class TaskController extends Controller
         return (new TaskResource($task))->response();
     }
 
+    public function heatmap(): JsonResponse
+    {
+        $to = now()->startOfDay();
+        $from = $to->copy()->subDays(370);
+
+        $counts = Task::whereNotNull('completed_at')
+            ->whereBetween('completed_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
+            ->get()
+            ->groupBy(fn ($t) => $t->completed_at->toDateString())
+            ->map->count();
+
+        return response()->json(['data' => [
+            'from' => $from->toDateString(),
+            'to' => $to->toDateString(),
+            'counts' => $counts,
+            'total' => $counts->sum(),
+        ]]);
+    }
+
     public function destroy(Task $task): JsonResponse
     {
         $task->delete();

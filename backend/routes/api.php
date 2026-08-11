@@ -34,6 +34,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/tasks', [TaskController::class, 'index']);
     Route::post('/tasks', [TaskController::class, 'store']);
     Route::post('/tasks/process', [TaskController::class, 'process']);
+    Route::get('/tasks/heatmap', [TaskController::class, 'heatmap']);
     Route::get('/tasks/{task}', [TaskController::class, 'show']);
     Route::patch('/tasks/{task}', [TaskController::class, 'update']);
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
