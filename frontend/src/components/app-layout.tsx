@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom'
 import { LayoutGrid, Kanban, Repeat, BarChart3 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
+import { ModeToggle } from '@/components/mode-toggle'
 
 export function AppLayout({ children, title }: { children: ReactNode; title: string }) {
   const { user, logout } = useAuth()
@@ -40,8 +41,9 @@ export function AppLayout({ children, title }: { children: ReactNode; title: str
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 shrink-0 items-center border-b px-4 md:px-6">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b px-4 md:px-6">
           <h1 className="text-base font-semibold tracking-tight">{title}</h1>
+          <ModeToggle />
         </header>
         {children}
       </div>

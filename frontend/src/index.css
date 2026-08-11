@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* dark mode por CLASSE (.dark) em vez de prefers-color-scheme — o next-themes
+   alterna a classe no <html>, então os utilitários dark: seguem o toggle. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: 0 0% 100%;
   --foreground: 0 0% 3.9%;
