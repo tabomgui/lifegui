@@ -48,3 +48,12 @@ test('não acessa categoria de outro usuário (404)', function () {
     $this->patchJson("/api/categories/{$other->id}", ['name' => 'x'])->assertNotFound();
     $this->deleteJson("/api/categories/{$other->id}")->assertNotFound();
 });
+
+test('user_id enviado no payload é ignorado (mass-assignment)', function () {
+    $this->postJson('/api/categories', ['name' => 'Trabalho', 'user_id' => 999])
+        ->assertCreated()
+        ->assertJsonPath('data.name', 'Trabalho');
+
+    $this->assertDatabaseHas('categories', ['name' => 'Trabalho', 'user_id' => $this->user->id]);
+    $this->assertDatabaseMissing('categories', ['name' => 'Trabalho', 'user_id' => 999]);
+});

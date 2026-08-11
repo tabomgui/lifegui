@@ -10,6 +10,10 @@ trait BelongsToUser
 {
     protected static function bootBelongsToUser(): void
     {
+        // Fail-open when there's no authenticated user (needed for factories/seeders
+        // running outside a request). This means the scope is NOT a safety net for
+        // unauthenticated access — every route touching a BelongsToUser model MUST
+        // sit behind auth:sanctum; that middleware is the only real barrier.
         static::addGlobalScope('user', function (Builder $builder) {
             if (Auth::hasUser()) {
                 $builder->where($builder->getModel()->getTable().'.user_id', Auth::id());
