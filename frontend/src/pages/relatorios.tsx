@@ -1,24 +1,29 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import {
   ArrowLeftRight,
   AlarmClockOff,
   CalendarClock,
   CalendarX,
   CheckCircle2,
+  Flame,
   GitBranch,
   Grid3x3,
   Kanban,
+  LineChart,
   Repeat,
+  Target,
   Timer,
 } from 'lucide-react'
 import { AppLayout } from '@/components/app-layout'
 import { TaskHeatmap } from '@/components/task-heatmap'
+import { HabitRadar } from '@/components/habit-radar'
 import { StatTile } from '@/components/stat-tile'
 import { PeriodFilter, rangeForDays, PERIODS } from '@/components/period-filter'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { useTaskReport } from '@/hooks/use-reports'
+import { useTaskReport, useHabitReport } from '@/hooks/use-reports'
 import { useTaskHeatmap } from '@/hooks/use-heatmap'
-import type { TaskReport } from '@/types/api'
+import { useHabitStats } from '@/hooks/use-habit-stats'
+import type { HabitReport, TaskReport } from '@/types/api'
 
 // ---- shared chart tokens ----
 const BLUE = '#3b82f6'
@@ -623,6 +628,287 @@ function TarefasTab({ from, to }: { from: string; to: string }) {
   )
 }
 
+// ============ Consistência diária (daily line + 7d moving average + ref) ============
+function ConsistencyChart({
+  data,
+  reference,
+}: {
+  data: HabitReport['dailyConsistency']
+  reference: number
+}) {
+  const svgRef = useRef<SVGSVGElement | null>(null)
+  const [hover, setHover] = useState<number | null>(null)
+
+  if (data.length < 2) {
+    return <p className="py-8 text-center text-sm text-muted-foreground">Sem dados no período.</p>
+  }
+
+  const W = 560
+  const H = 200
+  const padL = 26
+  const padR = 8
+  const padT = 10
+  const padB = 22
+  const n = data.length
+  const plotW = W - padL - padR
+  const plotH = H - padT - padB
+  const X = (i: number) => padL + (i / (n - 1)) * plotW
+  const Y = (v: number) => padT + plotH - (v / 100) * plotH
+
+  // 7-day trailing moving average, computed on the frontend.
+  const ma = data.map((_, i) => {
+    const win = data.slice(Math.max(0, i - 6), i + 1)
+    return win.reduce((a, b) => a + b.pct, 0) / win.length
+  })
+
+  const dailyLine = data.map((d, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)} ${Y(d.pct).toFixed(1)}`).join(' ')
+  const maLine = ma.map((v, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)} ${Y(v).toFixed(1)}`).join(' ')
+  const rings = [0, 25, 50, 75, 100]
+  const labelEvery = Math.ceil(n / 8)
+
+  const onMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    const svg = svgRef.current
+    if (!svg) return
+    const rect = svg.getBoundingClientRect()
+    const px = ((e.clientX - rect.left) / rect.width) * W
+    const i = Math.round(((px - padL) / plotW) * (n - 1))
+    setHover(Math.max(0, Math.min(n - 1, i)))
+  }
+
+  return (
+    <div className="relative">
+      <svg
+        ref={svgRef}
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full h-auto"
+        preserveAspectRatio="xMidYMid meet"
+        onMouseMove={onMove}
+        onMouseLeave={() => setHover(null)}
+      >
+        {rings.map((val) => {
+          const y = Y(val)
+          return (
+            <g key={val}>
+              <line x1={padL} y1={y} x2={W - padR} y2={y} stroke={GRID} strokeWidth={1} />
+              <text x={padL - 5} y={y + 3} textAnchor="end" fill={MUTED} fontSize={9}>
+                {val}
+              </text>
+            </g>
+          )
+        })}
+
+        {/* period-average reference line */}
+        <line
+          x1={padL}
+          y1={Y(reference)}
+          x2={W - padR}
+          y2={Y(reference)}
+          stroke={MUTED}
+          strokeWidth={1}
+          strokeDasharray="4 4"
+        />
+        <text x={W - padR} y={Y(reference) - 4} textAnchor="end" fill={MUTED} fontSize={9}>
+          média {reference}%
+        </text>
+
+        {/* x labels (sparse) */}
+        {data.map((d, i) =>
+          i % labelEvery === 0 ? (
+            <text key={d.date} x={X(i)} y={H - 6} textAnchor="middle" fill={MUTED} fontSize={9}>
+              {fmtDayMonth(d.date)}
+            </text>
+          ) : null,
+        )}
+
+        {/* raw daily — recessive accent */}
+        <path d={dailyLine} fill="none" stroke={BLUE} strokeWidth={1} opacity={0.25} />
+        {data.map((d, i) => (
+          <circle key={i} cx={X(i)} cy={Y(d.pct)} r={1.5} fill={BLUE} opacity={0.4} />
+        ))}
+
+        {/* moving average — stronger accent */}
+        <path
+          d={maLine}
+          fill="none"
+          stroke={BLUE}
+          strokeWidth={2.5}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+
+        {hover !== null && (
+          <g pointerEvents="none">
+            <line x1={X(hover)} y1={padT} x2={X(hover)} y2={padT + plotH} stroke={MUTED} strokeWidth={1} opacity={0.4} />
+            <circle cx={X(hover)} cy={Y(data[hover].pct)} r={3} fill={BLUE} />
+            <circle cx={X(hover)} cy={Y(ma[hover])} r={3} fill={BLUE} stroke="hsl(var(--card))" strokeWidth={1} />
+          </g>
+        )}
+      </svg>
+
+      {hover !== null && (
+        <div
+          className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded border bg-popover px-2 py-1 text-xs text-popover-foreground shadow"
+          style={{ left: `${(X(hover) / W) * 100}%`, top: `${(Y(Math.max(data[hover].pct, ma[hover])) / H) * 100}%` }}
+        >
+          <div className="font-medium">{fmtDayMonth(data[hover].date)}</div>
+          <div className="text-muted-foreground">
+            diário {data[hover].pct}% · média 7d {Math.round(ma[hover])}%
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ============ Sequência por hábito (current vs best) ============
+function StreaksList({ items }: { items: HabitReport['perHabitStreaks'] }) {
+  if (items.length === 0) {
+    return <p className="py-8 text-center text-sm text-muted-foreground">Nenhum hábito ativo.</p>
+  }
+  const max = Math.max(1, ...items.map((i) => i.best))
+  return (
+    <div className="space-y-3">
+      {items.map((it) => {
+        const broken = it.current === 0
+        const bestW = (it.best / max) * 100
+        const curW = (it.current / max) * 100
+        return (
+          <div key={it.habitId}>
+            <div className="mb-1 flex items-center justify-between text-xs">
+              <span className="flex min-w-0 items-center gap-1.5 truncate">
+                <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: it.color }} />
+                <span className="truncate">{it.name}</span>
+              </span>
+              <span className={`ml-2 shrink-0 tabular-nums ${broken ? 'text-red-500' : 'text-muted-foreground'}`}>
+                atual <span className="font-medium text-foreground">{it.current}</span> · recorde{' '}
+                <span className="font-medium text-foreground">{it.best}</span>
+              </span>
+            </div>
+            <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted">
+              {/* best (recorde) — recessive track in the habit hue */}
+              <div className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${bestW}%`, background: it.color, opacity: 0.25 }} />
+              {/* current — solid */}
+              <div
+                className="absolute inset-y-0 left-0 rounded-full"
+                style={{ width: `${Math.max(broken ? 0 : 2, curW)}%`, background: broken ? RED : it.color }}
+              />
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ============ Hábitos tab ============
+function HabitosTab({ from, to }: { from: string; to: string }) {
+  const { data, isPending } = useHabitReport(from, to)
+  const { data: stats, isPending: statsPending } = useHabitStats(from, to)
+
+  if (isPending || !data) {
+    return <div className="p-8 text-center text-sm text-muted-foreground">Carregando…</div>
+  }
+
+  const consistencySpark = data.dailyConsistency.map((d) => d.pct)
+
+  return (
+    <div className="space-y-8">
+      {/* Stat-tile row */}
+      <section>
+        <div className="mb-3 flex items-baseline justify-between">
+          <h2 className="text-sm font-semibold tracking-tight">Destaques de hábitos</h2>
+          <p className="hidden text-xs text-muted-foreground sm:block">delta vs período anterior</p>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatTile
+            label="Dias perfeitos"
+            icon={Flame}
+            value={data.perfectDays}
+            caption={`atual ${data.currentPerfectStreak} · recorde ${data.recordPerfectStreak}`}
+          />
+          <StatTile
+            label="Consistência"
+            icon={LineChart}
+            value={`${data.consistencyPct}%`}
+            delta={data.consistencyDelta}
+            deltaLabel="pp"
+            deltaGood="up"
+            caption="feito/exigido por dia · média do período"
+            sparkline={consistencySpark}
+          />
+          <StatTile
+            label="Aderência média"
+            icon={Target}
+            value={`${data.avgAdherence}%`}
+            caption="média das metas de todos os hábitos"
+          />
+          <StatTile
+            label="Hábitos ativos"
+            icon={Repeat}
+            value={data.activeHabitsCount}
+            caption="em acompanhamento"
+          />
+        </div>
+      </section>
+
+      {/* Consistência & aderência */}
+      <section>
+        <SectionHeading icon={Repeat}>Consistência &amp; aderência</SectionHeading>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
+          <div className="rounded-xl border bg-card p-4 shadow-sm xl:col-span-2">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <h3 className="text-sm font-medium">Consistência diária</h3>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  % feito/exigido por dia · média móvel 7d · linha de referência da média
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-4">
+                <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <svg width="18" height="8" aria-hidden>
+                    <line x1="0" y1="4" x2="18" y2="4" stroke={BLUE} strokeWidth={2.5} />
+                  </svg>
+                  Média móvel 7d
+                </span>
+                <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <svg width="18" height="8" aria-hidden>
+                    <line x1="0" y1="4" x2="18" y2="4" stroke={BLUE} strokeWidth={1} opacity={0.4} />
+                  </svg>
+                  % diário
+                </span>
+                <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <svg width="18" height="8" aria-hidden>
+                    <line x1="0" y1="4" x2="18" y2="4" stroke={MUTED} strokeWidth={1} strokeDasharray="4 4" />
+                  </svg>
+                  Média do período
+                </span>
+              </div>
+            </div>
+            <div className="mt-4">
+              <ConsistencyChart data={data.dailyConsistency} reference={data.consistencyPct} />
+            </div>
+          </div>
+
+          <Panel title="Radar de aderência por hábito" subtitle="% de aderência à meta no período">
+            {statsPending || !stats ? (
+              <div className="p-6 text-center text-sm text-muted-foreground">Carregando…</div>
+            ) : (
+              <HabitRadar habits={stats.habits} />
+            )}
+          </Panel>
+
+          <Panel
+            title="Sequência por hábito"
+            subtitle="momentum atual vs recorde · sequência quebrada em vermelho"
+          >
+            <StreaksList items={data.perHabitStreaks} />
+          </Panel>
+        </div>
+      </section>
+    </div>
+  )
+}
+
 export default function Relatorios() {
   const [period, setPeriod] = useState<string>('90d')
   const { from, to } = useMemo(() => rangeForDays(daysForKey(period)), [period])
@@ -652,9 +938,7 @@ export default function Relatorios() {
             </TabsContent>
 
             <TabsContent value="habitos" className="mt-6">
-              <div className="rounded-xl border border-dashed bg-card p-10 text-center text-sm text-muted-foreground">
-                Indicadores de hábitos chegam em breve.
-              </div>
+              <HabitosTab from={from} to={to} />
             </TabsContent>
           </Tabs>
         </div>

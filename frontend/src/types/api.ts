@@ -121,6 +121,39 @@ export interface TaskReportNoDueDate {
   total: number
 }
 
+// --- Relatórios > Hábitos report (GET /api/reports/habits) ---
+
+export interface HabitReportDailyConsistency {
+  date: string
+  pct: number
+}
+
+export interface HabitReportStreak {
+  habitId: number
+  name: string
+  color: string
+  current: number
+  best: number
+}
+
+export interface HabitReport {
+  from: string
+  to: string
+  tz: string
+  periodDays: number
+  previous: { from: string; to: string }
+  activeHabitsCount: number
+  avgAdherence: number
+  consistencyPct: number
+  consistencyPreviousPct: number
+  consistencyDelta: number
+  perfectDays: number
+  currentPerfectStreak: number
+  recordPerfectStreak: number
+  dailyConsistency: HabitReportDailyConsistency[]
+  perHabitStreaks: HabitReportStreak[]
+}
+
 export interface TaskReport {
   from: string
   to: string
