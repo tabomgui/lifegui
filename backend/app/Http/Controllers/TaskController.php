@@ -60,16 +60,31 @@ class TaskController extends Controller
         return (new TaskResource($task))->response();
     }
 
-    public function heatmap(): JsonResponse
+    public function heatmap(Request $request): JsonResponse
     {
-        $to = now()->startOfDay();
+        // completed_at is stored in UTC, but the heatmap must bucket by the
+        // CLIENT's calendar day, or a task completed at night lands in the
+        // wrong cell for anyone west of UTC (e.g. America/Sao_Paulo, UTC-3).
+        $tz = $request->string('tz');
+        if (! in_array((string) $tz, timezone_identifiers_list(), true)) {
+            $tz = 'UTC';
+        }
+
+        $now = now()->setTimezone($tz);
+        $to = $now->copy()->startOfDay();
         $from = $to->copy()->subDays(370);
 
-        $counts = Task::whereNotNull('completed_at')
-            ->whereBetween('completed_at', [$from, $to->copy()->endOfDay()])
-            ->get()
-            ->groupBy(fn ($t) => $t->completed_at->toDateString())
-            ->map->count();
+        // Pad the UTC query window by a day on each side so tasks near the
+        // client-timezone window edges aren't excluded before conversion.
+        $tasks = Task::whereNotNull('completed_at')
+            ->where('completed_at', '>=', $from->copy()->subDay()->utc())
+            ->where('completed_at', '<=', $to->copy()->endOfDay()->addDay()->utc())
+            ->get();
+
+        $counts = $tasks
+            ->groupBy(fn ($t) => $t->completed_at->copy()->setTimezone($tz)->toDateString())
+            ->map->count()
+            ->filter(fn ($c, $d) => $d >= $from->toDateString() && $d <= $to->toDateString());
 
         return response()->json(['data' => [
             'from' => $from->toDateString(),

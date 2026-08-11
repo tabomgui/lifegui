@@ -52,3 +52,22 @@ test('heatmap ignora tarefas sem completed_at', function () {
 
     $response->assertJsonPath('data.total', 0);
 });
+
+test('heatmap agrupa pelo fuso do cliente, não UTC', function () {
+    Carbon::setTestNow(Carbon::parse('2026-08-11 12:00:00', 'UTC'));
+
+    // 2026-08-11 02:00 UTC is 2026-08-10 23:00 in America/Sao_Paulo (UTC-3):
+    // grouping by raw UTC date would bucket it on the 11th instead of the 10th.
+    $task = Task::factory()->for($this->user)->create([
+        'status' => 'done',
+        'completed_at' => Carbon::parse('2026-08-11 02:00:00', 'UTC'),
+    ]);
+
+    $response = $this->getJson('/api/tasks/heatmap?tz=America/Sao_Paulo')->assertOk();
+
+    $response->assertJsonPath('data.counts.2026-08-10', 1);
+    $response->assertJsonPath('data.total', 1);
+    $response->assertJsonMissingPath('data.counts.2026-08-11');
+
+    Carbon::setTestNow();
+});

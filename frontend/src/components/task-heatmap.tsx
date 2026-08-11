@@ -61,7 +61,10 @@ export function TaskHeatmap({ data }: { data: TaskHeatmapData }) {
     const week: DayCell[] = []
     for (let d = 0; d < 7; d++) {
       const date = addDays(start, w * 7 + d)
-      week.push({ date, isPlaceholder: date > end })
+      // Days between the leading Sunday and `data.from`, and days after
+      // `data.to`, weren't measured by the backend — don't render them as a
+      // false "0 tasks" cell.
+      week.push({ date, isPlaceholder: date < from || date > end })
     }
     weeks.push(week)
   }
