@@ -55,18 +55,6 @@ export function HabitRadarChart({ habits }: { habits: HabitStat[] }) {
             />
           ))}
 
-          {/* radial value labels along the top axis (straight up) */}
-          {RINGS.map((ring) => (
-            <text
-              key={ring}
-              x={CENTER + 4}
-              y={CENTER - (ring / 100) * RADIUS}
-              className="fill-muted-foreground text-[8px]"
-            >
-              {ring}
-            </text>
-          ))}
-
           {/* axis lines */}
           {axes.map((a, i) => (
             <line
