@@ -22,6 +22,7 @@ import { TaskHeatmap } from '@/components/task-heatmap'
 import { HabitRadar } from '@/components/habit-radar'
 import { StatTile } from '@/components/stat-tile'
 import { PeriodFilter, rangeForDays, PERIODS } from '@/components/period-filter'
+import { MonthNavigator, currentMonthKey } from '@/components/month-navigator'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { useTaskReport, useHabitReport } from '@/hooks/use-reports'
 import { useTaskHeatmap } from '@/hooks/use-heatmap'
@@ -45,6 +46,22 @@ function daysForKey(key: string): number {
 function parseLocalDate(value: string): Date {
   const [y, m, d] = value.split('-').map(Number)
   return new Date(y, m - 1, d)
+}
+
+// Formata uma data como 'Y-m-d' LOCAL (evita toISOString, que é UTC).
+function formatLocalDate(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+// "YYYY-MM" -> primeiro/último dia do mês como datas locais 'Y-m-d'.
+function monthBoundaries(key: string): { from: string; to: string } {
+  const [y, m] = key.split('-').map(Number)
+  const first = new Date(y, (m || 1) - 1, 1)
+  const last = new Date(y, m || 1, 0)
+  return { from: formatLocalDate(first), to: formatLocalDate(last) }
 }
 
 function fmtDayMonth(value: string): string {
@@ -922,11 +939,14 @@ export default function Relatorios() {
   const habitsEnabled = isEnabled('habits')
   // A rota (ReportsRoute) garante que ao menos um módulo relevante está habilitado.
 
+  // Tabs controladas: o filtro do topo troca entre pílulas de dias (Tarefas /
+  const [tab, setTab] = useState<string>(defaultTab)
+
   return (
     <AppLayout title="Relatórios">
       <main className="min-h-0 flex-1 overflow-auto p-4 md:p-6">
         <div className="mx-auto w-full max-w-[1400px] space-y-6">
-          <Tabs defaultValue={defaultTab}>
+          <Tabs value={tab} onValueChange={setTab}>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <TabsList>
                 {tasksEnabled && (
@@ -942,10 +962,12 @@ export default function Relatorios() {
                   </TabsTrigger>
                 )}
               </TabsList>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">Período</span>
-                <PeriodFilter value={period} onChange={setPeriod} />
-              </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Período</span>
+                  <PeriodFilter value={period} onChange={setPeriod} />
+                </div>
+              )}
             </div>
 
             {tasksEnabled && (
