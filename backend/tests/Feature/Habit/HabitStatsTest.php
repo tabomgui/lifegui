@@ -117,14 +117,15 @@ test('to antes de from é rejeitado (422)', function () {
     $this->getJson('/api/habits/stats?from=2026-08-07&to=2026-08-01')->assertStatus(422);
 });
 
-test('janela maior que 366 dias é rejeitada (422)', function () {
-    // 2025 não é bissexto: 2025-01-01 .. 2026-01-03 = 367 dias.
-    $this->getJson('/api/habits/stats?from=2025-01-01&to=2026-01-03')
+test('janela inclusiva maior que 366 dias é rejeitada (422)', function () {
+    // 2024 é bissexto: from..to tem diff de 366 dias => período INCLUSIVO de 367 dias.
+    $this->getJson('/api/habits/stats?from=2024-01-01&to=2025-01-01')
         ->assertStatus(422)
         ->assertJsonValidationErrors('to');
 });
 
-test('janela de exatos 366 dias é aceita', function () {
-    // 2024 é bissexto: 2024-01-01 .. 2025-01-01 = 366 dias.
-    $this->getJson('/api/habits/stats?from=2024-01-01&to=2025-01-01')->assertOk();
+test('janela inclusiva de exatos 366 dias é aceita', function () {
+    // 2025 não é bissexto: from..to tem diff de 365 dias => período INCLUSIVO de 366 dias.
+    $res = $this->getJson('/api/habits/stats?from=2025-01-01&to=2026-01-01')->assertOk();
+    $res->assertJsonPath('data.period_days', 366);
 });

@@ -95,6 +95,8 @@ class HabitController extends Controller
     {
         $from = Carbon::parse($request->validated('from'))->startOfDay();
         $to = Carbon::parse($request->validated('to'))->startOfDay();
+        // Carbon 3 diffInDays() é assinado por padrão; sem `true` aqui só é seguro porque
+        // StatsRequest garante `to >= from` (after_or_equal:from) — não remover essa validação.
         $periodDays = $from->diffInDays($to) + 1;
 
         $habits = Habit::whereNull('archived_at')->orderBy('id')->get();

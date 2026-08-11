@@ -34,7 +34,9 @@ class StatsRequest extends FormRequest
                 return;
             }
 
-            if ($fromDate->diffInDays($toDate, true) > 366) {
+            // Período INCLUSIVO (from e to contam como dias): diff + 1 é o nº de dias da janela.
+            $periodDays = $fromDate->diffInDays($toDate, true) + 1;
+            if ($periodDays > 366) {
                 $validator->errors()->add('to', 'Período máximo de 366 dias.');
             }
         });
