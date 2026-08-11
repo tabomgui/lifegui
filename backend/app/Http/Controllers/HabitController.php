@@ -8,8 +8,10 @@ use App\Http\Requests\Habit\UpdateHabitRequest;
 use App\Http\Resources\HabitResource;
 use App\Models\Habit;
 use App\Support\HabitSummary;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class HabitController extends Controller
 {
@@ -39,9 +41,27 @@ class HabitController extends Controller
 
     public function toggle(ToggleHabitRequest $request, Habit $habit): JsonResponse
     {
-        $log = $habit->logs()->firstOrNew(['date' => $request->validated('date')]);
-        $log->done = $log->exists ? ! $log->done : true;
-        $log->save();
+        $date = $request->validated('date');
+
+        $log = DB::transaction(function () use ($habit, $date) {
+            $log = $habit->logs()->where('date', $date)->lockForUpdate()->first();
+            if ($log) {
+                $log->done = ! $log->done;
+                $log->save();
+                return $log;
+            }
+
+            try {
+                return $habit->logs()->create(['date' => $date, 'done' => true]);
+            } catch (UniqueConstraintViolationException $e) {
+                // Concorrência: outro request criou o log entre o SELECT e o INSERT.
+                // Relê com lock e inverte o valor já persistido.
+                $log = $habit->logs()->where('date', $date)->lockForUpdate()->first();
+                $log->done = ! $log->done;
+                $log->save();
+                return $log;
+            }
+        });
 
         return response()->json([
             'data' => [
@@ -53,7 +73,7 @@ class HabitController extends Controller
 
     public function summary(SummaryRequest $request): JsonResponse
     {
-        $weekStart = Carbon::parse($request->validated('week'))->startOfDay();
+        $weekStart = Carbon::parse($request->validated('week'));
         $weekEnd = $weekStart->copy()->addDays(6);
 
         $habits = Habit::whereNull('archived_at')->orderBy('id')->get();

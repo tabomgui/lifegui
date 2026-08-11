@@ -34,3 +34,18 @@ test('não faz toggle em hábito de outro usuário (404)', function () {
     $other = Habit::factory()->for(User::factory())->create();
     $this->postJson("/api/habits/{$other->id}/toggle", ['date' => '2026-08-10'])->assertNotFound();
 });
+
+test('dois toggles seguidos na mesma data voltam ao estado inicial', function () {
+    $h = Habit::factory()->for($this->user)->create();
+
+    $this->postJson("/api/habits/{$h->id}/toggle", ['date' => '2026-08-10'])
+        ->assertOk()->assertJsonPath('data.done', true);
+
+    $this->postJson("/api/habits/{$h->id}/toggle", ['date' => '2026-08-10'])
+        ->assertOk()->assertJsonPath('data.done', false);
+
+    $this->postJson("/api/habits/{$h->id}/toggle", ['date' => '2026-08-10'])
+        ->assertOk()->assertJsonPath('data.done', true);
+
+    expect(HabitLog::where('habit_id', $h->id)->where('date', '2026-08-10')->count())->toBe(1);
+});
