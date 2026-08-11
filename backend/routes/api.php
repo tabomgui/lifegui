@@ -36,6 +36,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/tasks/{task}', [TaskController::class, 'update']);
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
 
+    Route::get('/habits/summary', [HabitController::class, 'summary']);
     Route::get('/habits', [HabitController::class, 'index']);
     Route::post('/habits', [HabitController::class, 'store']);
     Route::patch('/habits/{habit}', [HabitController::class, 'update']);
