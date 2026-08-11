@@ -111,7 +111,14 @@ export function TaskCard({ task }: { task: Task }) {
   return (
     <div draggable
       onDragStart={(e) => e.dataTransfer.setData('text/plain', String(task.id))}
-      className="group cursor-grab rounded-md border bg-card p-3 shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing">
+      onClick={(e) => {
+        // Clicar no card abre a edição — exceto quando o clique é num controle interativo
+        // (botões/menus/inputs) ou num texto selecionado.
+        if ((e.target as HTMLElement).closest('button, input, a, [role="menu"]')) return
+        if (window.getSelection()?.toString()) return
+        setOpen(true)
+      }}
+      className="group cursor-pointer rounded-md border bg-card p-3 shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing">
       <p className={`text-sm leading-snug ${task.status === 'done' ? 'text-muted-foreground line-through' : ''}`}>
         {task.title}
       </p>
