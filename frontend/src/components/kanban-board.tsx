@@ -26,7 +26,7 @@ export function KanbanBoard({ tasks }: { tasks: Task[] }) {
           const colTasks = tasks.filter((t) => t.status === status).sort((a, b) => a.position - b.position)
           const { label, icon: Icon } = STATUS_META[status]
           return (
-            <div key={status} className="flex min-h-0 shrink-0 basis-[85%] snap-start flex-col rounded-lg border bg-muted/30 md:basis-auto">
+            <div key={status} className="flex min-h-0 w-full shrink-0 snap-start flex-col rounded-lg border bg-muted/30 md:w-auto">
               <div className="flex items-center justify-between px-3 py-2.5">
                 <div className="flex items-center gap-2 text-sm font-medium"><Icon className="h-4 w-4" /> {label}</div>
                 <span className="rounded-full bg-secondary px-1.5 text-[11px] text-muted-foreground">{colTasks.length}</span>
