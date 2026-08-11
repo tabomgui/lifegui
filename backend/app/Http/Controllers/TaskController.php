@@ -17,10 +17,16 @@ class TaskController extends Controller
         $tasks = Task::query()
             ->when($request->filled('category_id'), fn ($q) => $q->where('category_id', $request->integer('category_id')))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
+            ->withCount(['subtasks', 'subtasks as subtasks_done_count' => fn ($q) => $q->where('done', true)])
             ->orderBy('position')->orderBy('id')
             ->get();
 
         return TaskResource::collection($tasks)->response();
+    }
+
+    public function show(Task $task): JsonResponse
+    {
+        return (new TaskResource($task->load('subtasks')))->response();
     }
 
     public function store(StoreTaskRequest $request): JsonResponse
