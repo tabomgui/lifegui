@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { NavLink } from 'react-router-dom'
 import { LayoutGrid, Kanban, Repeat } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
@@ -15,12 +16,16 @@ export function AppLayout({ children, title }: { children: ReactNode; title: str
           <span className="text-sm font-semibold tracking-tight">lifeboard</span>
         </div>
         <nav className="flex-1 space-y-1 p-2">
-          <span className="flex items-center gap-3 rounded-md bg-accent px-3 py-2 text-sm font-medium">
+          <NavLink to="/" end className={({ isActive }) =>
+            `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium ${isActive ? 'bg-accent text-foreground' : 'text-muted-foreground hover:bg-accent hover:text-foreground'}`
+          }>
             <Kanban className="h-4 w-4" /> Tarefas
-          </span>
-          <span className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground">
+          </NavLink>
+          <NavLink to="/habits" className={({ isActive }) =>
+            `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium ${isActive ? 'bg-accent text-foreground' : 'text-muted-foreground hover:bg-accent hover:text-foreground'}`
+          }>
             <Repeat className="h-4 w-4" /> Hábitos
-          </span>
+          </NavLink>
         </nav>
         <div className="border-t p-2">
           <div className="flex items-center justify-between gap-2 px-1">

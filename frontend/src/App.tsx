@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/sonner'
 import Login from '@/pages/login'
 import Register from '@/pages/register'
 import Dashboard from '@/pages/dashboard'
+import Habits from '@/pages/habits'
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
           <Route path="/dashboard" element={<Navigate to="/" replace />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/habits" element={<Habits />} />
           </Route>
         </Routes>
         <Toaster />
