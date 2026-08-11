@@ -77,7 +77,10 @@ export function StatTile({
   const hasDelta = delta !== null && delta !== undefined
   const dir: 'up' | 'down' | null = !hasDelta ? null : delta > 0 ? 'up' : delta < 0 ? 'down' : null
   const good = dir === null ? null : dir === deltaGood
-  const deltaText = hasDelta ? `${delta > 0 ? '+' : ''}${delta}${deltaLabel ? ` ${deltaLabel}` : ''}` : ''
+  // pt-BR comma decimals (Intl), not the raw JS dot-decimal number-to-string.
+  const deltaText = hasDelta
+    ? `${delta > 0 ? '+' : ''}${delta.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}${deltaLabel ? ` ${deltaLabel}` : ''}`
+    : ''
 
   return (
     <div className="relative overflow-hidden rounded-xl border bg-card p-4 shadow-sm">

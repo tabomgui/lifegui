@@ -200,8 +200,13 @@ export interface HabitReport {
 }
 
 
+// or a deficit bullet must read as bad/alert even inside a period that's
+// otherwise fine, and vice-versa.
+
+  text: string
+}
+
   headline: string
-  bullets: string[]
 }
 
   currency: string
