@@ -73,3 +73,76 @@ export interface HabitStats {
   period_days: number
   habits: HabitStat[]
 }
+
+// --- Relatórios > Tarefas report (GET /api/reports/tasks) ---
+
+export interface TaskReportWeek {
+  weekStart: string
+  created: number
+  completed: number
+}
+
+export interface TaskReportCategory {
+  categoryId: number | null
+  name: string | null
+  color: string | null
+  open: number
+}
+
+export interface TaskReportAgingItem {
+  id: number
+  title: string
+  categoryColor: string | null
+  days: number
+}
+
+export interface TaskReportDueSoon {
+  date: string
+  count: number
+}
+
+export interface TaskReportOnTimeRate {
+  rate: number
+  onTime: number
+  total: number
+  previousRate: number
+}
+
+export interface TaskReportOverdueByAgeBucket {
+  '1-3': number
+  '4-7': number
+  '8-30': number
+  '30+': number
+}
+
+export interface TaskReportNoDueDate {
+  pct: number
+  count: number
+  total: number
+}
+
+export interface TaskReport {
+  from: string
+  to: string
+  tz: string
+  periodDays: number
+  previous: { from: string; to: string }
+  completedCount: number
+  completedDelta: number
+  createdCount: number
+  netFlow: number
+  netFlowDelta: number
+  overdueOpenCount: number
+  overdueDelta: number
+  overdueOldestDays: number
+  cycleTimeMedianDays: number | null
+  cycleTimePreviousMedianDays: number | null
+  cycleTimeDelta: number | null
+  weekly: TaskReportWeek[]
+  openByCategory: TaskReportCategory[]
+  agingWip: TaskReportAgingItem[]
+  dueSoon: TaskReportDueSoon[]
+  onTimeRate: TaskReportOnTimeRate
+  overdueByAgeBucket: TaskReportOverdueByAgeBucket
+  noDueDate: TaskReportNoDueDate
+}
