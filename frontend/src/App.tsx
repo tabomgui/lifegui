@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from '@/contexts/auth-context'
 import { ProtectedRoute } from '@/components/protected-route'
 import { Toaster } from '@/components/ui/sonner'
@@ -13,6 +13,8 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          {/* Backend (Google callback) redireciona para /dashboard; o dashboard vive em /. */}
+          <Route path="/dashboard" element={<Navigate to="/" replace />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<Dashboard />} />
           </Route>
