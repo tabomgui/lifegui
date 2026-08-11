@@ -64,4 +64,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/modules/{key}', [ModuleController::class, 'update']);
 
 
+
 });
