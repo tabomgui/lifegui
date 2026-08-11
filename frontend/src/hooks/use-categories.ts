@@ -25,7 +25,7 @@ export function useCreateCategory() {
 export function useUpdateCategory() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, ...input }: Partial<Category> & { id: number }) => {
+    mutationFn: async ({ id, ...input }: Partial<Pick<Category, 'name' | 'color' | 'icon'>> & { id: number }) => {
       await csrf()
       return (await api.patch(`/categories/${id}`, input)).data.data as Category
     },

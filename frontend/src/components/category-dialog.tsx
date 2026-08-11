@@ -42,34 +42,36 @@ export function CategoryDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader><DialogTitle>{category ? 'Editar' : 'Nova'} categoria</DialogTitle></DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="cat-name">Nome</Label>
-            <Input id="cat-name" value={name} onChange={(e) => setName(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label>Cor</Label>
-            <div className="flex gap-2">
-              {COLORS.map((c) => (
-                <button key={c} type="button" onClick={() => setColor(c)}
-                  className={`h-7 w-7 rounded-full border-2 ${color === c ? 'border-foreground' : 'border-transparent'}`}
-                  style={{ background: c }} aria-label={c} />
-              ))}
+        <form onSubmit={(e) => { e.preventDefault(); onSave() }}>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="cat-name">Nome</Label>
+              <Input id="cat-name" value={name} onChange={(e) => setName(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Cor</Label>
+              <div className="flex gap-2">
+                {COLORS.map((c) => (
+                  <button key={c} type="button" onClick={() => setColor(c)}
+                    className={`h-7 w-7 rounded-full border-2 ${color === c ? 'border-foreground' : 'border-transparent'}`}
+                    style={{ background: c }} aria-label={c} />
+                ))}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Ícone</Label>
+              <div className="flex gap-2">
+                {ICONS.map((i) => (
+                  <button key={i} type="button" onClick={() => setIcon(i)}
+                    className={`rounded-md border px-2 py-1 text-xs ${icon === i ? 'bg-accent' : ''}`}>{i}</button>
+                ))}
+              </div>
             </div>
           </div>
-          <div className="space-y-2">
-            <Label>Ícone</Label>
-            <div className="flex gap-2">
-              {ICONS.map((i) => (
-                <button key={i} type="button" onClick={() => setIcon(i)}
-                  className={`rounded-md border px-2 py-1 text-xs ${icon === i ? 'bg-accent' : ''}`}>{i}</button>
-              ))}
-            </div>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button onClick={onSave}>Salvar</Button>
-        </DialogFooter>
+          <DialogFooter className="mt-4">
+            <Button type="submit">Salvar</Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )

@@ -30,6 +30,9 @@ export function useMoveTask() {
       await csrf()
       return (await api.patch(`/tasks/${id}`, { status, position })).data.data as Task
     },
+    // Snapshot/rollback é por-mutação: sob moves concorrentes muito rápidos, um rollback
+    // pode sobrescrever o patch otimista de outro move em curso. O onSettled (invalidate)
+    // sempre reconcilia com o servidor logo em seguida, então a janela de inconsistência é curta.
     onMutate: async ({ id, status, position }) => {
       await qc.cancelQueries({ queryKey: KEY })
       const prev = qc.getQueryData<Task[]>(KEY)
