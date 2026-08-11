@@ -1,7 +1,8 @@
 import { useState } from 'react'
+import type { DragEvent } from 'react'
 import { Plus, Pencil, Trash2, Layers } from 'lucide-react'
 import { useCategories, useDeleteCategory } from '@/hooks/use-categories'
-import { useTasks } from '@/hooks/use-tasks'
+import { useTasks, useUpdateTaskCategory } from '@/hooks/use-tasks'
 import { CategoryDialog } from '@/components/category-dialog'
 import { DynamicIcon } from '@/components/icon'
 import type { Category } from '@/types/api'
@@ -13,8 +14,10 @@ export function CategoryTabs({
   const { data: categories = [] } = useCategories()
   const { data: tasks = [] } = useTasks()
   const del = useDeleteCategory()
+  const assignCategory = useUpdateTaskCategory()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<Category | null>(null)
+  const [dragOverId, setDragOverId] = useState<number | null>(null)
 
   const countFor = (id: number | 'all') =>
     id === 'all' ? tasks.length : tasks.filter((t) => t.category_id === id).length
@@ -27,6 +30,19 @@ export function CategoryTabs({
     catch { toast.error('Não foi possível apagar') }
   }
 
+  // Arrastar um card de tarefa (dataTransfer com o id, setado no task-card) e soltar
+  // numa aba categoriza a tarefa naquela categoria.
+  function onDropCategory(c: Category, e: DragEvent<HTMLDivElement>) {
+    e.preventDefault()
+    setDragOverId(null)
+    const id = Number(e.dataTransfer.getData('text/plain'))
+    if (!id) return
+    const task = tasks.find((t) => t.id === id)
+    if (!task || task.category_id === c.id) return
+    assignCategory.mutate({ id, category_id: c.id })
+    toast.success(`Movida para ${c.name}`)
+  }
+
   return (
     <div role="tablist" className="flex items-center gap-1 overflow-x-auto border-b px-4 py-2 md:px-6">
       <button role="tab" aria-selected={active === 'all'} onClick={() => onChange('all')}
@@ -35,7 +51,11 @@ export function CategoryTabs({
         <span className="ml-0.5 rounded-full bg-secondary px-1.5 text-[11px]">{countFor('all')}</span>
       </button>
       {categories.map((c) => (
-        <div key={c.id} className={`group inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium ${active === c.id ? 'bg-secondary' : 'text-muted-foreground hover:bg-accent'}`}>
+        <div key={c.id}
+          onDragOver={(e) => { e.preventDefault(); setDragOverId(c.id) }}
+          onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverId(null) }}
+          onDrop={(e) => onDropCategory(c, e)}
+          className={`group inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium ${active === c.id ? 'bg-secondary' : 'text-muted-foreground hover:bg-accent'} ${dragOverId === c.id ? 'bg-accent outline-2 outline-dashed outline-ring -outline-offset-2' : ''}`}>
           <button role="tab" aria-selected={active === c.id} onClick={() => onChange(c.id)} className="inline-flex items-center gap-1.5">
             <DynamicIcon name={c.icon} className="h-3.5 w-3.5" style={{ color: c.color }} />
             {c.name}
