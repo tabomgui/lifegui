@@ -36,6 +36,9 @@ function Sparkline({ values }: { values: number[] }) {
     .map((p) => `L ${p[0].toFixed(1)} ${p[1].toFixed(1)}`)
     .join(' ')} L ${w} ${h} Z`
   const last = pts[pts.length - 1]
+  // Série que cruza zero (ex.: fluxo líquido): linha-base honesta no zero.
+  const crossesZero = min < 0 && max > 0
+  const zeroY = h - 3 - ((0 - min) / range) * (h - 6)
   return (
     <svg
       viewBox={`0 0 ${w} ${h}`}
@@ -43,6 +46,9 @@ function Sparkline({ values }: { values: number[] }) {
       className="pointer-events-none absolute inset-x-0 bottom-0 h-10 w-full opacity-60"
       aria-hidden
     >
+      {crossesZero && (
+        <line x1={0} y1={zeroY.toFixed(1)} x2={w} y2={zeroY.toFixed(1)} stroke="currentColor" strokeWidth={1} className="text-border" vectorEffect="non-scaling-stroke" />
+      )}
       <path d={area} fill="#3b82f6" opacity={0.1} />
       <path
         d={line}

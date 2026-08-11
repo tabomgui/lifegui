@@ -1,5 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import {
+  ArrowDown,
+  ArrowUp,
   ArrowLeftRight,
   AlarmClockOff,
   CalendarClock,
@@ -325,8 +327,9 @@ function OnTimeRate({ data }: { data: TaskReport['onTimeRate'] }) {
         </div>
         {data.total > 0 && (
           <span
-            className={`mb-1 text-xs font-medium ${delta >= 0 ? 'text-emerald-500' : 'text-red-500'}`}
+            className={`mb-1 inline-flex items-center gap-0.5 text-xs font-medium ${delta >= 0 ? 'text-emerald-500' : 'text-red-500'}`}
           >
+            {delta >= 0 ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
             {delta >= 0 ? '+' : ''}
             {delta}pp
           </span>
