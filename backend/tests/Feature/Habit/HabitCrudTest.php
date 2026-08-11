@@ -15,9 +15,10 @@ test('lista hábitos não arquivados', function () {
 });
 
 test('cria hábito com meta opcional', function () {
-    $this->postJson('/api/habits', ['name' => 'Treino', 'emoji' => '🏋️', 'target_per_week' => 3])
+    $this->postJson('/api/habits', ['name' => 'Treino', 'icon' => 'dumbbell', 'target_per_week' => 3])
         ->assertCreated()
         ->assertJsonPath('data.name', 'Treino')
+        ->assertJsonPath('data.icon', 'dumbbell')
         ->assertJsonPath('data.target_per_week', 3);
 
     $this->assertDatabaseHas('habits', ['name' => 'Treino', 'user_id' => $this->user->id]);

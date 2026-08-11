@@ -11,7 +11,7 @@ class HabitFactory extends Factory
         return [
             'user_id' => User::factory(),
             'name' => fake()->words(2, true),
-            'emoji' => '✨',
+            'icon' => 'circle-check',
             'target_per_week' => null,
             'color' => fake()->hexColor(),
             'archived_at' => null,

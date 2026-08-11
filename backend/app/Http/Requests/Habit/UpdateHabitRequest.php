@@ -11,7 +11,7 @@ class UpdateHabitRequest extends FormRequest
     {
         return [
             'name' => ['sometimes', 'required', 'string', 'max:255'],
-            'emoji' => ['nullable', 'string', 'max:16'],
+            'icon' => ['nullable', 'string', 'max:64'],
             'target_per_week' => ['nullable', 'integer', 'min:1', 'max:7'],
             'color' => ['nullable', 'string', 'max:32'],
         ];

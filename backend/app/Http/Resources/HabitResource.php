@@ -11,7 +11,7 @@ class HabitResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'emoji' => $this->emoji,
+            'icon' => $this->icon,
             'target_per_week' => $this->target_per_week,
             'color' => $this->color,
         ];
