@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HabitController;
+use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\SubtaskController;
 use App\Http\Controllers\TaskController;
 use App\Http\Resources\UserResource;
@@ -50,4 +51,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/habits/{habit}', [HabitController::class, 'update']);
     Route::delete('/habits/{habit}', [HabitController::class, 'destroy']);
     Route::post('/habits/{habit}/toggle', [HabitController::class, 'toggle']);
+
+    // Aggregation dashboards. A dedicated /reports/* namespace sidesteps the
+    // literal-before-{param} route hazard entirely (no collision with
+    // /tasks/{task} or /habits/{habit}).
+    Route::get('/reports/tasks', [ReportsController::class, 'tasks']);
+    Route::get('/reports/habits', [ReportsController::class, 'habits']);
 });
