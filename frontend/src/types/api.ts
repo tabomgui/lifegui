@@ -213,6 +213,8 @@ export interface HabitReport {
   from: string
   to: string
   previous: { from: string; to: string }
+  // dias) e quais deles compõem a janela atual/anterior ("YYYY-MM", asc) —
+  // gráficos mensais, os mesmos meses cujo total aparece nos cards.
 }
 
 export interface TaskReport {
