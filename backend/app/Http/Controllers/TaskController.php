@@ -56,13 +56,16 @@ class TaskController extends Controller
     {
         // Continue from the end of the 'todo' column instead of restarting
         // at 0, so successive process()/store() calls don't collide.
-        $created = DB::transaction(function () use ($request) {
+        $categoryId = $request->validated('category_id') ?? null;
+
+        $created = DB::transaction(function () use ($request, $categoryId) {
             $base = (int) Task::where('status', 'todo')->max('position') + 1;
 
             return collect($request->lines())->map(fn ($title, $i) => Task::create([
                 'title' => $title,
                 'status' => 'todo',
                 'position' => $base + $i,
+                'category_id' => $categoryId,
             ]));
         });
 

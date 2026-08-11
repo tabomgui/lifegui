@@ -1,4 +1,5 @@
 <?php
+use App\Models\Category;
 use App\Models\Task;
 use App\Models\User;
 
@@ -39,4 +40,22 @@ test('store após process recebe position maior que as tarefas existentes na mes
     $this->postJson('/api/tasks', ['title' => 'Nova'])
         ->assertCreated()
         ->assertJsonPath('data.position', $maxAfterProcess + 1);
+});
+
+test('processar com category_id atribui a categoria a todas as tarefas criadas', function () {
+    $category = Category::factory()->for($this->user)->create();
+
+    $this->postJson('/api/tasks/process', ['text' => "Uma\nDuas", 'category_id' => $category->id])
+        ->assertCreated()
+        ->assertJsonPath('data.0.category_id', $category->id)
+        ->assertJsonPath('data.1.category_id', $category->id);
+
+    expect(Task::where('category_id', $category->id)->count())->toBe(2);
+});
+
+test('processar com category_id de outro usuário é rejeitado (422)', function () {
+    $other = Category::factory()->for(User::factory())->create();
+
+    $this->postJson('/api/tasks/process', ['text' => "Uma\nDuas", 'category_id' => $other->id])
+        ->assertStatus(422);
 });

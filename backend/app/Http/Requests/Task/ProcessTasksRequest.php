@@ -2,6 +2,7 @@
 namespace App\Http\Requests\Task;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ProcessTasksRequest extends FormRequest
 {
@@ -11,6 +12,8 @@ class ProcessTasksRequest extends FormRequest
     {
         return [
             'text' => ['required', 'string', 'max:20000'],
+            // Scoped to the logged-in user: see StoreTaskRequest for the rationale.
+            'category_id' => ['nullable', 'integer', Rule::exists('categories', 'id')->where('user_id', $this->user()->id)],
         ];
     }
 
