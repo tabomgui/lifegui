@@ -190,6 +190,8 @@ export interface HabitReport {
   net: number
 }
 
+  // linhas sem id não são clicáveis (não há como buscar suas transações).
+  id: string | null
   name: string
   color: string
   total: number
@@ -197,6 +199,23 @@ export interface HabitReport {
   previousTotal: number
   // null quando previousTotal === 0 (categoria nova).
   deltaPct: number | null
+}
+
+
+  id: string
+  // "YYYY-MM-DD".
+  date: string
+  description: string
+  payee: string | null
+  amount: number
+}
+
+  categoryId: string
+  from: string
+  to: string
+  currency: string
+  count: number
+  total: number
 }
 
 
