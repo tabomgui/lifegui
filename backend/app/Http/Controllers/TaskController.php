@@ -43,13 +43,20 @@ class TaskController extends Controller
             ...$request->validated(),
             'status' => $status,
             'position' => (int) Task::where('status', $status)->max('position') + 1,
+            'completed_at' => $status === 'done' ? now() : null,
         ]);
         return (new TaskResource($task))->response()->setStatusCode(201);
     }
 
     public function update(UpdateTaskRequest $request, Task $task): JsonResponse
     {
-        $task->update($request->validated());
+        $data = $request->validated();
+
+        if (array_key_exists('status', $data) && $data['status'] !== $task->status) {
+            $data['completed_at'] = $data['status'] === 'done' ? now() : null;
+        }
+
+        $task->update($data);
         return (new TaskResource($task))->response();
     }
 

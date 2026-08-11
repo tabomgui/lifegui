@@ -96,3 +96,36 @@ test('due_date inválido é rejeitado (422)', function () {
     $this->postJson('/api/tasks', ['title' => 'Data ruim', 'due_date' => '2026-13-40'])
         ->assertStatus(422);
 });
+
+test('mover tarefa para done define completed_at', function () {
+    $task = Task::factory()->for($this->user)->create(['status' => 'todo']);
+
+    $response = $this->patchJson("/api/tasks/{$task->id}", ['status' => 'done']);
+
+    $response->assertOk();
+    expect($task->fresh()->completed_at)->not->toBeNull();
+});
+
+test('mover tarefa de done de volta para todo/doing limpa completed_at', function () {
+    $task = Task::factory()->for($this->user)->create(['status' => 'done', 'completed_at' => now()]);
+
+    $this->patchJson("/api/tasks/{$task->id}", ['status' => 'doing'])->assertOk();
+
+    expect($task->fresh()->completed_at)->toBeNull();
+});
+
+test('cliente não pode definir completed_at diretamente', function () {
+    $task = Task::factory()->for($this->user)->create(['status' => 'todo']);
+
+    $this->patchJson("/api/tasks/{$task->id}", ['completed_at' => '2020-01-01 00:00:00'])->assertOk();
+
+    expect($task->fresh()->completed_at)->toBeNull();
+});
+
+test('criar tarefa já como done define completed_at', function () {
+    $response = $this->postJson('/api/tasks', ['title' => 'Feita já', 'status' => 'done']);
+
+    $response->assertCreated();
+    $task = Task::find($response->json('data.id'));
+    expect($task->completed_at)->not->toBeNull();
+});

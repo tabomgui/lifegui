@@ -16,6 +16,7 @@ class TaskFactory extends Factory
             'status' => 'todo',
             'position' => 0,
             'due_date' => null,
+            'completed_at' => null,
         ];
     }
 }

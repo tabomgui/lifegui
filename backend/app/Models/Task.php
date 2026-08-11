@@ -11,12 +11,13 @@ class Task extends Model
 {
     use HasFactory, BelongsToUser;
 
-    protected $fillable = ['title', 'notes', 'status', 'position', 'category_id', 'user_id', 'due_date'];
+    protected $fillable = ['title', 'notes', 'status', 'position', 'category_id', 'user_id', 'due_date', 'completed_at'];
 
     protected function casts(): array
     {
         return [
             'due_date' => 'date:Y-m-d',
+            'completed_at' => 'datetime',
         ];
     }
 
