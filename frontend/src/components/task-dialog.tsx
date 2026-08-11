@@ -96,14 +96,16 @@ export function TaskDialog({
   const [dueDate, setDueDate] = useState('')
   const [categoryId, setCategoryId] = useState('')
 
+  // Reseeda ao abrir (e quando a task carrega/muda), pra descartar edições não salvas
+  // de uma abertura anterior — mesmo padrão de habit-dialog/category-dialog.
   useEffect(() => {
-    if (task) {
+    if (open && task) {
       setTitle(task.title)
       setNotes(task.notes ?? '')
       setDueDate(task.due_date ?? '')
       setCategoryId(task.category_id != null ? String(task.category_id) : '')
     }
-  }, [task?.id])
+  }, [open, task])
 
   async function onSave() {
     if (!task) return
