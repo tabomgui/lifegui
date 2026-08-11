@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Task\HeatmapRequest;
 use App\Http\Requests\Task\ProcessTasksRequest;
 use App\Http\Requests\Task\StoreTaskRequest;
 use App\Http\Requests\Task\UpdateTaskRequest;
@@ -8,6 +9,7 @@ use App\Http\Resources\TaskResource;
 use App\Models\Task;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class TaskController extends Controller
@@ -60,7 +62,7 @@ class TaskController extends Controller
         return (new TaskResource($task))->response();
     }
 
-    public function heatmap(Request $request): JsonResponse
+    public function heatmap(HeatmapRequest $request): JsonResponse
     {
         // completed_at is stored in UTC, but the heatmap must bucket by the
         // CLIENT's calendar day, or a task completed at night lands in the
@@ -70,9 +72,18 @@ class TaskController extends Controller
             $tz = 'UTC';
         }
 
-        $now = now()->setTimezone($tz);
-        $to = $now->copy()->startOfDay();
-        $from = $to->copy()->subDays(370);
+        $fromInput = $request->validated('from');
+        $toInput = $request->validated('to');
+
+        if ($fromInput && $toInput) {
+            // Explicit window from the client's period filter (local Y-m-d).
+            $from = Carbon::createFromFormat('Y-m-d', $fromInput, (string) $tz)->startOfDay();
+            $to = Carbon::createFromFormat('Y-m-d', $toInput, (string) $tz)->startOfDay();
+        } else {
+            $now = now()->setTimezone($tz);
+            $to = $now->copy()->startOfDay();
+            $from = $to->copy()->subDays(370);
+        }
 
         // Pad the UTC query window by a day on each side so tasks near the
         // client-timezone window edges aren't excluded before conversion.
