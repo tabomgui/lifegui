@@ -1,5 +1,27 @@
 export type TaskStatus = 'todo' | 'doing' | 'done'
 
+// --- Módulos (GET /api/modules) ---
+
+
+export interface ModuleInfo {
+  key: ModuleKey
+  label: string
+  description: string
+  icon: string
+  version: string
+  enabled: boolean
+}
+
+
+  configured: boolean
+  base_url: string | null
+  email: string | null
+  enabled: boolean
+  hasPassword: boolean
+  last_status: string | null
+  last_checked_at: string | null
+}
+
 export interface Category {
   id: number
   name: string

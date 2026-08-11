@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
-import { LayoutGrid, Kanban, Repeat, BarChart3, Menu, X } from 'lucide-react'
+import { LayoutGrid, Kanban, Repeat, BarChart3, Wallet, Settings, Menu, X } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
+import { useEnabledModules } from '@/hooks/use-modules'
 import { Button } from '@/components/ui/button'
 import { ModeToggle } from '@/components/mode-toggle'
 
@@ -13,6 +14,8 @@ const navClass = ({ isActive }: { isActive: boolean }) =>
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { user, logout } = useAuth()
+  const { isEnabled } = useEnabledModules()
+  const showReports = isEnabled('tasks') || isEnabled('habits')
   return (
     <>
       <div className="flex h-14 items-center gap-2 border-b px-4">
@@ -21,15 +24,27 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         </div>
         <span className="text-sm font-semibold tracking-tight">lifeboard</span>
       </div>
-      <nav className="flex-1 space-y-1 p-2">
-        <NavLink to="/" end className={navClass} onClick={onNavigate}>
-          <Kanban className="h-4 w-4" /> Tarefas
-        </NavLink>
-        <NavLink to="/habits" className={navClass} onClick={onNavigate}>
-          <Repeat className="h-4 w-4" /> Hábitos
-        </NavLink>
-        <NavLink to="/relatorios" className={navClass} onClick={onNavigate}>
-          <BarChart3 className="h-4 w-4" /> Relatórios
+      <nav className="flex flex-1 flex-col gap-1 p-2">
+        {isEnabled('tasks') && (
+          <NavLink to="/" end className={navClass} onClick={onNavigate}>
+            <Kanban className="h-4 w-4" /> Tarefas
+          </NavLink>
+        )}
+        {isEnabled('habits') && (
+          <NavLink to="/habits" className={navClass} onClick={onNavigate}>
+            <Repeat className="h-4 w-4" /> Hábitos
+          </NavLink>
+        )}
+          </NavLink>
+        )}
+        {showReports && (
+          <NavLink to="/relatorios" className={navClass} onClick={onNavigate}>
+            <BarChart3 className="h-4 w-4" /> Relatórios
+          </NavLink>
+        )}
+        <div className="mt-auto" />
+        <NavLink to="/configuracoes" className={navClass} onClick={onNavigate}>
+          <Settings className="h-4 w-4" /> Configurações
         </NavLink>
       </nav>
       <div className="border-t p-2">

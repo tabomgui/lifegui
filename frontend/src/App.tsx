@@ -1,12 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from '@/contexts/auth-context'
 import { ProtectedRoute } from '@/components/protected-route'
+import { ModuleRoute, IndexRoute } from '@/components/module-route'
 import { Toaster } from '@/components/ui/sonner'
 import Login from '@/pages/login'
 import Register from '@/pages/register'
 import Dashboard from '@/pages/dashboard'
 import Habits from '@/pages/habits'
 import Relatorios from '@/pages/relatorios'
+import Configuracoes from '@/pages/configuracoes'
 
 export default function App() {
   return (
@@ -18,9 +20,10 @@ export default function App() {
           {/* Backend (Google callback) redireciona para /dashboard; o dashboard vive em /. */}
           <Route path="/dashboard" element={<Navigate to="/" replace />} />
           <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/habits" element={<Habits />} />
+            <Route path="/" element={<IndexRoute><Dashboard /></IndexRoute>} />
+            <Route path="/habits" element={<ModuleRoute module="habits"><Habits /></ModuleRoute>} />
             <Route path="/relatorios" element={<Relatorios />} />
+            <Route path="/configuracoes" element={<Configuracoes />} />
           </Route>
         </Routes>
         <Toaster />
