@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Circle, Play, Check, Undo2, Trash2, CircleDashed, ChevronDown, Calendar, CalendarOff } from 'lucide-react'
+import { Circle, Play, Check, Undo2, Trash2, CircleDashed, ChevronDown, Calendar, CalendarOff, ListChecks } from 'lucide-react'
 import type { Task, TaskStatus } from '@/types/api'
 import { useMoveTask, useDeleteTask, useUpdateTaskCategory, useUpdateTaskDueDate } from '@/hooks/use-tasks'
 import { useCategories } from '@/hooks/use-categories'
 import { DynamicIcon } from '@/components/icon'
 import { dueDateMeta, TONE_CLASSES } from '@/lib/due-date'
+import { TaskDialog } from '@/components/task-dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -104,14 +105,27 @@ function TaskDueControl({ task }: { task: Task }) {
 export function TaskCard({ task }: { task: Task }) {
   const move = useMoveTask()
   const del = useDeleteTask()
+  const [open, setOpen] = useState(false)
+  const subtasksCount = task.subtasks_count ?? 0
 
   return (
     <div draggable
       onDragStart={(e) => e.dataTransfer.setData('text/plain', String(task.id))}
       className="group cursor-grab rounded-md border bg-card p-3 shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing">
-      <p className={`text-sm leading-snug ${task.status === 'done' ? 'text-muted-foreground line-through' : ''}`}>{task.title}</p>
-      <div className="mt-1.5">
+      <button
+        type="button"
+        aria-label={`Abrir tarefa: ${task.title}`}
+        onClick={() => setOpen(true)}
+        className={`w-full text-left text-sm leading-snug hover:underline ${task.status === 'done' ? 'text-muted-foreground line-through' : ''}`}>
+        {task.title}
+      </button>
+      <div className="mt-1.5 flex items-center gap-2">
         <TaskDueControl task={task} />
+        {subtasksCount > 0 && (
+          <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+            <ListChecks className="h-3 w-3" /> {task.subtasks_done_count ?? 0}/{subtasksCount}
+          </span>
+        )}
       </div>
       <div className="mt-2.5 flex items-center justify-between gap-1">
         <div className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 group-focus-within:opacity-100">
@@ -128,6 +142,7 @@ export function TaskCard({ task }: { task: Task }) {
           </button>
         </div>
       </div>
+      <TaskDialog taskId={task.id} open={open} onOpenChange={setOpen} />
     </div>
   )
 }
