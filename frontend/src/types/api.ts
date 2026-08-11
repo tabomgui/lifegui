@@ -176,6 +176,46 @@ export interface HabitReport {
   perHabitStreaks: HabitReportStreak[]
 }
 
+
+  key: string
+  label: string
+  value: number
+  color: string
+}
+
+  // Mês no formato "YYYY-MM".
+  date: string
+  value: number
+}
+
+  value: number
+  changeAmount: number
+  changePercent: number
+}
+
+  // Mês no formato "YYYY-MM".
+  date: string
+  net: number
+}
+
+  name: string
+  color: string
+  total: number
+  percentage: number
+}
+
+  name: string
+  institution: string
+  type: string
+  balance: number
+  currency: string
+}
+
+  currency: string
+  balanceDate: string
+  monthlyNet: number
+}
+
 export interface TaskReport {
   from: string
   to: string
