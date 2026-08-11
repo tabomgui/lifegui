@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
-import { LayoutGrid, Kanban, Repeat } from 'lucide-react'
+import { LayoutGrid, Kanban, Repeat, BarChart3 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 
@@ -25,6 +25,11 @@ export function AppLayout({ children, title }: { children: ReactNode; title: str
             `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium ${isActive ? 'bg-accent text-foreground' : 'text-muted-foreground hover:bg-accent hover:text-foreground'}`
           }>
             <Repeat className="h-4 w-4" /> Hábitos
+          </NavLink>
+          <NavLink to="/relatorios" className={({ isActive }) =>
+            `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium ${isActive ? 'bg-accent text-foreground' : 'text-muted-foreground hover:bg-accent hover:text-foreground'}`
+          }>
+            <BarChart3 className="h-4 w-4" /> Relatórios
           </NavLink>
         </nav>
         <div className="border-t p-2">

@@ -6,6 +6,7 @@ import Login from '@/pages/login'
 import Register from '@/pages/register'
 import Dashboard from '@/pages/dashboard'
 import Habits from '@/pages/habits'
+import Relatorios from '@/pages/relatorios'
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/habits" element={<Habits />} />
+            <Route path="/relatorios" element={<Relatorios />} />
           </Route>
         </Routes>
         <Toaster />
