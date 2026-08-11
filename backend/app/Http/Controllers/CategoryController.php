@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Category\ReorderCategoryRequest;
 use App\Http\Requests\Category\StoreCategoryRequest;
 use App\Http\Requests\Category\UpdateCategoryRequest;
 use App\Http\Resources\CategoryResource;
@@ -38,6 +39,14 @@ class CategoryController extends Controller
     public function destroy(Category $category): JsonResponse
     {
         $category->delete();
+        return response()->json(null, 204);
+    }
+
+    public function reorder(ReorderCategoryRequest $request): JsonResponse
+    {
+        foreach ($request->input('ids') as $position => $id) {
+            Category::where('id', $id)->update(['position' => $position]);
+        }
         return response()->json(null, 204);
     }
 }
