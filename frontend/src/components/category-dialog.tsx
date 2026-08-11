@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useCreateCategory, useUpdateCategory } from '@/hooks/use-categories'
+import { CATEGORY_ICONS, DynamicIcon } from '@/components/icon'
 import type { Category } from '@/types/api'
 import { toast } from 'sonner'
 
-const ICONS = ['folder', 'briefcase', 'home', 'user', 'heart-pulse', 'lightbulb']
+const ICONS = CATEGORY_ICONS
 const COLORS = ['#64748b', '#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6']
 
 export function CategoryDialog({
@@ -60,10 +61,12 @@ export function CategoryDialog({
             </div>
             <div className="space-y-2">
               <Label>Ícone</Label>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-8 gap-1.5">
                 {ICONS.map((i) => (
-                  <button key={i} type="button" onClick={() => setIcon(i)}
-                    className={`rounded-md border px-2 py-1 text-xs ${icon === i ? 'bg-accent' : ''}`}>{i}</button>
+                  <button key={i} type="button" onClick={() => setIcon(i)} aria-label={i} aria-pressed={icon === i}
+                    className={`flex h-8 w-8 items-center justify-center rounded-md border ${icon === i ? 'border-foreground bg-accent' : 'border-transparent hover:bg-accent'}`}>
+                    <DynamicIcon name={i} className="h-4 w-4" />
+                  </button>
                 ))}
               </div>
             </div>

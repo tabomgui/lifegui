@@ -3,6 +3,7 @@ import { Plus, Pencil, Trash2, Layers } from 'lucide-react'
 import { useCategories, useDeleteCategory } from '@/hooks/use-categories'
 import { useTasks } from '@/hooks/use-tasks'
 import { CategoryDialog } from '@/components/category-dialog'
+import { DynamicIcon } from '@/components/icon'
 import type { Category } from '@/types/api'
 import { toast } from 'sonner'
 
@@ -36,7 +37,7 @@ export function CategoryTabs({
       {categories.map((c) => (
         <div key={c.id} className={`group inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium ${active === c.id ? 'bg-secondary' : 'text-muted-foreground hover:bg-accent'}`}>
           <button role="tab" aria-selected={active === c.id} onClick={() => onChange(c.id)} className="inline-flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full" style={{ background: c.color }} />
+            <DynamicIcon name={c.icon} className="h-3.5 w-3.5" style={{ color: c.color }} />
             {c.name}
             <span className="ml-0.5 rounded-full bg-secondary px-1.5 text-[11px]">{countFor(c.id)}</span>
           </button>
