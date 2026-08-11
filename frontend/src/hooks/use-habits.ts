@@ -22,10 +22,12 @@ export function useHabitSummary(week: string) {
 export function useCreateHabit() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (input: Pick<Habit, 'name' | 'emoji' | 'color'> & { target_per_week: number | null }) => {
+    mutationFn: async (input: Pick<Habit, 'name' | 'emoji' | 'color' | 'target_per_week'>) => {
       await csrf()
       return (await api.post('/habits', input)).data.data as Habit
     },
+    // Invalidar ['habits'] também revalida ['habits','summary',week] por prefix-matching do
+    // TanStack Query (dependência intencional; se a forma da key mudar, ajustar aqui).
     onSuccess: () => qc.invalidateQueries({ queryKey: HABITS }),
   })
 }
@@ -37,6 +39,8 @@ export function useUpdateHabit() {
       await csrf()
       return (await api.patch(`/habits/${id}`, input)).data.data as Habit
     },
+    // Invalidar ['habits'] também revalida ['habits','summary',week] por prefix-matching do
+    // TanStack Query (dependência intencional; se a forma da key mudar, ajustar aqui).
     onSuccess: () => qc.invalidateQueries({ queryKey: HABITS }),
   })
 }
@@ -48,11 +52,16 @@ export function useDeleteHabit() {
       await csrf()
       await api.delete(`/habits/${id}`)
     },
+    // Invalidar ['habits'] também revalida ['habits','summary',week] por prefix-matching do
+    // TanStack Query (dependência intencional; se a forma da key mudar, ajustar aqui).
     onSuccess: () => qc.invalidateQueries({ queryKey: ['habits'] }),
   })
 }
 
 // Toggle otimista: inverte o dia no summary da semana antes da resposta.
+// Snapshot/rollback é por-mutação: sob toggles concorrentes muito rápidos, um rollback
+// pode sobrescrever o patch otimista de outro toggle em curso. O onSettled (invalidate)
+// sempre reconcilia com o servidor logo em seguida, então a janela de inconsistência é curta.
 export function useToggleHabit(week: string) {
   const qc = useQueryClient()
   const key = summaryKey(week)

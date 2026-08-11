@@ -36,6 +36,7 @@ export function HabitRow({
       <div className="flex gap-1.5">
         {days.map((d, i) => (
           <button key={d.date} title={d.date} aria-label={`${WEEK_DOW[i]} ${d.date} ${d.done ? 'feito' : 'não feito'}`}
+            aria-pressed={d.done}
             onClick={() => toggle.mutate({ habitId: habit.id, date: d.date })}
             className={`flex h-8 w-8 items-center justify-center rounded-md border text-xs transition-colors ${d.done ? 'border-primary bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'}`}>
             {d.done ? '✓' : WEEK_DOW[i][0]}
