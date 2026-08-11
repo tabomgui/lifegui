@@ -55,3 +55,21 @@ export interface TaskHeatmap {
   counts: Record<string, number>
   total: number
 }
+
+export interface HabitStat {
+  habit_id: number
+  name: string
+  color: string
+  icon: string
+  target_per_week: number | null
+  done_count: number
+  expected: number
+  rate: number
+}
+
+export interface HabitStats {
+  from: string
+  to: string
+  period_days: number
+  habits: HabitStat[]
+}
