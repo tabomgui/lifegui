@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Habit\StatsRequest;
 use App\Http\Requests\Habit\StoreHabitRequest;
 use App\Http\Requests\Habit\SummaryRequest;
 use App\Http\Requests\Habit\ToggleHabitRequest;
@@ -88,5 +89,45 @@ class HabitController extends Controller
         });
 
         return response()->json(['data' => $data]);
+    }
+
+    public function stats(StatsRequest $request): JsonResponse
+    {
+        $from = Carbon::parse($request->validated('from'))->startOfDay();
+        $to = Carbon::parse($request->validated('to'))->startOfDay();
+        $periodDays = $from->diffInDays($to) + 1;
+
+        $habits = Habit::whereNull('archived_at')->orderBy('id')->get();
+
+        $habitsData = $habits->map(function (Habit $habit) use ($from, $to, $periodDays) {
+            $doneCount = $habit->logs()
+                ->whereBetween('date', [$from->toDateString(), $to->toDateString()])
+                ->where('done', true)
+                ->count();
+
+            $expected = $habit->target_per_week
+                ? ($habit->target_per_week / 7) * $periodDays
+                : (float) $periodDays;
+
+            $rate = $expected > 0 ? (int) min(100, round($doneCount / $expected * 100)) : 0;
+
+            return [
+                'habit_id' => $habit->id,
+                'name' => $habit->name,
+                'color' => $habit->color,
+                'icon' => $habit->icon,
+                'target_per_week' => $habit->target_per_week,
+                'done_count' => $doneCount,
+                'expected' => round($expected, 1),
+                'rate' => $rate,
+            ];
+        });
+
+        return response()->json(['data' => [
+            'from' => $from->toDateString(),
+            'to' => $to->toDateString(),
+            'period_days' => $periodDays,
+            'habits' => $habitsData,
+        ]]);
     }
 }

@@ -44,6 +44,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/tasks/{task}/subtasks/{subtask}', [SubtaskController::class, 'destroy'])->scopeBindings();
 
     Route::get('/habits/summary', [HabitController::class, 'summary']);
+    Route::get('/habits/stats', [HabitController::class, 'stats']);
     Route::get('/habits', [HabitController::class, 'index']);
     Route::post('/habits', [HabitController::class, 'store']);
     Route::patch('/habits/{habit}', [HabitController::class, 'update']);
