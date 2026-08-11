@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HabitController;
+use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\SubtaskController;
 use App\Http\Controllers\TaskController;
@@ -57,4 +58,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // /tasks/{task} or /habits/{habit}).
     Route::get('/reports/tasks', [ReportsController::class, 'tasks']);
     Route::get('/reports/habits', [ReportsController::class, 'habits']);
+
+    // Per-user module on/off toggles.
+    Route::get('/modules', [ModuleController::class, 'index']);
+    Route::patch('/modules/{key}', [ModuleController::class, 'update']);
+
 });
