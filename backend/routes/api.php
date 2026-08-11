@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HabitController;
+use App\Http\Controllers\SubtaskController;
 use App\Http\Controllers\TaskController;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
@@ -36,6 +37,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/tasks/{task}', [TaskController::class, 'show']);
     Route::patch('/tasks/{task}', [TaskController::class, 'update']);
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
+
+    Route::post('/tasks/{task}/subtasks', [SubtaskController::class, 'store']);
+    Route::patch('/tasks/{task}/subtasks/{subtask}', [SubtaskController::class, 'update'])->scopeBindings();
+    Route::delete('/tasks/{task}/subtasks/{subtask}', [SubtaskController::class, 'destroy'])->scopeBindings();
 
     Route::get('/habits/summary', [HabitController::class, 'summary']);
     Route::get('/habits', [HabitController::class, 'index']);
