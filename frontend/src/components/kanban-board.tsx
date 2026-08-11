@@ -34,10 +34,10 @@ export function KanbanBoard({ tasks }: { tasks: Task[] }) {
               </div>
               <div
                 onDragOver={(e) => { e.preventDefault(); setOver(status) }}
-                onDragLeave={() => setOver(null)}
+                onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOver(null) }}
                 onDrop={(e) => onDrop(status, e)}
                 className={`flex min-h-[140px] flex-1 flex-col gap-2 p-2 ${over === status ? 'bg-accent outline-2 outline-dashed outline-ring -outline-offset-4' : ''}`}>
-                {colTasks.map((t) => <TaskCard key={t.id} task={t} />)}
+                {colTasks.map((t) => <TaskCard key={t.id} task={t} tasks={tasks} />)}
                 {colTasks.length === 0 && (
                   <div className="flex flex-1 items-center justify-center rounded-md border border-dashed py-6 text-xs text-muted-foreground/60">
                     Solte tarefas aqui

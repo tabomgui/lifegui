@@ -8,7 +8,7 @@ const NEXT: Record<TaskStatus, { to: TaskStatus; icon: typeof Play; label: strin
   done: [{ to: 'doing', icon: Undo2, label: 'Fazendo' }],
 }
 
-export function TaskCard({ task }: { task: Task }) {
+export function TaskCard({ task, tasks }: { task: Task; tasks: Task[] }) {
   const move = useMoveTask()
   const del = useDeleteTask()
 
@@ -17,12 +17,16 @@ export function TaskCard({ task }: { task: Task }) {
       onDragStart={(e) => e.dataTransfer.setData('text/plain', String(task.id))}
       className="group cursor-grab rounded-md border bg-card p-3 shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing">
       <p className={`text-sm leading-snug ${task.status === 'done' ? 'text-muted-foreground line-through' : ''}`}>{task.title}</p>
-      <div className="mt-2.5 flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="mt-2.5 flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 group-focus-within:opacity-100">
         {NEXT[task.status].map(({ to, icon: Icon, label }) => (
-          <button key={to} title={label} onClick={() => move.mutate({ id: task.id, status: to, position: task.position })}
+          <button key={to} aria-label={`Mover para ${label}`} title={`Mover para ${label}`}
+            onClick={() => {
+              const position = tasks.filter((t) => t.status === to).length
+              move.mutate({ id: task.id, status: to, position })
+            }}
             className="rounded p-1 hover:bg-accent"><Icon className="h-3.5 w-3.5" /></button>
         ))}
-        <button title="Apagar" onClick={() => del.mutate(task.id)} className="rounded p-1 hover:bg-accent">
+        <button aria-label="Apagar tarefa" title="Apagar tarefa" onClick={() => del.mutate(task.id)} className="rounded p-1 hover:bg-accent">
           <Trash2 className="h-3.5 w-3.5" />
         </button>
       </div>

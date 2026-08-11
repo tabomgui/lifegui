@@ -25,7 +25,11 @@ export function BrainDump() {
       <div className="mx-auto flex max-w-3xl flex-col gap-2 rounded-lg border bg-card p-2 shadow-sm">
         <div className="flex items-start gap-2">
           <Sparkles className="mt-2.5 ml-1 h-4 w-4 shrink-0 text-muted-foreground" />
-          <Textarea value={text} onChange={(e) => setText(e.target.value)} rows={1}
+          <Textarea value={text} onChange={(e) => {
+            setText(e.target.value)
+            e.target.style.height = 'auto'
+            e.target.style.height = `${e.target.scrollHeight}px`
+          }} rows={1}
             placeholder="Jogue tudo aqui — uma tarefa por linha…"
             className="min-h-[38px] resize-none border-0 shadow-none focus-visible:ring-0" />
         </div>
