@@ -66,6 +66,17 @@ export function useUpdateTaskCategory() {
   })
 }
 
+export function useUpdateTaskDueDate() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, due_date }: { id: number; due_date: string | null }) => {
+      await csrf()
+      return (await api.patch(`/tasks/${id}`, { due_date })).data.data as Task
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  })
+}
+
 export function useDeleteTask() {
   const qc = useQueryClient()
   return useMutation({

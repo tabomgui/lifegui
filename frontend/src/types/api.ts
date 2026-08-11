@@ -15,6 +15,7 @@ export interface Task {
   status: TaskStatus
   position: number
   category_id: number | null
+  due_date: string | null
 }
 
 export interface Habit {
