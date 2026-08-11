@@ -1,0 +1,24 @@
+import type { CSSProperties } from "react"
+import { useTheme } from "next-themes"
+import { Toaster as Sonner, type ToasterProps } from "sonner"
+
+const Toaster = ({ ...props }: ToasterProps) => {
+  const { theme = "system" } = useTheme()
+
+  return (
+    <Sonner
+      theme={theme as ToasterProps["theme"]}
+      className="toaster group"
+      style={
+        {
+          "--normal-bg": "hsl(var(--card))",
+          "--normal-text": "hsl(var(--card-foreground))",
+          "--normal-border": "hsl(var(--border))",
+        } as CSSProperties
+      }
+      {...props}
+    />
+  )
+}
+
+export { Toaster }
