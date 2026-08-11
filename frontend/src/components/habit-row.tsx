@@ -18,6 +18,10 @@ export function HabitRow({
   const doneCount = summary?.done_count ?? 0
   const streak = summary?.streak ?? 0
 
+  // Dia de hoje em data LOCAL (Y-m-d) — não dá pra marcar dias futuros.
+  const now = new Date()
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+
   return (
     <div className="group grid grid-cols-[1fr_auto] items-center gap-2 border-b px-4 py-3 last:border-b-0">
       <div className="flex items-center gap-3">
@@ -35,14 +39,25 @@ export function HabitRow({
         </div>
       </div>
       <div className="flex gap-1.5">
-        {days.map((d, i) => (
-          <button key={d.date} title={d.date} aria-label={`${WEEK_DOW[i]} ${d.date} ${d.done ? 'feito' : 'não feito'}`}
-            aria-pressed={d.done}
-            onClick={() => toggle.mutate({ habitId: habit.id, date: d.date })}
-            className={`flex h-8 w-8 items-center justify-center rounded-md border text-xs transition-colors ${d.done ? 'border-primary bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'}`}>
-            {d.done ? <Check className="h-4 w-4" /> : WEEK_DOW[i][0]}
-          </button>
-        ))}
+        {days.map((d, i) => {
+          const isFuture = d.date > todayStr
+          return (
+            <button key={d.date} disabled={isFuture}
+              title={isFuture ? `${d.date} (dia futuro)` : d.date}
+              aria-label={`${WEEK_DOW[i]} ${d.date} ${isFuture ? 'futuro' : d.done ? 'feito' : 'não feito'}`}
+              aria-pressed={d.done}
+              onClick={() => toggle.mutate({ habitId: habit.id, date: d.date })}
+              className={`flex h-8 w-8 items-center justify-center rounded-md border text-xs transition-colors ${
+                isFuture
+                  ? 'cursor-not-allowed border-dashed text-muted-foreground/30'
+                  : d.done
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:bg-accent'
+              }`}>
+              {d.done ? <Check className="h-4 w-4" /> : WEEK_DOW[i][0]}
+            </button>
+          )
+        })}
       </div>
     </div>
   )
