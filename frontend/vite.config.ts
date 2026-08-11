@@ -12,7 +12,10 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5173,
       host: '0.0.0.0',
-      proxy: { '/api': { target: backendUrl, changeOrigin: true } },
+      proxy: {
+        '/api': { target: backendUrl, changeOrigin: true },
+        '/sanctum': { target: backendUrl, changeOrigin: true },
+      },
       watch: { usePolling: true },
     },
   }

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import type * as React from 'react'
+import axios from 'axios'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,14 +13,19 @@ export default function Login() {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
+    setSubmitting(true)
     try {
       await login(email, password)
       navigate('/')
-    } catch {
-      toast.error('Credenciais inválidas')
+    } catch (error: unknown) {
+      const message = axios.isAxiosError(error) ? error.response?.data?.message : undefined
+      toast.error(message ?? 'Credenciais inválidas')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -35,7 +41,7 @@ export default function Login() {
           <Label htmlFor="password">Senha</Label>
           <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
         </div>
-        <Button type="submit" className="w-full">Entrar</Button>
+        <Button type="submit" className="w-full" disabled={submitting}>Entrar</Button>
         <a href="/api/auth/google/redirect" className="block w-full rounded-md border py-2 text-center text-sm hover:bg-accent">
           Entrar com Google
         </a>
