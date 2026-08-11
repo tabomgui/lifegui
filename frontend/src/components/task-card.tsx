@@ -62,7 +62,7 @@ function TaskDueControl({ task }: { task: Task }) {
       <PopoverTrigger asChild>
         {meta ? (
           <button
-            aria-label="Definir prazo"
+            aria-label={`Prazo: ${meta.label}`}
             title={meta.label}
             className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[11px] ${TONE_CLASSES[meta.tone]}`}>
             <Calendar className="h-3 w-3" /> {meta.label}
