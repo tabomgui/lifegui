@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Circle, Play, Check, Undo2, Trash2, CircleDashed, ChevronDown, Calendar, CalendarOff, ListChecks, SquarePen } from 'lucide-react'
+import { Circle, Play, Check, Undo2, Trash2, CircleDashed, ChevronDown, Calendar, CalendarOff, ListChecks, SquarePen, CheckSquare, Square } from 'lucide-react'
 import type { Task, TaskStatus } from '@/types/api'
 import { useMoveTask, useDeleteTask, useUpdateTaskCategory, useUpdateTaskDueDate } from '@/hooks/use-tasks'
 import { useCategories } from '@/hooks/use-categories'
@@ -123,6 +123,21 @@ export function TaskCard({ task }: { task: Task }) {
           </span>
         )}
       </div>
+      {task.subtasks && task.subtasks.length > 0 && (
+        <ul className="mt-1.5 space-y-0.5">
+          {task.subtasks.slice(0, 3).map((s) => (
+            <li key={s.id} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              {s.done
+                ? <CheckSquare className="h-3 w-3 shrink-0 text-emerald-500" />
+                : <Square className="h-3 w-3 shrink-0" />}
+              <span className={`truncate ${s.done ? 'line-through' : ''}`}>{s.title}</span>
+            </li>
+          ))}
+          {task.subtasks.length > 3 && (
+            <li className="pl-[18px] text-[11px] text-muted-foreground/70">+{task.subtasks.length - 3} mais</li>
+          )}
+        </ul>
+      )}
       <div className="mt-2.5 flex items-center justify-between gap-1">
         <div className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 group-focus-within:opacity-100">
           <TaskCategoryMenu task={task} />
