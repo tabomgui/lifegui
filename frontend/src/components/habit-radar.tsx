@@ -18,6 +18,17 @@ function angleFor(i: number, n: number): number {
   return -Math.PI / 2 + (i * 2 * Math.PI) / n
 }
 
+// Denominador claro no tooltip: hábito diário conta dias do período;
+// hábito com meta semanal mostra a meta em vez de um esperado fracionário.
+function detailFor(h: HabitStat): string {
+  if (h.target_per_week == null) {
+    const days = Math.round(h.expected)
+    return `${h.done_count} de ${days} dias`
+  }
+  const label = h.done_count === 1 ? 'feito' : 'feitos'
+  return `${h.done_count} ${label} · meta ${h.target_per_week}×/sem`
+}
+
 export function HabitRadarChart({ habits }: { habits: HabitStat[] }) {
   const [hovered, setHovered] = useState<number | null>(null)
   const n = habits.length
@@ -126,8 +137,7 @@ export function HabitRadarChart({ habits }: { habits: HabitStat[] }) {
               top: `${(axes[hovered].value.y / SIZE) * 100}%`,
             }}
           >
-            {axes[hovered].habit.name} — {axes[hovered].habit.rate}% ({axes[hovered].habit.done_count}/
-            {axes[hovered].habit.expected})
+            {axes[hovered].habit.name} — {axes[hovered].habit.rate}% · {detailFor(axes[hovered].habit)}
           </div>
         )}
       </div>
