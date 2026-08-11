@@ -32,7 +32,7 @@ export default function Login() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <form onSubmit={onSubmit} className="w-full max-w-sm space-y-4 rounded-lg border bg-card p-6">
-        <h1 className="text-lg font-semibold">Entrar no lifeboard</h1>
+        <h1 className="text-lg font-semibold">Entrar no lifegui</h1>
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />

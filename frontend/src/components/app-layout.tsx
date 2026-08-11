@@ -21,7 +21,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
           <LayoutGrid className="h-4 w-4" />
         </div>
-        <span className="text-sm font-semibold tracking-tight">lifeboard</span>
+        <span className="text-sm font-semibold tracking-tight">lifegui</span>
       </div>
       <nav className="flex flex-1 flex-col gap-1 p-2">
         {isEnabled('tasks') && (

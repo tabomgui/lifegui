@@ -1,4 +1,4 @@
-# Lifeboard — convenções do projeto
+# lifegui — convenções do projeto
 
 
 ## UI

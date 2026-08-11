@@ -2,7 +2,7 @@ services:
   mysql:
     image: mysql:8
     environment:
-      MYSQL_DATABASE: ${DB_DATABASE:-lifeboard}
+      MYSQL_DATABASE: ${DB_DATABASE:-lifegui}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
     ports:
       - "3306:3306"
@@ -23,7 +23,7 @@ services:
         condition: service_healthy
     environment:
       DB_HOST: mysql
-      DB_DATABASE: ${DB_DATABASE:-lifeboard}
+      DB_DATABASE: ${DB_DATABASE:-lifegui}
       DB_USERNAME: ${DB_USERNAME:-root}
       DB_PASSWORD: ${DB_PASSWORD:-root}
     command: sh -c "composer install --no-interaction --prefer-dist && (grep -q '^APP_KEY=base64' .env || php artisan key:generate --force) && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"

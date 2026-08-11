@@ -14,7 +14,7 @@ node_modules/
 /backend/public/build/
 
 # Laravel
-/backend/lifeboard
+/backend/lifegui
 *.sqlite
 *.sqlite3
 /backend/storage/*.key
