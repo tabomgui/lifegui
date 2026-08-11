@@ -16,3 +16,24 @@ export interface Task {
   position: number
   category_id: number | null
 }
+
+export interface Habit {
+  id: number
+  name: string
+  emoji: string
+  target_per_week: number | null
+  color: string
+}
+
+export interface HabitDay {
+  date: string
+  done: boolean
+}
+
+export interface HabitSummary {
+  habit_id: number
+  target_per_week: number | null
+  done_count: number
+  streak: number
+  days: HabitDay[]
+}
