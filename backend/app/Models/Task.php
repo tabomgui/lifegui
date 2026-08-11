@@ -10,7 +10,14 @@ class Task extends Model
 {
     use HasFactory, BelongsToUser;
 
-    protected $fillable = ['title', 'notes', 'status', 'position', 'category_id', 'user_id'];
+    protected $fillable = ['title', 'notes', 'status', 'position', 'category_id', 'user_id', 'due_date'];
+
+    protected function casts(): array
+    {
+        return [
+            'due_date' => 'date:Y-m-d',
+        ];
+    }
 
     public function category(): BelongsTo
     {

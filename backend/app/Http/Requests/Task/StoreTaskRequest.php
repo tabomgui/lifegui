@@ -18,6 +18,7 @@ class StoreTaskRequest extends FormRequest
             // a foreign category. Rejecting them here (422) is the fix.
             'category_id' => ['nullable', 'integer', Rule::exists('categories', 'id')->where('user_id', $this->user()->id)],
             'status' => ['sometimes', Rule::in(['todo', 'doing', 'done'])],
+            'due_date' => ['nullable', 'date_format:Y-m-d'],
         ];
     }
 }
