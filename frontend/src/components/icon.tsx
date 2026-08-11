@@ -17,6 +17,16 @@ import {
   Music,
   Coffee,
   Target,
+  Droplet,
+  Moon,
+  Footprints,
+  PenLine,
+  Sun,
+  Bike,
+  Salad,
+  Brain,
+  Sparkles,
+  CircleCheck,
 } from 'lucide-react'
 
 // Curated set of lucide icon names available to categories and habits.
@@ -40,6 +50,26 @@ export const CATEGORY_ICONS: string[] = [
   'target',
 ]
 
+// Curated set of lucide icon names oriented to habits.
+export const HABIT_ICONS: string[] = [
+  'book-open',
+  'dumbbell',
+  'droplet',
+  'moon',
+  'footprints',
+  'heart-pulse',
+  'coffee',
+  'pen-line',
+  'sun',
+  'bike',
+  'salad',
+  'brain',
+  'music',
+  'sparkles',
+  'target',
+  'circle-check',
+]
+
 const ICON_MAP: Record<string, LucideIcon> = {
   folder: Folder,
   briefcase: Briefcase,
@@ -57,6 +87,16 @@ const ICON_MAP: Record<string, LucideIcon> = {
   music: Music,
   coffee: Coffee,
   target: Target,
+  droplet: Droplet,
+  moon: Moon,
+  footprints: Footprints,
+  'pen-line': PenLine,
+  sun: Sun,
+  bike: Bike,
+  salad: Salad,
+  brain: Brain,
+  sparkles: Sparkles,
+  'circle-check': CircleCheck,
 }
 
 const DEFAULT_ICON = Folder

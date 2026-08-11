@@ -22,7 +22,7 @@ export function useHabitSummary(week: string) {
 export function useCreateHabit() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (input: Pick<Habit, 'name' | 'emoji' | 'color' | 'target_per_week'>) => {
+    mutationFn: async (input: Pick<Habit, 'name' | 'icon' | 'color' | 'target_per_week'>) => {
       await csrf()
       return (await api.post('/habits', input)).data.data as Habit
     },
@@ -35,7 +35,7 @@ export function useCreateHabit() {
 export function useUpdateHabit() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, ...input }: Partial<Pick<Habit, 'name' | 'emoji' | 'color' | 'target_per_week'>> & { id: number }) => {
+    mutationFn: async ({ id, ...input }: Partial<Pick<Habit, 'name' | 'icon' | 'color' | 'target_per_week'>> & { id: number }) => {
       await csrf()
       return (await api.patch(`/habits/${id}`, input)).data.data as Habit
     },

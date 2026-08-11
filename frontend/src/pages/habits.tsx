@@ -42,7 +42,7 @@ export default function Habits() {
             {isLoading ? (
               <div className="p-6 text-center text-sm text-muted-foreground">Carregando…</div>
             ) : habits.length === 0 ? (
-              <div className="p-8 text-center text-sm text-muted-foreground">Nenhum hábito ainda. Crie o primeiro 👆</div>
+              <div className="p-8 text-center text-sm text-muted-foreground">Nenhum hábito ainda. Crie o primeiro acima.</div>
             ) : (
               habits.map((h) => (
                 <HabitRow key={h.id} habit={h} week={week}

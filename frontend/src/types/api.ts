@@ -20,7 +20,7 @@ export interface Task {
 export interface Habit {
   id: number
   name: string
-  emoji: string
+  icon: string
   target_per_week: number | null
   color: string
 }

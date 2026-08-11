@@ -1,7 +1,8 @@
-import { Flame, Pencil, Trash2 } from 'lucide-react'
+import { Flame, Pencil, Trash2, Check } from 'lucide-react'
 import type { Habit, HabitSummary } from '@/types/api'
 import { useToggleHabit } from '@/hooks/use-habits'
 import { WEEK_DOW } from '@/components/week-stepper'
+import { DynamicIcon } from '@/components/icon'
 
 export function HabitRow({
   habit, summary, week, onEdit, onDelete,
@@ -20,7 +21,7 @@ export function HabitRow({
   return (
     <div className="group grid grid-cols-[1fr_auto] items-center gap-2 border-b px-4 py-3 last:border-b-0">
       <div className="flex items-center gap-3">
-        <span className="text-lg">{habit.emoji}</span>
+        <DynamicIcon name={habit.icon} className="h-5 w-5" style={{ color: habit.color }} />
         <div>
           <p className="text-sm font-medium">{habit.name}</p>
           <p className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -39,7 +40,7 @@ export function HabitRow({
             aria-pressed={d.done}
             onClick={() => toggle.mutate({ habitId: habit.id, date: d.date })}
             className={`flex h-8 w-8 items-center justify-center rounded-md border text-xs transition-colors ${d.done ? 'border-primary bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'}`}>
-            {d.done ? '✓' : WEEK_DOW[i][0]}
+            {d.done ? <Check className="h-4 w-4" /> : WEEK_DOW[i][0]}
           </button>
         ))}
       </div>
