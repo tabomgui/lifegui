@@ -30,7 +30,9 @@ export function HabitDialog({
 
   async function onSave() {
     if (!name.trim()) return toast.error('Dê um nome ao hábito')
-    const target_per_week = target ? Number(target) : null
+    // Trata vazio ou 0 como "sem meta"; o backend só aceita 1..7.
+    const parsed = Number(target)
+    const target_per_week = target && parsed >= 1 ? parsed : null
     try {
       if (habit) await update.mutateAsync({ id: habit.id, name, emoji, color, target_per_week })
       else await create.mutateAsync({ name, emoji, color, target_per_week })
