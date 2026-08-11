@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from '@/contexts/auth-context'
 import { ProtectedRoute } from '@/components/protected-route'
-import { ModuleRoute, IndexRoute } from '@/components/module-route'
+import { ModuleRoute, IndexRoute, ReportsRoute } from '@/components/module-route'
 import { Toaster } from '@/components/ui/sonner'
 import Login from '@/pages/login'
 import Register from '@/pages/register'
@@ -22,7 +22,7 @@ export default function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<IndexRoute><Dashboard /></IndexRoute>} />
             <Route path="/habits" element={<ModuleRoute module="habits"><Habits /></ModuleRoute>} />
-            <Route path="/relatorios" element={<Relatorios />} />
+            <Route path="/relatorios" element={<ReportsRoute><Relatorios /></ReportsRoute>} />
             <Route path="/configuracoes" element={<Configuracoes />} />
           </Route>
         </Routes>

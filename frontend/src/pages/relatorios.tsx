@@ -25,6 +25,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { useTaskReport, useHabitReport } from '@/hooks/use-reports'
 import { useTaskHeatmap } from '@/hooks/use-heatmap'
 import { useHabitStats } from '@/hooks/use-habit-stats'
+import { useEnabledModules } from '@/hooks/use-modules'
 import type { HabitReport, TaskReport } from '@/types/api'
 
 // ---- shared chart tokens ----
@@ -915,20 +916,29 @@ function HabitosTab({ from, to }: { from: string; to: string }) {
 export default function Relatorios() {
   const [period, setPeriod] = useState<string>('90d')
   const { from, to } = useMemo(() => rangeForDays(daysForKey(period)), [period])
+  const { isEnabled } = useEnabledModules()
+  const tasksEnabled = isEnabled('tasks')
+  const habitsEnabled = isEnabled('habits')
+  // A rota (ReportsRoute) garante que ao menos um dos dois está habilitado.
+  const defaultTab = tasksEnabled ? 'tarefas' : 'habitos'
 
   return (
     <AppLayout title="Relatórios">
       <main className="min-h-0 flex-1 overflow-auto p-4 md:p-6">
         <div className="mx-auto w-full max-w-[1400px] space-y-6">
-          <Tabs defaultValue="tarefas">
+          <Tabs defaultValue={defaultTab}>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <TabsList>
-                <TabsTrigger value="tarefas">
-                  <Kanban className="h-3.5 w-3.5" /> Tarefas
-                </TabsTrigger>
-                <TabsTrigger value="habitos">
-                  <Repeat className="h-3.5 w-3.5" /> Hábitos
-                </TabsTrigger>
+                {tasksEnabled && (
+                  <TabsTrigger value="tarefas">
+                    <Kanban className="h-3.5 w-3.5" /> Tarefas
+                  </TabsTrigger>
+                )}
+                {habitsEnabled && (
+                  <TabsTrigger value="habitos">
+                    <Repeat className="h-3.5 w-3.5" /> Hábitos
+                  </TabsTrigger>
+                )}
               </TabsList>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">Período</span>
@@ -936,13 +946,17 @@ export default function Relatorios() {
               </div>
             </div>
 
-            <TabsContent value="tarefas" className="mt-6">
-              <TarefasTab from={from} to={to} />
-            </TabsContent>
+            {tasksEnabled && (
+              <TabsContent value="tarefas" className="mt-6">
+                <TarefasTab from={from} to={to} />
+              </TabsContent>
+            )}
 
-            <TabsContent value="habitos" className="mt-6">
-              <HabitosTab from={from} to={to} />
-            </TabsContent>
+            {habitsEnabled && (
+              <TabsContent value="habitos" className="mt-6">
+                <HabitosTab from={from} to={to} />
+              </TabsContent>
+            )}
           </Tabs>
         </div>
       </main>

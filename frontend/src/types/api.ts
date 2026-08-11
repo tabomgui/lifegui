@@ -208,7 +208,7 @@ export interface HabitReport {
   institution: string
   type: string
   balance: number
-  currency: string
+  currency: string | null
 }
 
   currency: string
