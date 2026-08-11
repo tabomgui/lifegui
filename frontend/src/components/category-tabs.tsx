@@ -32,15 +32,19 @@ export function CategoryTabs({
 
   // Arrastar um card de tarefa (dataTransfer com o id, setado no task-card) e soltar
   // numa aba categoriza a tarefa naquela categoria.
-  function onDropCategory(c: Category, e: DragEvent<HTMLDivElement>) {
+  async function onDropCategory(c: Category, e: DragEvent<HTMLDivElement>) {
     e.preventDefault()
     setDragOverId(null)
     const id = Number(e.dataTransfer.getData('text/plain'))
     if (!id) return
     const task = tasks.find((t) => t.id === id)
     if (!task || task.category_id === c.id) return
-    assignCategory.mutate({ id, category_id: c.id })
-    toast.success(`Movida para ${c.name}`)
+    try {
+      await assignCategory.mutateAsync({ id, category_id: c.id })
+      toast.success(`Movida para ${c.name}`)
+    } catch {
+      toast.error('Não foi possível mover a tarefa')
+    }
   }
 
   return (
