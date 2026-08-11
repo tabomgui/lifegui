@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, csrf } from '@/lib/api'
-import type { Task, TaskStatus } from '@/types/api'
+import type { Subtask, Task, TaskStatus } from '@/types/api'
 
 const KEY = ['tasks']
 
@@ -8,6 +8,77 @@ export function useTasks() {
   return useQuery({
     queryKey: KEY,
     queryFn: async () => (await api.get('/tasks')).data.data as Task[],
+  })
+}
+
+export function useTaskDetail(id: number | null) {
+  return useQuery({
+    queryKey: ['task', id],
+    queryFn: async () => (await api.get(`/tasks/${id}`)).data.data as Task,
+    enabled: id != null,
+  })
+}
+
+export function useUpdateTask() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({
+      id,
+      ...fields
+    }: { id: number } & Partial<Pick<Task, 'title' | 'notes' | 'due_date' | 'category_id' | 'status'>>) => {
+      await csrf()
+      return (await api.patch(`/tasks/${id}`, fields)).data.data as Task
+    },
+    onSuccess: (_data, { id }) => {
+      qc.invalidateQueries({ queryKey: KEY })
+      qc.invalidateQueries({ queryKey: ['task', id] })
+    },
+  })
+}
+
+export function useAddSubtask() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ taskId, title }: { taskId: number; title: string }) => {
+      await csrf()
+      return (await api.post(`/tasks/${taskId}/subtasks`, { title })).data.data as Subtask
+    },
+    onSuccess: (_data, { taskId }) => {
+      qc.invalidateQueries({ queryKey: ['task', taskId] })
+      qc.invalidateQueries({ queryKey: KEY })
+    },
+  })
+}
+
+export function useUpdateSubtask() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({
+      taskId,
+      subtaskId,
+      ...fields
+    }: { taskId: number; subtaskId: number } & Partial<Pick<Subtask, 'done' | 'title'>>) => {
+      await csrf()
+      return (await api.patch(`/tasks/${taskId}/subtasks/${subtaskId}`, fields)).data.data as Subtask
+    },
+    onSuccess: (_data, { taskId }) => {
+      qc.invalidateQueries({ queryKey: ['task', taskId] })
+      qc.invalidateQueries({ queryKey: KEY })
+    },
+  })
+}
+
+export function useDeleteSubtask() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ taskId, subtaskId }: { taskId: number; subtaskId: number }) => {
+      await csrf()
+      await api.delete(`/tasks/${taskId}/subtasks/${subtaskId}`)
+    },
+    onSuccess: (_data, { taskId }) => {
+      qc.invalidateQueries({ queryKey: ['task', taskId] })
+      qc.invalidateQueries({ queryKey: KEY })
+    },
   })
 }
 

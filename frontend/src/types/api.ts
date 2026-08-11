@@ -8,6 +8,13 @@ export interface Category {
   position: number
 }
 
+export interface Subtask {
+  id: number
+  title: string
+  done: boolean
+  position: number
+}
+
 export interface Task {
   id: number
   title: string
@@ -16,6 +23,9 @@ export interface Task {
   position: number
   category_id: number | null
   due_date: string | null
+  subtasks?: Subtask[]
+  subtasks_count?: number
+  subtasks_done_count?: number
 }
 
 export interface Habit {
