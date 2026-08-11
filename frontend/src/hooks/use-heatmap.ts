@@ -7,9 +7,9 @@ import type { TaskHeatmap } from '@/types/api'
 // for the user instead of shifting to the next UTC day.
 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
 
-export function useTaskHeatmap() {
+export function useTaskHeatmap(from: string, to: string) {
   return useQuery({
-    queryKey: ['tasks', 'heatmap', tz],
-    queryFn: async () => (await api.get('/tasks/heatmap', { params: { tz } })).data.data as TaskHeatmap,
+    queryKey: ['tasks', 'heatmap', from, to],
+    queryFn: async () => (await api.get('/tasks/heatmap', { params: { from, to, tz } })).data.data as TaskHeatmap,
   })
 }

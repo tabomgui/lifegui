@@ -80,7 +80,7 @@ export function TaskHeatmap({ data }: { data: TaskHeatmapData }) {
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
-        {data.total} tarefas concluídas no último ano
+        {data.total} tarefas concluídas no período
       </p>
       <div className="overflow-x-auto">
         <div className="inline-flex gap-2">
