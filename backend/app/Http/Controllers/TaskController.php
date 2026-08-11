@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Task\ProcessTasksRequest;
 use App\Http\Requests\Task\StoreTaskRequest;
 use App\Http\Requests\Task\UpdateTaskRequest;
 use App\Http\Resources\TaskResource;
@@ -43,5 +44,16 @@ class TaskController extends Controller
     {
         $task->delete();
         return response()->json(null, 204);
+    }
+
+    public function process(ProcessTasksRequest $request): JsonResponse
+    {
+        $created = collect($request->lines())->map(fn ($title, $i) => Task::create([
+            'title' => $title,
+            'status' => 'todo',
+            'position' => $i,
+        ]));
+
+        return TaskResource::collection($created)->response()->setStatusCode(201);
     }
 }
