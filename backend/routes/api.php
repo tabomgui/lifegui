@@ -40,4 +40,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/habits', [HabitController::class, 'store']);
     Route::patch('/habits/{habit}', [HabitController::class, 'update']);
     Route::delete('/habits/{habit}', [HabitController::class, 'destroy']);
+    Route::post('/habits/{habit}/toggle', [HabitController::class, 'toggle']);
 });

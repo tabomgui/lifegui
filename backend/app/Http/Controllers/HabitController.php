@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Habit\StoreHabitRequest;
+use App\Http\Requests\Habit\ToggleHabitRequest;
 use App\Http\Requests\Habit\UpdateHabitRequest;
 use App\Http\Resources\HabitResource;
 use App\Models\Habit;
@@ -31,5 +32,19 @@ class HabitController extends Controller
     {
         $habit->delete();
         return response()->json(null, 204);
+    }
+
+    public function toggle(ToggleHabitRequest $request, Habit $habit): JsonResponse
+    {
+        $log = $habit->logs()->firstOrNew(['date' => $request->validated('date')]);
+        $log->done = $log->exists ? ! $log->done : true;
+        $log->save();
+
+        return response()->json([
+            'data' => [
+                'date' => $log->date->toDateString(),
+                'done' => $log->done,
+            ],
+        ]);
     }
 }
