@@ -14,7 +14,7 @@ export default function Dashboard() {
   return (
     <AppLayout title="Tarefas">
       <main className="flex min-h-0 flex-1 flex-col">
-        <BrainDump />
+        <BrainDump activeCategoryId={activeCat === 'all' ? null : activeCat} />
         <CategoryTabs active={activeCat} onChange={setActiveCat} />
         {isError
           ? <div className="flex flex-1 items-center justify-center text-muted-foreground">Não foi possível carregar as tarefas.</div>

@@ -14,9 +14,9 @@ export function useTasks() {
 export function useProcessTasks() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (text: string) => {
+    mutationFn: async ({ text, categoryId }: { text: string; categoryId?: number | null }) => {
       await csrf()
-      return (await api.post('/tasks/process', { text })).data.data as Task[]
+      return (await api.post('/tasks/process', { text, category_id: categoryId ?? null })).data.data as Task[]
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   })
