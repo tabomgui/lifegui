@@ -8,6 +8,7 @@ use App\Http\Resources\TaskResource;
 use App\Models\Task;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TaskController extends Controller
 {
@@ -27,9 +28,14 @@ class TaskController extends Controller
         // Task::create() doesn't refresh in-memory attributes from the DB
         // column default, so 'status' must be defaulted explicitly here or
         // the returned resource would show status: null instead of 'todo'.
+        $status = $request->validated('status') ?? 'todo';
+
+        // Position lands at the end of the target column so newly created
+        // tasks don't collide with (or overwrite) existing ones at 0.
         $task = Task::create([
             ...$request->validated(),
-            'status' => $request->validated('status') ?? 'todo',
+            'status' => $status,
+            'position' => (int) Task::where('status', $status)->max('position') + 1,
         ]);
         return (new TaskResource($task))->response()->setStatusCode(201);
     }
@@ -48,11 +54,17 @@ class TaskController extends Controller
 
     public function process(ProcessTasksRequest $request): JsonResponse
     {
-        $created = collect($request->lines())->map(fn ($title, $i) => Task::create([
-            'title' => $title,
-            'status' => 'todo',
-            'position' => $i,
-        ]));
+        // Continue from the end of the 'todo' column instead of restarting
+        // at 0, so successive process()/store() calls don't collide.
+        $created = DB::transaction(function () use ($request) {
+            $base = (int) Task::where('status', 'todo')->max('position') + 1;
+
+            return collect($request->lines())->map(fn ($title, $i) => Task::create([
+                'title' => $title,
+                'status' => 'todo',
+                'position' => $base + $i,
+            ]));
+        });
 
         return TaskResource::collection($created)->response()->setStatusCode(201);
     }

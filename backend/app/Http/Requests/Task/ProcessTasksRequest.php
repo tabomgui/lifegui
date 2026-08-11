@@ -10,7 +10,7 @@ class ProcessTasksRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'text' => ['required', 'string'],
+            'text' => ['required', 'string', 'max:20000'],
         ];
     }
 
@@ -26,8 +26,14 @@ class ProcessTasksRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
-            if (empty($this->lines())) {
+            $lines = $this->lines();
+
+            if (empty($lines)) {
                 $validator->errors()->add('text', 'Escreva ao menos uma tarefa.');
+            }
+
+            if (count($lines) > 500) {
+                $validator->errors()->add('text', 'Muitas tarefas de uma vez (máx. 500).');
             }
         });
     }

@@ -19,3 +19,24 @@ test('processar cria uma tarefa por linha não-vazia em status todo', function (
 test('texto vazio é rejeitado', function () {
     $this->postJson('/api/tasks/process', ['text' => "\n  \n"])->assertStatus(422);
 });
+
+test('chamadas sucessivas de process não colidem em position (continua do fim da coluna todo)', function () {
+    $this->postJson('/api/tasks/process', ['text' => "Uma\nDuas"])->assertCreated();
+    $firstBatchMaxPosition = Task::max('position');
+
+    $response = $this->postJson('/api/tasks/process', ['text' => "Três\nQuatro"])
+        ->assertCreated();
+
+    $positions = collect($response->json('data'))->pluck('position');
+    expect($positions->min())->toBeGreaterThan($firstBatchMaxPosition);
+    expect(Task::where('status', 'todo')->pluck('position')->unique())->toHaveCount(4);
+});
+
+test('store após process recebe position maior que as tarefas existentes na mesma coluna', function () {
+    $this->postJson('/api/tasks/process', ['text' => "Uma\nDuas"])->assertCreated();
+    $maxAfterProcess = Task::max('position');
+
+    $this->postJson('/api/tasks', ['title' => 'Nova'])
+        ->assertCreated()
+        ->assertJsonPath('data.position', $maxAfterProcess + 1);
+});
