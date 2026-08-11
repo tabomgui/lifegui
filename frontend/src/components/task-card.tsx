@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Circle, Play, Check, Undo2, Trash2, CircleDashed, ChevronDown, Calendar, CalendarOff, ListChecks } from 'lucide-react'
+import { Circle, Play, Check, Undo2, Trash2, CircleDashed, ChevronDown, Calendar, CalendarOff, ListChecks, SquarePen } from 'lucide-react'
 import type { Task, TaskStatus } from '@/types/api'
 import { useMoveTask, useDeleteTask, useUpdateTaskCategory, useUpdateTaskDueDate } from '@/hooks/use-tasks'
 import { useCategories } from '@/hooks/use-categories'
@@ -112,13 +112,9 @@ export function TaskCard({ task }: { task: Task }) {
     <div draggable
       onDragStart={(e) => e.dataTransfer.setData('text/plain', String(task.id))}
       className="group cursor-grab rounded-md border bg-card p-3 shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing">
-      <button
-        type="button"
-        aria-label={`Abrir tarefa: ${task.title}`}
-        onClick={() => setOpen(true)}
-        className={`w-full text-left text-sm leading-snug hover:underline ${task.status === 'done' ? 'text-muted-foreground line-through' : ''}`}>
+      <p className={`text-sm leading-snug ${task.status === 'done' ? 'text-muted-foreground line-through' : ''}`}>
         {task.title}
-      </button>
+      </p>
       <div className="mt-1.5 flex items-center gap-2">
         <TaskDueControl task={task} />
         {subtasksCount > 0 && (
@@ -132,6 +128,9 @@ export function TaskCard({ task }: { task: Task }) {
           <TaskCategoryMenu task={task} />
         </div>
         <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 group-focus-within:opacity-100">
+          <button aria-label="Editar tarefa" title="Editar tarefa" onClick={() => setOpen(true)} className="rounded p-1 hover:bg-accent">
+            <SquarePen className="h-3.5 w-3.5" />
+          </button>
           {NEXT[task.status].map(({ to, icon: Icon, label }) => (
             <button key={to} aria-label={`Mover para ${label}`} title={`Mover para ${label}`}
               onClick={() => move.mutate({ id: task.id, status: to })}
