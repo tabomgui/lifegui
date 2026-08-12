@@ -1,4 +1,5 @@
 <?php
+
 use App\Models\Habit;
 use App\Models\User;
 
@@ -54,4 +55,49 @@ test('não acessa hábito de outro usuário (404)', function () {
     $other = Habit::factory()->for(User::factory())->create();
     $this->patchJson("/api/habits/{$other->id}", ['name' => 'x'])->assertNotFound();
     $this->deleteJson("/api/habits/{$other->id}")->assertNotFound();
+});
+
+test('archive define archived_at e tira da lista padrão', function () {
+    $h = Habit::factory()->for($this->user)->create(['name' => 'Ativo']);
+
+    $this->postJson("/api/habits/{$h->id}/archive")
+        ->assertOk()
+        ->assertJsonPath('data.id', $h->id);
+
+    expect($h->fresh()->archived_at)->not->toBeNull();
+
+    $this->getJson('/api/habits')->assertOk()->assertJsonCount(0, 'data');
+});
+
+test('unarchive limpa archived_at e devolve à lista padrão', function () {
+    $h = Habit::factory()->for($this->user)->create(['name' => 'Ativo', 'archived_at' => now()]);
+
+    $this->postJson("/api/habits/{$h->id}/unarchive")
+        ->assertOk()
+        ->assertJsonPath('data.id', $h->id)
+        ->assertJsonPath('data.archived_at', null);
+
+    expect($h->fresh()->archived_at)->toBeNull();
+
+    $this->getJson('/api/habits')->assertOk()->assertJsonCount(1, 'data');
+});
+
+test('?archived=1 lista apenas arquivados', function () {
+    Habit::factory()->for($this->user)->create(['name' => 'Ativo']);
+    $arch = Habit::factory()->for($this->user)->create(['name' => 'Arquivado', 'archived_at' => now()]);
+
+    $this->getJson('/api/habits?archived=1')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.name', 'Arquivado');
+
+    // e o recurso expõe archived_at como ISO string
+    $this->getJson('/api/habits?archived=1')
+        ->assertJsonPath('data.0.archived_at', fn ($v) => is_string($v));
+});
+
+test('não arquiva hábito de outro usuário (404)', function () {
+    $other = Habit::factory()->for(User::factory())->create();
+    $this->postJson("/api/habits/{$other->id}/archive")->assertNotFound();
+    $this->postJson("/api/habits/{$other->id}/unarchive")->assertNotFound();
 });

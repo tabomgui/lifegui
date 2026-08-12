@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Habit\StatsRequest;
@@ -11,65 +12,111 @@ use App\Models\Habit;
 use App\Support\HabitSummary;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class HabitController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $habits = Habit::whereNull('archived_at')->orderBy('id')->get();
+        $archived = $request->boolean('archived');
+        $habits = Habit::query()
+            ->when(
+                $archived,
+                fn ($q) => $q->whereNotNull('archived_at'),
+                fn ($q) => $q->whereNull('archived_at'),
+            )
+            ->orderBy('id')
+            ->get();
+
         return HabitResource::collection($habits)->response();
     }
 
     public function store(StoreHabitRequest $request): JsonResponse
     {
         $habit = Habit::create($request->validated());
+
         return (new HabitResource($habit))->response()->setStatusCode(201);
     }
 
     public function update(UpdateHabitRequest $request, Habit $habit): JsonResponse
     {
         $habit->update($request->validated());
+
         return (new HabitResource($habit))->response();
     }
 
     public function destroy(Habit $habit): JsonResponse
     {
         $habit->delete();
+
         return response()->json(null, 204);
     }
 
     public function toggle(ToggleHabitRequest $request, Habit $habit): JsonResponse
     {
         $date = $request->validated('date');
+        $state = $request->validated('state'); // null | 'done' | 'skip' | 'none'
 
-        $log = DB::transaction(function () use ($habit, $date) {
+        $result = DB::transaction(function () use ($habit, $date, $state) {
             $log = $habit->logs()->where('date', $date)->lockForUpdate()->first();
+
+            // state='none' limpa o dia (apaga o log).
+            if ($state === 'none') {
+                $log?->delete();
+
+                return ['date' => $date, 'done' => false, 'skipped' => false];
+            }
+
+            // Estado alvo: done/skip são explícitos; sem state é o toggle clássico
+            // (inverte done e sempre zera skipped).
+            [$done, $skipped] = match ($state) {
+                'done' => [true, false],
+                'skip' => [false, true],
+                default => [$log ? ! $log->done : true, false],
+            };
+
             if ($log) {
-                $log->done = ! $log->done;
+                $log->done = $done;
+                $log->skipped = $skipped;
                 $log->save();
-                return $log;
+
+                return ['date' => $log->date->toDateString(), 'done' => $log->done, 'skipped' => $log->skipped];
             }
 
             try {
-                return $habit->logs()->create(['date' => $date, 'done' => true]);
+                $log = $habit->logs()->create(['date' => $date, 'done' => $done, 'skipped' => $skipped]);
             } catch (UniqueConstraintViolationException $e) {
                 // Concorrência: outro request criou o log entre o SELECT e o INSERT.
-                // Relê com lock e inverte o valor já persistido.
+                // Relê com lock e reaplica o estado alvo.
                 $log = $habit->logs()->where('date', $date)->lockForUpdate()->first();
-                $log->done = ! $log->done;
+                if ($state === null) {
+                    $done = ! $log->done; // toggle é relativo ao valor já persistido
+                }
+                $log->done = $done;
+                $log->skipped = $skipped;
                 $log->save();
-                return $log;
             }
+
+            return ['date' => $log->date->toDateString(), 'done' => $log->done, 'skipped' => $log->skipped];
         });
 
-        return response()->json([
-            'data' => [
-                'date' => $log->date->toDateString(),
-                'done' => $log->done,
-            ],
-        ]);
+        return response()->json(['data' => $result]);
+    }
+
+    public function archive(Habit $habit): JsonResponse
+    {
+        $habit->update(['archived_at' => now()]);
+
+        return (new HabitResource($habit))->response();
+    }
+
+    public function unarchive(Habit $habit): JsonResponse
+    {
+        $habit->update(['archived_at' => null]);
+
+        return (new HabitResource($habit))->response();
     }
 
     public function summary(SummaryRequest $request): JsonResponse
@@ -80,12 +127,12 @@ class HabitController extends Controller
         $habits = Habit::whereNull('archived_at')->orderBy('id')->get();
 
         $data = $habits->map(function (Habit $habit) use ($weekStart, $weekEnd) {
-            $doneByDate = $habit->logs()
+            $logsByDate = $habit->logs()
                 ->whereBetween('date', [$weekStart->toDateString(), $weekEnd->toDateString()])
                 ->get()
-                ->mapWithKeys(fn ($log) => [$log->date->toDateString() => $log->done]);
+                ->keyBy(fn ($log) => $log->date->toDateString());
 
-            return HabitSummary::forHabit($habit, $weekStart, $doneByDate);
+            return HabitSummary::forHabit($habit, $weekStart, $logsByDate);
         });
 
         return response()->json(['data' => $data]);

@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="pt-BR" class="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>lifegui — Tarefas & Hábitos (proposta)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet">
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: { extend: {
+      fontFamily: { sans: ['Geist','ui-sans-serif','system-ui','sans-serif'], mono: ['Geist Mono','ui-monospace','monospace'] },
+      colors: {
+        border:'hsl(var(--border))', input:'hsl(var(--input))', ring:'hsl(var(--ring))',
+        background:'hsl(var(--background))', foreground:'hsl(var(--foreground))',
+        primary:{DEFAULT:'hsl(var(--primary))',foreground:'hsl(var(--primary-foreground))'},
+        secondary:{DEFAULT:'hsl(var(--secondary))',foreground:'hsl(var(--secondary-foreground))'},
+        destructive:{DEFAULT:'hsl(var(--destructive))',foreground:'hsl(var(--destructive-foreground))'},
+        muted:{DEFAULT:'hsl(var(--muted))',foreground:'hsl(var(--muted-foreground))'},
+        accent:{DEFAULT:'hsl(var(--accent))',foreground:'hsl(var(--accent-foreground))'},
+        card:{DEFAULT:'hsl(var(--card))',foreground:'hsl(var(--card-foreground))'},
+      },
+      borderRadius:{ lg:'var(--radius)', md:'calc(var(--radius) - 2px)', sm:'calc(var(--radius) - 4px)' },
+    }},
+  }
+</script>
+<style>
+  :root{--background:0 0% 100%;--foreground:0 0% 3.9%;--card:0 0% 100%;--card-foreground:0 0% 3.9%;--primary:0 0% 9%;--primary-foreground:0 0% 98%;--secondary:0 0% 96.1%;--secondary-foreground:0 0% 9%;--muted:0 0% 96.1%;--muted-foreground:0 0% 45.1%;--accent:0 0% 96.1%;--accent-foreground:0 0% 9%;--destructive:0 84.2% 60.2%;--destructive-foreground:0 0% 98%;--border:0 0% 89.8%;--input:0 0% 89.8%;--ring:0 0% 3.9%;--radius:0.5rem;}
+  .dark{--background:0 0% 3.9%;--foreground:0 0% 98%;--card:0 0% 5.5%;--card-foreground:0 0% 98%;--primary:0 0% 98%;--primary-foreground:0 0% 9%;--secondary:0 0% 14.9%;--secondary-foreground:0 0% 98%;--muted:0 0% 14.9%;--muted-foreground:0 0% 63.9%;--accent:0 0% 14.9%;--accent-foreground:0 0% 98%;--destructive:0 62.8% 30.6%;--destructive-foreground:0 0% 98%;--border:0 0% 14.9%;--input:0 0% 14.9%;--ring:0 0% 83.1%;}
+  *{border-color:hsl(var(--border));}
+  body{background:hsl(var(--background));color:hsl(var(--foreground));}
+  ::-webkit-scrollbar{width:8px;height:8px;}::-webkit-scrollbar-thumb{background:hsl(var(--border));border-radius:6px;}::-webkit-scrollbar-track{background:transparent;}
+  /* marcador de anotação */
+  .anno{display:inline-flex;height:16px;width:16px;align-items:center;justify-content:center;border-radius:9999px;background:#8b5cf6;color:#fff;font-size:10px;font-weight:700;line-height:1;vertical-align:middle;}
+  .new-outline{outline:1.5px dashed #8b5cf6;outline-offset:3px;border-radius:8px;}
+</style>
+</head>
+<body class="font-sans antialiased">
+
+<div class="flex h-screen overflow-hidden">
+  <!-- Sidebar -->
+  <aside class="hidden md:flex w-60 shrink-0 flex-col border-r bg-card/40">
+    <div class="flex h-14 items-center gap-2 border-b px-4">
+      <div class="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground"><i data-lucide="layout-grid" class="h-4 w-4"></i></div>
+      <span class="text-sm font-semibold tracking-tight">lifegui</span>
+    </div>
+    <nav class="flex-1 space-y-1 p-2">
+      <button onclick="show('tasks')" id="nav-tasks" class="nav flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium"><i data-lucide="kanban" class="h-4 w-4"></i> Tarefas</button>
+      <button onclick="show('habits')" id="nav-habits" class="nav flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium"><i data-lucide="repeat" class="h-4 w-4"></i> Hábitos</button>
+      <div class="my-2 border-t"></div>
+      <button class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground"><i data-lucide="bar-chart-3" class="h-4 w-4"></i> Relatórios</button>
+    </nav>
+    <div class="border-t p-3 text-xs text-muted-foreground">proposta · mockup</div>
+  </aside>
+
+  <div class="flex min-w-0 flex-1 flex-col">
+    <header class="flex h-14 shrink-0 items-center gap-3 border-b px-4 md:px-6">
+      <h1 id="title" class="text-base font-semibold tracking-tight">Tarefas</h1>
+      <span class="rounded-full border border-violet-500/40 bg-violet-500/10 px-2 py-0.5 text-[11px] font-medium text-violet-400">proposta de incrementos</span>
+      <div class="ml-auto flex items-center gap-2 text-xs text-muted-foreground"><span class="anno">n</span> = o que muda · <span class="rounded bg-emerald-500/15 px-1.5 py-0.5 text-emerald-400">baixa</span> <span class="rounded bg-amber-500/15 px-1.5 py-0.5 text-amber-400">média</span></div>
+    </header>
+
+    <main class="min-h-0 flex-1 overflow-auto">
+
+      <!-- ================= TAREFAS ================= -->
+      <section id="view-tasks" class="p-4 md:p-6">
+        <!-- brain-dump -->
+        <div class="mx-auto max-w-3xl rounded-lg border bg-card p-2 shadow-sm">
+          <div class="flex items-start gap-2 px-1 pt-1">
+            <i data-lucide="sparkles" class="mt-1 h-4 w-4 text-muted-foreground"></i>
+            <textarea rows="1" class="w-full resize-none bg-transparent py-1 text-sm outline-none placeholder:text-muted-foreground" placeholder="Jogue tudo aqui — uma tarefa por linha…"></textarea>
+          </div>
+          <div class="mt-1 flex items-center justify-between border-t px-1 pt-2">
+            <span class="text-xs text-muted-foreground">Tecla <kbd class="rounded border bg-muted px-1">/</kbd> foca aqui · <kbd class="rounded border bg-muted px-1">Ctrl</kbd>+<kbd class="rounded border bg-muted px-1">Enter</kbd> processa <span class="anno">1</span></span>
+            <button class="inline-flex items-center gap-1.5 rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground"><i data-lucide="wand-sparkles" class="h-3.5 w-3.5"></i> Processar</button>
+          </div>
+        </div>
+
+        <!-- tabs + busca -->
+        <div class="mt-5 flex items-center gap-2 border-b pb-2">
+          <div class="flex items-center gap-1 overflow-x-auto">
+            <button class="new-outline inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1 text-xs font-medium"><i data-lucide="sun" class="h-3.5 w-3.5 text-amber-400"></i> Hoje <span class="rounded-full bg-red-500/20 px-1.5 text-[11px] text-red-400">3</span></button>
+            <span class="anno -ml-1 -mt-3">2</span>
+            <button class="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium text-muted-foreground"><i data-lucide="layers" class="h-3.5 w-3.5"></i> Todas <span class="rounded-full bg-secondary px-1.5 text-[11px]">6</span></button>
+            <button class="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium text-muted-foreground"><i data-lucide="home" class="h-3.5 w-3.5" style="color:#3b82f6"></i> Casa <span class="rounded-full bg-secondary px-1.5 text-[11px]">2</span></button>
+            <button class="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium text-muted-foreground"><i data-lucide="briefcase" class="h-3.5 w-3.5" style="color:#f59e0b"></i> Trabalho <span class="rounded-full bg-secondary px-1.5 text-[11px]">3</span></button>
+            <button class="inline-flex items-center gap-1.5 rounded-md border border-dashed px-2.5 py-1 text-xs font-medium text-muted-foreground"><i data-lucide="plus" class="h-3.5 w-3.5"></i> Categoria</button>
+          </div>
+          <div class="new-outline ml-auto flex items-center gap-1.5 rounded-md border bg-card px-2 py-1">
+            <i data-lucide="search" class="h-3.5 w-3.5 text-muted-foreground"></i>
+            <input class="w-40 bg-transparent text-xs outline-none placeholder:text-muted-foreground" placeholder="Buscar tarefas…">
+            <span class="anno">3</span>
+          </div>
+        </div>
+
+        <!-- board -->
+        <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <!-- A fazer -->
+          <div class="rounded-lg border bg-muted/30">
+            <div class="flex items-center justify-between px-3 py-2.5"><span class="flex items-center gap-2 text-sm font-medium"><i data-lucide="circle" class="h-4 w-4 text-muted-foreground"></i> A fazer</span><span class="rounded-full bg-secondary px-1.5 text-[11px]">4</span></div>
+            <div class="space-y-2 px-2 pb-3">
+              <!-- prioritária -->
+              <div class="rounded-md border border-l-2 border-l-amber-400 bg-card p-3 shadow-sm">
+                <div class="flex items-start justify-between gap-2">
+                  <p class="text-sm leading-snug">Pagar conta de luz</p>
+                  <i data-lucide="star" class="h-4 w-4 shrink-0 fill-amber-400 text-amber-400"></i>
+                </div>
+                <div class="mt-1.5 flex items-center gap-1.5">
+                  <span class="inline-flex items-center gap-1 rounded-full border border-red-500/40 bg-red-500/10 px-1.5 py-0.5 text-[11px] text-red-400"><i data-lucide="calendar" class="h-3 w-3"></i> atrasada 2d</span>
+                </div>
+                <span class="anno absolute">4</span>
+              </div>
+              <div class="rounded-md border bg-card p-3 shadow-sm">
+                <p class="text-sm leading-snug">Comprar presente da Ana</p>
+                <div class="mt-1.5 flex items-center gap-1.5">
+                  <span class="inline-flex items-center gap-1 rounded-full border border-orange-500/40 bg-orange-500/10 px-1.5 py-0.5 text-[11px] text-orange-400"><i data-lucide="calendar" class="h-3 w-3"></i> hoje</span>
+                  <span class="inline-flex items-center gap-1 text-[11px] text-muted-foreground"><i data-lucide="list-checks" class="h-3 w-3"></i> 1/3</span>
+                </div>
+                <div class="mt-2 space-y-1 text-xs text-muted-foreground">
+                  <div class="flex items-center gap-1.5"><i data-lucide="check-square" class="h-3 w-3 text-emerald-500"></i> <span class="line-through">Escolher loja</span></div>
+                  <div class="flex items-center gap-1.5"><i data-lucide="square" class="h-3 w-3"></i> Definir orçamento</div>
+                </div>
+              </div>
+              <div class="rounded-md border bg-card p-3 shadow-sm">
+                <p class="text-sm leading-snug">Agendar dentista</p>
+                <div class="mt-1.5"><span class="inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[11px] text-muted-foreground"><i data-lucide="calendar" class="h-3 w-3"></i> em 5d</span></div>
+              </div>
+            </div>
+          </div>
+          <!-- Fazendo -->
+          <div class="rounded-lg border bg-muted/30">
+            <div class="flex items-center justify-between px-3 py-2.5"><span class="flex items-center gap-2 text-sm font-medium"><i data-lucide="play" class="h-4 w-4 text-muted-foreground"></i> Fazendo</span><span class="rounded-full bg-secondary px-1.5 text-[11px]">1</span></div>
+            <div class="space-y-2 px-2 pb-3">
+              <!-- card com popover de prazo aberto -->
+              <div class="rounded-md border border-l-2 border-l-amber-400 bg-card p-3 shadow-sm">
+                <div class="flex items-start justify-between gap-2"><p class="text-sm leading-snug">Revisar PR do time</p><i data-lucide="star" class="h-4 w-4 shrink-0 fill-amber-400 text-amber-400"></i></div>
+                <div class="mt-1.5"><span class="inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[11px] text-muted-foreground"><i data-lucide="calendar-plus" class="h-3 w-3"></i> definir prazo</span></div>
+                <!-- popover -->
+                <div class="new-outline mt-2 w-max rounded-md border bg-popover bg-card p-2 shadow-md">
+                  <div class="mb-1.5 flex gap-1">
+                    <button class="rounded border bg-secondary px-2 py-0.5 text-[11px]">Hoje</button>
+                    <button class="rounded border px-2 py-0.5 text-[11px] text-muted-foreground">Amanhã</button>
+                    <button class="rounded border px-2 py-0.5 text-[11px] text-muted-foreground">Próx. semana</button>
+                    <span class="anno">5</span>
+                  </div>
+                  <input type="date" class="rounded border bg-transparent px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Feito -->
+          <div class="rounded-lg border bg-muted/30">
+            <div class="flex items-center justify-between px-3 py-2.5"><span class="flex items-center gap-2 text-sm font-medium"><i data-lucide="check" class="h-4 w-4 text-muted-foreground"></i> Feito</span><span class="rounded-full bg-secondary px-1.5 text-[11px]">1</span></div>
+            <div class="space-y-2 px-2 pb-3">
+              <div class="rounded-md border bg-card p-3 opacity-70 shadow-sm">
+                <p class="text-sm leading-snug text-muted-foreground line-through">Enviar relatório mensal</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- toast desfazer -->
+        <div class="mt-4 flex justify-center">
+          <div class="new-outline inline-flex items-center gap-3 rounded-md border bg-card px-3 py-2 text-sm shadow-lg">
+            <i data-lucide="trash-2" class="h-4 w-4 text-muted-foreground"></i>
+            <span>Tarefa apagada</span>
+            <button class="inline-flex items-center gap-1 text-xs font-medium text-violet-400"><i data-lucide="undo-2" class="h-3.5 w-3.5"></i> Desfazer</button>
+            <span class="anno">6</span>
+          </div>
+        </div>
+
+        <!-- legenda tarefas -->
+        <div class="mx-auto mt-6 max-w-4xl rounded-lg border bg-card/40 p-4">
+          <h3 class="mb-3 text-sm font-semibold">O que muda em Tarefas</h3>
+          <ul class="grid gap-2 text-sm sm:grid-cols-2">
+            <li class="flex gap-2"><span class="anno">1</span><span>Captura sem tirar a mão do teclado: <kbd class="rounded border bg-muted px-1 text-xs">/</kbd> foca o brain-dump, <kbd class="rounded border bg-muted px-1 text-xs">Ctrl+Enter</kbd> processa. <em class="tag-b">baixa</em></span></li>
+            <li class="flex gap-2"><span class="anno">2</span><span>Aba <b>Hoje</b>: reúne atrasadas + vencendo hoje das 3 colunas num lugar só (usa o due_date que já existe). <em class="tag-b">baixa</em></span></li>
+            <li class="flex gap-2"><span class="anno">3</span><span>Busca instantânea por título/descrição/subtarefa (filtro em memória, sem backend). <em class="tag-b">baixa</em></span></li>
+            <li class="flex gap-2"><span class="anno">4</span><span><b>Prioridade</b> (estrela): fixa no topo da coluna + faixa lateral âmbar. <em class="tag-m">média</em> (1 coluna booleana).</span></li>
+            <li class="flex gap-2"><span class="anno">5</span><span>Atalhos de prazo <b>Hoje / Amanhã / Próx. semana</b> no popover — um clique. <em class="tag-b">baixa</em></span></li>
+            <li class="flex gap-2"><span class="anno">6</span><span>Apagar com <b>Desfazer</b> (toast), em vez de sumir na hora. <em class="tag-b">baixa</em></span></li>
+          </ul>
+          <p class="mt-3 text-xs text-muted-foreground">Também no radar (opcional): reordenar dentro da coluna por prazo/arrastar <em class="tag-m">média</em> · tarefas recorrentes simples <em class="tag-m">média</em>.</p>
+        </div>
+      </section>
+
+      <!-- ================= HÁBITOS ================= -->
+      <section id="view-habits" class="hidden p-4 md:p-6">
+        <div class="mx-auto max-w-4xl">
+          <!-- Vista HOJE -->
+          <div class="new-outline rounded-lg border bg-card p-4">
+            <div class="mb-3 flex items-center justify-between">
+              <div class="flex items-center gap-2"><i data-lucide="sun" class="h-4 w-4 text-amber-400"></i><h2 class="text-sm font-semibold">Hoje · seg, 11 de ago</h2><span class="anno">1</span></div>
+              <span class="text-xs text-muted-foreground">2 de 4 feitos</span>
+            </div>
+            <div class="grid gap-2 sm:grid-cols-2">
+              <!-- feito -->
+              <div class="flex items-center gap-3 rounded-md border bg-muted/20 p-2.5">
+                <span class="flex h-9 w-9 items-center justify-center rounded-md text-white" style="background:#3b82f6"><i data-lucide="droplet" class="h-4 w-4"></i></span>
+                <div class="min-w-0 flex-1"><p class="text-sm font-medium">Beber água</p><p class="text-xs text-muted-foreground">meta 7/sem</p></div>
+                <!-- anel de progresso -->
+                <svg viewBox="0 0 36 36" class="h-8 w-8 shrink-0"><circle cx="18" cy="18" r="15" fill="none" stroke="hsl(var(--muted))" stroke-width="4"/><circle cx="18" cy="18" r="15" fill="none" stroke="#10b981" stroke-width="4" stroke-linecap="round" stroke-dasharray="94" stroke-dashoffset="27" transform="rotate(-90 18 18)"/><text x="18" y="21" text-anchor="middle" font-size="9" fill="hsl(var(--muted-foreground))">5/7</text></svg>
+                <button class="flex h-9 w-9 items-center justify-center rounded-md border border-emerald-500 bg-emerald-500 text-white"><i data-lucide="check" class="h-5 w-5"></i></button>
+              </div>
+              <!-- a fazer -->
+              <div class="flex items-center gap-3 rounded-md border bg-card p-2.5">
+                <span class="flex h-9 w-9 items-center justify-center rounded-md text-white" style="background:#ef4444"><i data-lucide="dumbbell" class="h-4 w-4"></i></span>
+                <div class="min-w-0 flex-1"><p class="text-sm font-medium">Treinar</p><p class="flex items-center gap-1 text-xs text-muted-foreground"><i data-lucide="flame" class="h-3 w-3 text-orange-500"></i> 4 dias</p></div>
+                <svg viewBox="0 0 36 36" class="h-8 w-8 shrink-0"><circle cx="18" cy="18" r="15" fill="none" stroke="hsl(var(--muted))" stroke-width="4"/><circle cx="18" cy="18" r="15" fill="none" stroke="#10b981" stroke-width="4" stroke-linecap="round" stroke-dasharray="94" stroke-dashoffset="47" transform="rotate(-90 18 18)"/><text x="18" y="21" text-anchor="middle" font-size="9" fill="hsl(var(--muted-foreground))">3/5</text></svg>
+                <button class="flex h-9 w-9 items-center justify-center rounded-md border text-muted-foreground hover:bg-accent"><i data-lucide="check" class="h-5 w-5"></i></button>
+                <button title="Pular hoje" class="flex h-9 w-9 items-center justify-center rounded-md border border-dashed text-muted-foreground"><i data-lucide="chevrons-right" class="h-4 w-4"></i></button>
+              </div>
+              <!-- feito -->
+              <div class="flex items-center gap-3 rounded-md border bg-muted/20 p-2.5">
+                <span class="flex h-9 w-9 items-center justify-center rounded-md text-white" style="background:#8b5cf6"><i data-lucide="book-open" class="h-4 w-4"></i></span>
+                <div class="min-w-0 flex-1"><p class="text-sm font-medium">Ler 20 min</p><p class="text-xs text-muted-foreground">meta 5/sem</p></div>
+                <svg viewBox="0 0 36 36" class="h-8 w-8 shrink-0"><circle cx="18" cy="18" r="15" fill="none" stroke="hsl(var(--muted))" stroke-width="4"/><circle cx="18" cy="18" r="15" fill="none" stroke="#10b981" stroke-width="4" stroke-linecap="round" stroke-dasharray="94" stroke-dashoffset="75" transform="rotate(-90 18 18)"/><text x="18" y="21" text-anchor="middle" font-size="9" fill="hsl(var(--muted-foreground))">2/5</text></svg>
+                <button class="flex h-9 w-9 items-center justify-center rounded-md border border-emerald-500 bg-emerald-500 text-white"><i data-lucide="check" class="h-5 w-5"></i></button>
+              </div>
+              <!-- pulado -->
+              <div class="flex items-center gap-3 rounded-md border bg-card p-2.5">
+                <span class="flex h-9 w-9 items-center justify-center rounded-md text-white" style="background:#10b981"><i data-lucide="brain" class="h-4 w-4"></i></span>
+                <div class="min-w-0 flex-1"><p class="text-sm font-medium">Meditar</p><p class="text-xs text-amber-400">pulado hoje · não quebra o streak <span class="anno">4</span></p></div>
+                <button class="flex h-9 w-9 items-center justify-center rounded-md border text-muted-foreground hover:bg-accent"><i data-lucide="check" class="h-5 w-5"></i></button>
+              </div>
+            </div>
+            <p class="mt-2 text-[11px] text-muted-foreground">Toggle grande = gesto mais repetido do dia. Botão tracejado = <b>Pular</b> (folga/viagem).</p>
+          </div>
+
+          <!-- quick add + stepper -->
+          <div class="mt-5 flex items-center justify-between gap-3">
+            <div class="new-outline flex items-center gap-2 rounded-md border bg-card px-2 py-1">
+              <i data-lucide="plus" class="h-4 w-4 text-muted-foreground"></i>
+              <input class="w-48 bg-transparent text-sm outline-none placeholder:text-muted-foreground" placeholder="novo hábito… (Enter)">
+              <span class="anno">2</span>
+            </div>
+            <div class="flex items-center gap-2 text-sm text-muted-foreground">
+              <button class="flex h-8 w-8 items-center justify-center rounded-md border"><i data-lucide="chevron-left" class="h-4 w-4"></i></button>
+              <span class="min-w-[110px] text-center">11/8 – 17/8</span>
+              <button class="flex h-8 w-8 items-center justify-center rounded-md border"><i data-lucide="chevron-right" class="h-4 w-4"></i></button>
+            </div>
+          </div>
+
+          <!-- grade semanal (mantida) -->
+          <div class="mt-3 overflow-hidden rounded-lg border bg-card">
+            <div class="grid grid-cols-[1fr_auto] items-center gap-2 border-b bg-muted/40 px-4 py-2 text-xs font-medium text-muted-foreground">
+              <span>Hábito <span class="text-muted-foreground/60">· semana</span></span>
+              <div class="flex gap-1.5">
+                <span class="w-8 text-center">Seg</span><span class="w-8 text-center">Ter</span><span class="w-8 text-center">Qua</span><span class="w-8 text-center">Qui</span><span class="w-8 text-center">Sex</span><span class="w-8 text-center">Sáb</span><span class="w-8 text-center">Dom</span>
+              </div>
+            </div>
+            <!-- linha 1 -->
+            <div class="group grid grid-cols-[1fr_auto] items-center gap-2 border-b px-4 py-3">
+              <div class="flex items-center gap-3">
+                <svg viewBox="0 0 36 36" class="h-7 w-7 shrink-0"><circle cx="18" cy="18" r="15" fill="none" stroke="hsl(var(--muted))" stroke-width="4"/><circle cx="18" cy="18" r="15" fill="none" stroke="#3b82f6" stroke-width="4" stroke-linecap="round" stroke-dasharray="94" stroke-dashoffset="27" transform="rotate(-90 18 18)"/></svg>
+                <span class="flex h-5 w-5 items-center justify-center"><i data-lucide="droplet" class="h-5 w-5" style="color:#3b82f6"></i></span>
+                <div><p class="text-sm font-medium">Beber água <span class="anno">3</span></p><p class="flex items-center gap-2 text-xs text-muted-foreground">5/7 esta semana <span class="flex items-center gap-1"><i data-lucide="flame" class="h-3 w-3 text-orange-500"></i> 5</span></p></div>
+                <div class="ml-1 flex gap-1 opacity-0 group-hover:opacity-100">
+                  <button title="Arquivar" class="rounded p-1 hover:bg-accent"><i data-lucide="archive" class="h-3.5 w-3.5"></i></button>
+                  <span class="anno self-center">5</span>
+                  <button class="rounded p-1 hover:bg-accent"><i data-lucide="pencil" class="h-3.5 w-3.5"></i></button>
+                </div>
+              </div>
+              <div class="flex gap-1.5">
+                <button class="flex h-8 w-8 items-center justify-center rounded-md border border-primary bg-primary text-primary-foreground"><i data-lucide="check" class="h-4 w-4"></i></button>
+                <button class="flex h-8 w-8 items-center justify-center rounded-md border border-primary bg-primary text-primary-foreground"><i data-lucide="check" class="h-4 w-4"></i></button>
+                <button class="flex h-8 w-8 items-center justify-center rounded-md border border-primary bg-primary text-primary-foreground"><i data-lucide="check" class="h-4 w-4"></i></button>
+                <button title="Pulado" class="flex h-8 w-8 items-center justify-center rounded-md border border-dashed border-amber-500/50 text-amber-400"><i data-lucide="minus" class="h-4 w-4"></i></button>
+                <button class="flex h-8 w-8 items-center justify-center rounded-md border border-primary bg-primary text-primary-foreground"><i data-lucide="check" class="h-4 w-4"></i></button>
+                <button class="flex h-8 w-8 items-center justify-center rounded-md border text-muted-foreground">S</button>
+                <button class="flex h-8 w-8 items-center justify-center rounded-md border border-dashed text-muted-foreground/30">D</button>
+              </div>
+            </div>
+            <!-- linha 2 -->
+            <div class="group grid grid-cols-[1fr_auto] items-center gap-2 px-4 py-3">
+              <div class="flex items-center gap-3">
+                <svg viewBox="0 0 36 36" class="h-7 w-7 shrink-0"><circle cx="18" cy="18" r="15" fill="none" stroke="hsl(var(--muted))" stroke-width="4"/><circle cx="18" cy="18" r="15" fill="none" stroke="#ef4444" stroke-width="4" stroke-linecap="round" stroke-dasharray="94" stroke-dashoffset="47" transform="rotate(-90 18 18)"/></svg>
+                <span class="flex h-5 w-5 items-center justify-center"><i data-lucide="dumbbell" class="h-5 w-5" style="color:#ef4444"></i></span>
+                <div><p class="text-sm font-medium">Treinar</p><p class="flex items-center gap-2 text-xs text-muted-foreground">3/5 esta semana <span class="flex items-center gap-1"><i data-lucide="flame" class="h-3 w-3 text-orange-500"></i> 4</span></p></div>
+              </div>
+              <div class="flex gap-1.5">
+                <button class="flex h-8 w-8 items-center justify-center rounded-md border border-primary bg-primary text-primary-foreground"><i data-lucide="check" class="h-4 w-4"></i></button>
+                <button class="flex h-8 w-8 items-center justify-center rounded-md border border-primary bg-primary text-primary-foreground"><i data-lucide="check" class="h-4 w-4"></i></button>
+                <button class="flex h-8 w-8 items-center justify-center rounded-md border text-muted-foreground">Q</button>
+                <button class="flex h-8 w-8 items-center justify-center rounded-md border border-primary bg-primary text-primary-foreground"><i data-lucide="check" class="h-4 w-4"></i></button>
+                <button class="flex h-8 w-8 items-center justify-center rounded-md border text-muted-foreground">S</button>
+                <button class="flex h-8 w-8 items-center justify-center rounded-md border border-dashed text-muted-foreground/30">S</button>
+                <button class="flex h-8 w-8 items-center justify-center rounded-md border border-dashed text-muted-foreground/30">D</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- legenda hábitos -->
+          <div class="mt-6 rounded-lg border bg-card/40 p-4">
+            <h3 class="mb-3 text-sm font-semibold">O que muda em Hábitos</h3>
+            <ul class="grid gap-2 text-sm sm:grid-cols-2">
+              <li class="flex gap-2"><span class="anno">1</span><span>Card <b>Hoje</b> no topo: só os hábitos do dia, com toggle grande — o gesto que mais se repete. <em class="tag-b">baixa</em></span></li>
+              <li class="flex gap-2"><span class="anno">2</span><span><b>Adição rápida</b> inline (cor/ícone padrão); detalhes ficam pra depois. <em class="tag-b">baixa</em></span></li>
+              <li class="flex gap-2"><span class="anno">3</span><span><b>Anel de progresso</b> semanal (feitos/meta) ao lado do nome — leitura visual imediata. <em class="tag-b">baixa</em></span></li>
+              <li class="flex gap-2"><span class="anno">4</span><span><b>Pular</b> um dia de propósito (folga/viagem) sem quebrar o streak — hoje só existe feito/não-feito. <em class="tag-m">média</em></span></li>
+              <li class="flex gap-2"><span class="anno">5</span><span><b>Arquivar</b> hábito em vez de só apagar — o campo <code class="text-xs">archived_at</code> já existe no schema, falta só endpoint+botão. <em class="tag-b">baixa</em></span></li>
+            </ul>
+            <p class="mt-3 text-xs text-muted-foreground">Também no radar (opcional): reordenar hábitos <em class="tag-m">média</em> · nota rápida no check do dia <em class="tag-b">baixa</em> · mini-calendário do mês por hábito <em class="tag-m">média</em>.</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<style>
+  .tag-b{font-style:normal;font-size:11px;border-radius:4px;padding:1px 5px;background:rgba(16,185,129,.15);color:#34d399;}
+  .tag-m{font-style:normal;font-size:11px;border-radius:4px;padding:1px 5px;background:rgba(245,158,11,.15);color:#fbbf24;}
+  .nav{color:hsl(var(--muted-foreground));}
+  .nav.active{background:hsl(var(--accent));color:hsl(var(--foreground));}
+</style>
+<script>
+  function show(v){
+    document.getElementById('view-tasks').classList.toggle('hidden', v!=='tasks');
+    document.getElementById('view-habits').classList.toggle('hidden', v!=='habits');
+    document.getElementById('nav-tasks').classList.toggle('active', v==='tasks');
+    document.getElementById('nav-habits').classList.toggle('active', v==='habits');
+    document.getElementById('title').textContent = v==='tasks' ? 'Tarefas' : 'Hábitos';
+    lucide.createIcons();
+  }
+  show('tasks');
+  lucide.createIcons();
+</script>
+</body>
+</html>

@@ -52,6 +52,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/habits/{habit}', [HabitController::class, 'update']);
     Route::delete('/habits/{habit}', [HabitController::class, 'destroy']);
     Route::post('/habits/{habit}/toggle', [HabitController::class, 'toggle']);
+    Route::post('/habits/{habit}/archive', [HabitController::class, 'archive']);
+    Route::post('/habits/{habit}/unarchive', [HabitController::class, 'unarchive']);
 
     // Aggregation dashboards. A dedicated /reports/* namespace sidesteps the
     // literal-before-{param} route hazard entirely (no collision with

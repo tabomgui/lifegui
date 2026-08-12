@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
@@ -14,6 +15,7 @@ class HabitResource extends JsonResource
             'icon' => $this->icon,
             'target_per_week' => $this->target_per_week,
             'color' => $this->color,
+            'archived_at' => $this->archived_at?->toIso8601String(),
         ];
     }
 }

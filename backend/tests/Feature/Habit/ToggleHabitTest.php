@@ -1,4 +1,5 @@
 <?php
+
 use App\Models\Habit;
 use App\Models\HabitLog;
 use App\Models\User;
@@ -85,4 +86,79 @@ test('permite toggle em amanhã (tolerância de fuso)', function () {
         ->assertJsonPath('data.done', true);
 
     Carbon::setTestNow();
+});
+
+test('state=done cria log done e skipped=false', function () {
+    $h = Habit::factory()->for($this->user)->create();
+
+    $this->postJson("/api/habits/{$h->id}/toggle", ['date' => '2026-08-10', 'state' => 'done'])
+        ->assertOk()
+        ->assertJsonPath('data.done', true)
+        ->assertJsonPath('data.skipped', false);
+
+    $this->assertDatabaseHas('habit_logs', ['habit_id' => $h->id, 'date' => '2026-08-10', 'done' => true, 'skipped' => false]);
+});
+
+test('state=skip cria log skipped e done=false', function () {
+    $h = Habit::factory()->for($this->user)->create();
+
+    $this->postJson("/api/habits/{$h->id}/toggle", ['date' => '2026-08-10', 'state' => 'skip'])
+        ->assertOk()
+        ->assertJsonPath('data.done', false)
+        ->assertJsonPath('data.skipped', true);
+
+    $this->assertDatabaseHas('habit_logs', ['habit_id' => $h->id, 'date' => '2026-08-10', 'done' => false, 'skipped' => true]);
+});
+
+test('state=skip sobre um done vira skip', function () {
+    $h = Habit::factory()->for($this->user)->create();
+    HabitLog::factory()->for($h)->create(['date' => '2026-08-10', 'done' => true, 'skipped' => false]);
+
+    $this->postJson("/api/habits/{$h->id}/toggle", ['date' => '2026-08-10', 'state' => 'skip'])
+        ->assertOk()
+        ->assertJsonPath('data.done', false)
+        ->assertJsonPath('data.skipped', true);
+
+    expect(HabitLog::where('habit_id', $h->id)->where('date', '2026-08-10')->count())->toBe(1);
+});
+
+test('state=none apaga o log do dia', function () {
+    $h = Habit::factory()->for($this->user)->create();
+    HabitLog::factory()->for($h)->create(['date' => '2026-08-10', 'done' => false, 'skipped' => true]);
+
+    $this->postJson("/api/habits/{$h->id}/toggle", ['date' => '2026-08-10', 'state' => 'none'])
+        ->assertOk()
+        ->assertJsonPath('data.done', false)
+        ->assertJsonPath('data.skipped', false)
+        ->assertJsonPath('data.date', '2026-08-10');
+
+    $this->assertDatabaseMissing('habit_logs', ['habit_id' => $h->id, 'date' => '2026-08-10']);
+});
+
+test('state=none em dia sem log não quebra', function () {
+    $h = Habit::factory()->for($this->user)->create();
+
+    $this->postJson("/api/habits/{$h->id}/toggle", ['date' => '2026-08-10', 'state' => 'none'])
+        ->assertOk()
+        ->assertJsonPath('data.done', false)
+        ->assertJsonPath('data.skipped', false);
+
+    expect(HabitLog::where('habit_id', $h->id)->count())->toBe(0);
+});
+
+test('toggle sem state zera skipped ao inverter done', function () {
+    $h = Habit::factory()->for($this->user)->create();
+    HabitLog::factory()->for($h)->create(['date' => '2026-08-10', 'done' => false, 'skipped' => true]);
+
+    $this->postJson("/api/habits/{$h->id}/toggle", ['date' => '2026-08-10'])
+        ->assertOk()
+        ->assertJsonPath('data.done', true)
+        ->assertJsonPath('data.skipped', false);
+});
+
+test('state inválido é rejeitado (422)', function () {
+    $h = Habit::factory()->for($this->user)->create();
+    $this->postJson("/api/habits/{$h->id}/toggle", ['date' => '2026-08-10', 'state' => 'wat'])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('state');
 });
