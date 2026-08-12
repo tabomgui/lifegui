@@ -61,16 +61,19 @@ export function BrainDump({ activeCategoryId }: { activeCategoryId: number | nul
             placeholder="Jogue tudo aqui — uma tarefa por linha…"
             className="min-h-[38px] resize-none border-0 shadow-none focus-visible:ring-0" />
         </div>
-        <div className="flex items-center justify-between border-t pt-2">
-          {activeCategory
-            ? (
-              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+        <div className="flex items-center justify-between gap-2 border-t pt-2">
+          <div className="flex min-w-0 flex-col gap-0.5 text-xs text-muted-foreground">
+            <span>
+              Tecla <kbd className="rounded border bg-muted px-1 text-[10px] font-medium">/</kbd> foca aqui · <kbd className="rounded border bg-muted px-1 text-[10px] font-medium">Ctrl</kbd>+<kbd className="rounded border bg-muted px-1 text-[10px] font-medium">Enter</kbd> processa
+            </span>
+            {activeCategory && (
+              <span className="flex items-center gap-1">
                 <DynamicIcon name={activeCategory.icon} className="h-3.5 w-3.5" style={{ color: activeCategory.color }} />
                 novas tarefas irão para {activeCategory.name}
               </span>
-            )
-            : <span />}
-          <Button size="sm" onClick={onProcess} disabled={process.isPending}>
+            )}
+          </div>
+          <Button size="sm" onClick={onProcess} disabled={process.isPending} className="shrink-0">
             <Wand2 className="mr-1.5 h-4 w-4" /> Processar
           </Button>
         </div>

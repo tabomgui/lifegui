@@ -73,19 +73,24 @@ export default function Habits() {
           <HabitTodayCard habits={habits} />
 
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <form
-              onSubmit={(e) => { e.preventDefault(); addQuick() }}
-              className="flex items-center gap-2 rounded-md border bg-card px-2 py-1"
-            >
-              <Plus className="h-4 w-4 text-muted-foreground" />
-              <input
-                value={quick}
-                onChange={(e) => setQuick(e.target.value)}
-                className="w-48 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-                placeholder="novo hábito… (Enter)"
-                aria-label="Novo hábito"
-              />
-            </form>
+            <div className="flex items-center gap-2">
+              <form
+                onSubmit={(e) => { e.preventDefault(); addQuick() }}
+                className="flex items-center gap-2 rounded-md border bg-card px-2 py-1"
+              >
+                <Plus className="h-4 w-4 text-muted-foreground" />
+                <input
+                  value={quick}
+                  onChange={(e) => setQuick(e.target.value)}
+                  className="w-48 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                  placeholder="novo hábito…"
+                  aria-label="Novo hábito"
+                />
+              </form>
+              <span className="text-xs text-muted-foreground">
+                <kbd className="rounded border bg-muted px-1 text-[10px] font-medium">Enter</kbd> cria
+              </span>
+            </div>
             <div className="flex items-center gap-2">
               <WeekStepper week={week} onChange={setWeek} />
               <Button size="sm" variant="outline" onClick={openNew}>
