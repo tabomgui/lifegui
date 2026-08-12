@@ -14,6 +14,7 @@ class TaskResource extends JsonResource
             'notes' => $this->notes,
             'status' => $this->status,
             'position' => $this->position,
+            'is_priority' => (bool) $this->is_priority,
             'category_id' => $this->category_id,
             'due_date' => $this->due_date?->toDateString(),
             'subtasks' => SubtaskResource::collection($this->whenLoaded('subtasks')),

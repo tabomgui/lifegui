@@ -19,6 +19,7 @@ class UpdateTaskRequest extends FormRequest
             'category_id' => ['nullable', 'integer', Rule::exists('categories', 'id')->where('user_id', $this->user()->id)],
             'status' => ['sometimes', Rule::in(['todo', 'doing', 'done'])],
             'position' => ['sometimes', 'integer', 'min:0'],
+            'is_priority' => ['sometimes', 'boolean'],
             'due_date' => ['nullable', 'date_format:Y-m-d'],
         ];
     }

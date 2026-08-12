@@ -129,3 +129,29 @@ test('criar tarefa já como done define completed_at', function () {
     $task = Task::find($response->json('data.id'));
     expect($task->completed_at)->not->toBeNull();
 });
+
+test('tarefa recém-criada tem is_priority=false por padrão e o resource expõe o campo', function () {
+    $this->postJson('/api/tasks', ['title' => 'Comum'])
+        ->assertCreated()
+        ->assertJsonPath('data.is_priority', false);
+});
+
+test('PATCH alterna is_priority da tarefa (marca e desmarca)', function () {
+    $task = Task::factory()->for($this->user)->create();
+
+    $this->patchJson("/api/tasks/{$task->id}", ['is_priority' => true])
+        ->assertOk()
+        ->assertJsonPath('data.is_priority', true);
+    expect($task->fresh()->is_priority)->toBeTrue();
+
+    $this->patchJson("/api/tasks/{$task->id}", ['is_priority' => false])
+        ->assertOk()
+        ->assertJsonPath('data.is_priority', false);
+    expect($task->fresh()->is_priority)->toBeFalse();
+});
+
+test('não pode alternar is_priority de tarefa de outro usuário (404)', function () {
+    $other = Task::factory()->for(User::factory())->create();
+
+    $this->patchJson("/api/tasks/{$other->id}", ['is_priority' => true])->assertNotFound();
+});

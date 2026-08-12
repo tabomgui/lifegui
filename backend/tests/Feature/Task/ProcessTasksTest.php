@@ -59,3 +59,10 @@ test('processar com category_id de outro usuário é rejeitado (422)', function 
     $this->postJson('/api/tasks/process', ['text' => "Uma\nDuas", 'category_id' => $other->id])
         ->assertStatus(422);
 });
+
+test('tarefas processadas nascem com is_priority=false', function () {
+    $this->postJson('/api/tasks/process', ['text' => "Uma\nDuas"])
+        ->assertCreated()
+        ->assertJsonPath('data.0.is_priority', false)
+        ->assertJsonPath('data.1.is_priority', false);
+});
