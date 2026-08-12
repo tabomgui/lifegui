@@ -10,7 +10,6 @@ import {
   useHabits,
   useHabitSummary,
   useDeleteHabit,
-  useCreateHabit,
   useArchiveHabit,
   useUnarchiveHabit,
 } from '@/hooks/use-habits'
@@ -18,21 +17,15 @@ import { DynamicIcon } from '@/components/icon'
 import type { Habit } from '@/types/api'
 import { toast } from 'sonner'
 
-// Cor/ícone padrão da adição rápida; detalhes ficam pra depois via diálogo.
-const QUICK_ICON = 'circle-check'
-const QUICK_COLOR = '#64748b'
-
 export default function Habits() {
   const [week, setWeek] = useState(() => mondayOf(new Date()))
   const { data: habits = [], isLoading } = useHabits()
   const { data: summaries = [] } = useHabitSummary(week)
   const del = useDeleteHabit()
-  const create = useCreateHabit()
   const archive = useArchiveHabit()
   const unarchive = useUnarchiveHabit()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<Habit | null>(null)
-  const [quick, setQuick] = useState('')
   const [showArchived, setShowArchived] = useState(false)
   const { data: archived = [] } = useHabits(true, showArchived)
 
@@ -54,18 +47,6 @@ export default function Habits() {
     catch { toast.error('Não foi possível restaurar') }
   }
 
-  async function addQuick() {
-    const name = quick.trim()
-    if (!name) return
-    setQuick('')
-    try {
-      await create.mutateAsync({ name, icon: QUICK_ICON, color: QUICK_COLOR, target_per_week: null })
-    } catch {
-      toast.error('Não foi possível criar')
-      setQuick(name)
-    }
-  }
-
   return (
     <AppLayout title="Hábitos">
       <main className="min-h-0 flex-1 overflow-auto p-4 md:p-6">
@@ -73,30 +54,10 @@ export default function Habits() {
           <HabitTodayCard habits={habits} />
 
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <form
-                onSubmit={(e) => { e.preventDefault(); addQuick() }}
-                className="flex items-center gap-2 rounded-md border bg-card px-2 py-1"
-              >
-                <Plus className="h-4 w-4 text-muted-foreground" />
-                <input
-                  value={quick}
-                  onChange={(e) => setQuick(e.target.value)}
-                  className="w-48 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-                  placeholder="novo hábito…"
-                  aria-label="Novo hábito"
-                />
-              </form>
-              <span className="text-xs text-muted-foreground">
-                <kbd className="rounded border bg-muted px-1 text-[10px] font-medium">Enter</kbd> cria
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <WeekStepper week={week} onChange={setWeek} />
-              <Button size="sm" variant="outline" onClick={openNew}>
-                <Plus className="mr-1.5 h-4 w-4" /> Detalhado
-              </Button>
-            </div>
+            <WeekStepper week={week} onChange={setWeek} />
+            <Button size="sm" onClick={openNew}>
+              <Plus className="mr-1.5 h-4 w-4" /> Novo hábito
+            </Button>
           </div>
 
           <div className="overflow-hidden rounded-lg border bg-card">
