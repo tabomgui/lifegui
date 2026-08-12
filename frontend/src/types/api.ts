@@ -45,6 +45,7 @@ export interface Task {
   position: number
   category_id: number | null
   due_date: string | null
+  is_priority: boolean
   subtasks?: Subtask[]
   subtasks_count?: number
   subtasks_done_count?: number

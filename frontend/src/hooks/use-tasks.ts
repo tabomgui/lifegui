@@ -1,4 +1,6 @@
+import { useCallback } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { api, csrf } from '@/lib/api'
 import type { Subtask, Task, TaskStatus } from '@/types/api'
 
@@ -25,7 +27,7 @@ export function useUpdateTask() {
     mutationFn: async ({
       id,
       ...fields
-    }: { id: number } & Partial<Pick<Task, 'title' | 'notes' | 'due_date' | 'category_id' | 'status'>>) => {
+    }: { id: number } & Partial<Pick<Task, 'title' | 'notes' | 'due_date' | 'category_id' | 'status' | 'is_priority'>>) => {
       await csrf()
       return (await api.patch(`/tasks/${id}`, fields)).data.data as Task
     },
@@ -148,6 +150,29 @@ export function useUpdateTaskDueDate() {
   })
 }
 
+// Alterna a estrela de prioridade com atualização otimista no cache; reverte em erro.
+export function useSetTaskPriority() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, is_priority }: { id: number; is_priority: boolean }) => {
+      await csrf()
+      return (await api.patch(`/tasks/${id}`, { is_priority })).data.data as Task
+    },
+    onMutate: async ({ id, is_priority }) => {
+      await qc.cancelQueries({ queryKey: KEY })
+      const prev = qc.getQueryData<Task[]>(KEY)
+      qc.setQueryData<Task[]>(KEY, (old) =>
+        (old ?? []).map((t) => (t.id === id ? { ...t, is_priority } : t)),
+      )
+      return { prev }
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(KEY, ctx.prev)
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: KEY }),
+  })
+}
+
 export function useDeleteTask() {
   const qc = useQueryClient()
   return useMutation({
@@ -157,4 +182,47 @@ export function useDeleteTask() {
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   })
+}
+
+// Apagar com desfazer: remove o card do cache na hora e só dispara o DELETE real
+// depois que o toast expira (~5s). Desfazer cancela o timer e reinsere o card, sem
+// nenhuma chamada ao servidor.
+export function useDeferredDeleteTask() {
+  const qc = useQueryClient()
+  return useCallback(
+    (task: Task) => {
+      const prev = qc.getQueryData<Task[]>(KEY)
+      qc.setQueryData<Task[]>(KEY, (old) => (old ?? []).filter((t) => t.id !== task.id))
+
+      let cancelled = false
+      const timer = setTimeout(async () => {
+        if (cancelled) return
+        try {
+          await csrf()
+          await api.delete(`/tasks/${task.id}`)
+        } catch {
+          if (prev) qc.setQueryData(KEY, prev)
+          toast.error('Não foi possível apagar')
+        } finally {
+          qc.invalidateQueries({ queryKey: KEY })
+        }
+      }, 5000)
+
+      toast('Tarefa apagada', {
+        duration: 5000,
+        action: {
+          label: 'Desfazer',
+          onClick: () => {
+            cancelled = true
+            clearTimeout(timer)
+            qc.setQueryData<Task[]>(KEY, (old) => {
+              const list = old ?? []
+              return list.some((t) => t.id === task.id) ? list : [...list, task]
+            })
+          },
+        },
+      })
+    },
+    [qc],
+  )
 }

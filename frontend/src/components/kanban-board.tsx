@@ -43,7 +43,9 @@ export function KanbanBoard({ tasks }: { tasks: Task[] }) {
       >
         <div className="flex h-full gap-0 md:grid md:grid-cols-3 md:gap-4">
           {COLUMNS.map((status) => {
-            const colTasks = tasks.filter((t) => t.status === status).sort((a, b) => a.position - b.position)
+            const colTasks = tasks
+              .filter((t) => t.status === status)
+              .sort((a, b) => Number(b.is_priority) - Number(a.is_priority) || a.position - b.position)
             const { label, icon: Icon } = STATUS_META[status]
             return (
               <div key={status} className="flex min-h-0 w-full shrink-0 snap-start flex-col border-y bg-muted/30 md:w-auto md:rounded-lg md:border">

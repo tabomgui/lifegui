@@ -21,6 +21,26 @@ export function dueDateMeta(due: string | null): DueDateMeta | null {
   return { label: `${d}/${m}`, tone: 'far' }
 }
 
+// Data local no formato 'Y-m-d' com deslocamento em dias (0 = hoje, 1 = amanhã, 7 = próx. semana).
+export function isoOffset(days = 0): string {
+  const d = new Date()
+  d.setDate(d.getDate() + days)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+// Verdadeiro quando o prazo é hoje ou já passou (base local, sem hora).
+export function isOverdueOrToday(due: string | null): boolean {
+  if (!due) return false
+  const [y, m, d] = due.split('-').map(Number)
+  const target = new Date(y, m - 1, d)
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  return target.getTime() <= today.getTime()
+}
+
 export const TONE_CLASSES: Record<DueTone, string> = {
   overdue: 'border-red-300 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300',
   soon: 'border-orange-300 bg-orange-50 text-orange-700 dark:border-orange-900 dark:bg-orange-950 dark:text-orange-300',

@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { Circle, Play, Check, Undo2, Trash2, CircleDashed, ChevronDown, Calendar, CalendarOff, ListChecks, SquarePen, CheckSquare, Square } from 'lucide-react'
+import { Circle, Play, Check, Undo2, Trash2, CircleDashed, ChevronDown, Calendar, CalendarOff, ListChecks, SquarePen, CheckSquare, Square, Star } from 'lucide-react'
 import type { Task, TaskStatus } from '@/types/api'
-import { useMoveTask, useDeleteTask, useUpdateTaskCategory, useUpdateTaskDueDate } from '@/hooks/use-tasks'
+import { useMoveTask, useDeferredDeleteTask, useSetTaskPriority, useUpdateTaskCategory, useUpdateTaskDueDate } from '@/hooks/use-tasks'
 import { useCategories } from '@/hooks/use-categories'
 import { DynamicIcon } from '@/components/icon'
-import { dueDateMeta, TONE_CLASSES } from '@/lib/due-date'
+import { dueDateMeta, isoOffset, TONE_CLASSES } from '@/lib/due-date'
 import { TaskDialog } from '@/components/task-dialog'
 import {
   DropdownMenu,
@@ -77,6 +77,19 @@ function TaskDueControl({ task }: { task: Task }) {
         )}
       </PopoverTrigger>
       <PopoverContent className="w-auto p-2" align="start">
+        <div className="mb-2 flex gap-1">
+          {([['Hoje', 0], ['Amanhã', 1], ['Próx. semana', 7]] as const).map(([label, offset]) => (
+            <button
+              key={label}
+              onClick={() => {
+                updateDueDate.mutate({ id: task.id, due_date: isoOffset(offset) })
+                setOpen(false)
+              }}
+              className="rounded border px-2 py-0.5 text-[11px] text-muted-foreground hover:bg-accent">
+              {label}
+            </button>
+          ))}
+        </div>
         <div className="flex items-center gap-2">
           <input
             type="date"
@@ -104,7 +117,8 @@ function TaskDueControl({ task }: { task: Task }) {
 
 export function TaskCard({ task }: { task: Task }) {
   const move = useMoveTask()
-  const del = useDeleteTask()
+  const deferredDelete = useDeferredDeleteTask()
+  const setPriority = useSetTaskPriority()
   const [open, setOpen] = useState(false)
   const subtasksCount = task.subtasks_count ?? 0
 
@@ -118,10 +132,20 @@ export function TaskCard({ task }: { task: Task }) {
         if (window.getSelection()?.toString()) return
         setOpen(true)
       }}
-      className="group cursor-pointer rounded-md border bg-card p-3 shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing">
-      <p className={`text-sm leading-snug ${task.status === 'done' ? 'text-muted-foreground line-through' : ''}`}>
-        {task.title}
-      </p>
+      className={`group cursor-pointer rounded-md border bg-card p-3 shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing ${task.is_priority ? 'border-l-2 border-l-amber-400' : ''}`}>
+      <div className="flex items-start justify-between gap-2">
+        <p className={`text-sm leading-snug ${task.status === 'done' ? 'text-muted-foreground line-through' : ''}`}>
+          {task.title}
+        </p>
+        <button
+          aria-label={task.is_priority ? 'Remover prioridade' : 'Marcar como prioridade'}
+          aria-pressed={task.is_priority}
+          title={task.is_priority ? 'Remover prioridade' : 'Marcar como prioridade'}
+          onClick={() => setPriority.mutate({ id: task.id, is_priority: !task.is_priority })}
+          className={`shrink-0 rounded p-0.5 hover:bg-accent ${task.is_priority ? '' : 'opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 group-focus-within:opacity-100'}`}>
+          <Star className={`h-4 w-4 ${task.is_priority ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground'}`} />
+        </button>
+      </div>
       <div className="mt-1.5 flex items-center gap-2">
         <TaskDueControl task={task} />
         {subtasksCount > 0 && (
@@ -158,7 +182,7 @@ export function TaskCard({ task }: { task: Task }) {
               onClick={() => move.mutate({ id: task.id, status: to })}
               className="rounded p-1 hover:bg-accent"><Icon className="h-3.5 w-3.5" /></button>
           ))}
-          <button aria-label="Apagar tarefa" title="Apagar tarefa" onClick={() => del.mutate(task.id)} className="rounded p-1 hover:bg-accent">
+          <button aria-label="Apagar tarefa" title="Apagar tarefa" onClick={() => deferredDelete(task)} className="rounded p-1 hover:bg-accent">
             <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>

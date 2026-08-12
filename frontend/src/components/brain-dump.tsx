@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { KeyboardEvent } from 'react'
 import { Sparkles, Wand2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -11,6 +12,7 @@ export function BrainDump({ activeCategoryId }: { activeCategoryId: number | nul
   const process = useProcessTasks()
   const { data: categories = [] } = useCategories()
   const [text, setText] = useState('')
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const activeCategory = categories.find((c) => c.id === activeCategoryId)
 
@@ -25,16 +27,37 @@ export function BrainDump({ activeCategoryId }: { activeCategoryId: number | nul
     }
   }
 
+  // Ctrl/Cmd+Enter dentro do brain-dump dispara o Processar.
+  function onKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault()
+      onProcess()
+    }
+  }
+
+  // Tecla '/' global foca o brain-dump — ignorada quando já se digita num campo.
+  useEffect(() => {
+    function onGlobalKey(e: globalThis.KeyboardEvent) {
+      if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return
+      const el = e.target as HTMLElement | null
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return
+      e.preventDefault()
+      textareaRef.current?.focus()
+    }
+    window.addEventListener('keydown', onGlobalKey)
+    return () => window.removeEventListener('keydown', onGlobalKey)
+  }, [])
+
   return (
     <div className="border-b bg-card/30 px-4 py-3 md:px-6">
       <div className="mx-auto flex max-w-3xl flex-col gap-2 rounded-lg border bg-card p-2 shadow-sm">
         <div className="flex items-start gap-2">
           <Sparkles className="mt-2.5 ml-1 h-4 w-4 shrink-0 text-muted-foreground" />
-          <Textarea value={text} onChange={(e) => {
+          <Textarea ref={textareaRef} value={text} onChange={(e) => {
             setText(e.target.value)
             e.target.style.height = 'auto'
             e.target.style.height = `${e.target.scrollHeight}px`
-          }} rows={1}
+          }} onKeyDown={onKeyDown} rows={1}
             placeholder="Jogue tudo aqui — uma tarefa por linha…"
             className="min-h-[38px] resize-none border-0 shadow-none focus-visible:ring-0" />
         </div>
