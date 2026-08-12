@@ -57,11 +57,13 @@ export interface Habit {
   icon: string
   target_per_week: number | null
   color: string
+  archived_at: string | null
 }
 
 export interface HabitDay {
   date: string
   done: boolean
+  skipped: boolean
 }
 
 export interface HabitSummary {

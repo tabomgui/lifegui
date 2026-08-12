@@ -1,14 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, csrf } from '@/lib/api'
-import type { Habit, HabitSummary } from '@/types/api'
+import type { Habit, HabitDay, HabitSummary } from '@/types/api'
 
 const HABITS = ['habits']
 const summaryKey = (week: string) => ['habits', 'summary', week]
 
-export function useHabits() {
+export function useHabits(archived = false, enabled = true) {
   return useQuery({
-    queryKey: HABITS,
-    queryFn: async () => (await api.get('/habits')).data.data as Habit[],
+    queryKey: ['habits', 'list', archived],
+    queryFn: async () =>
+      (await api.get('/habits', { params: archived ? { archived: 1 } : {} })).data.data as Habit[],
+    enabled,
   })
 }
 
@@ -58,7 +60,17 @@ export function useDeleteHabit() {
   })
 }
 
-// Toggle otimista: inverte o dia no summary da semana antes da resposta.
+// Estado-alvo do dia. Sem `state` = compat: alterna `done` e zera `skipped`.
+export type HabitToggleState = 'done' | 'skip' | 'none'
+
+function applyState(d: HabitDay, state?: HabitToggleState): HabitDay {
+  if (state === 'done') return { ...d, done: true, skipped: false }
+  if (state === 'skip') return { ...d, done: false, skipped: true }
+  if (state === 'none') return { ...d, done: false, skipped: false }
+  return { ...d, done: !d.done, skipped: false }
+}
+
+// Toggle otimista: aplica o estado-alvo ao dia no summary da semana antes da resposta.
 // Snapshot/rollback é por-mutação: sob toggles concorrentes muito rápidos, um rollback
 // pode sobrescrever o patch otimista de outro toggle em curso. O onSettled (invalidate)
 // sempre reconcilia com o servidor logo em seguida, então a janela de inconsistência é curta.
@@ -66,23 +78,25 @@ export function useToggleHabit(week: string) {
   const qc = useQueryClient()
   const key = summaryKey(week)
   return useMutation({
-    mutationFn: async ({ habitId, date }: { habitId: number; date: string }) => {
+    mutationFn: async ({ habitId, date, state }: { habitId: number; date: string; state?: HabitToggleState }) => {
       await csrf()
-      return (await api.post(`/habits/${habitId}/toggle`, { date })).data.data as { date: string; done: boolean }
+      const body: { date: string; state?: HabitToggleState } = { date }
+      if (state) body.state = state
+      return (await api.post(`/habits/${habitId}/toggle`, body)).data.data as {
+        date: string
+        done: boolean
+        skipped: boolean
+      }
     },
-    onMutate: async ({ habitId, date }) => {
+    onMutate: async ({ habitId, date, state }) => {
       await qc.cancelQueries({ queryKey: key })
       const prev = qc.getQueryData<HabitSummary[]>(key)
       qc.setQueryData<HabitSummary[]>(key, (old) =>
-        (old ?? []).map((h) =>
-          h.habit_id !== habitId
-            ? h
-            : {
-                ...h,
-                days: h.days.map((d) => (d.date === date ? { ...d, done: !d.done } : d)),
-                done_count: h.days.reduce((n, d) => n + (d.date === date ? (d.done ? 0 : 1) : d.done ? 1 : 0), 0),
-              },
-        ),
+        (old ?? []).map((h) => {
+          if (h.habit_id !== habitId) return h
+          const days = h.days.map((d) => (d.date === date ? applyState(d, state) : d))
+          return { ...h, days, done_count: days.filter((d) => d.done).length }
+        }),
       )
       return { prev }
     },
@@ -90,5 +104,27 @@ export function useToggleHabit(week: string) {
       if (ctx?.prev) qc.setQueryData(key, ctx.prev)
     },
     onSettled: () => qc.invalidateQueries({ queryKey: key }),
+  })
+}
+
+export function useArchiveHabit() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: number) => {
+      await csrf()
+      return (await api.post(`/habits/${id}/archive`)).data.data as Habit
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['habits'] }),
+  })
+}
+
+export function useUnarchiveHabit() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: number) => {
+      await csrf()
+      return (await api.post(`/habits/${id}/unarchive`)).data.data as Habit
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['habits'] }),
   })
 }

@@ -1,40 +1,102 @@
 import { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, Archive, RotateCcw } from 'lucide-react'
 import { AppLayout } from '@/components/app-layout'
 import { Button } from '@/components/ui/button'
 import { HabitDialog } from '@/components/habit-dialog'
 import { HabitRow } from '@/components/habit-row'
+import { HabitTodayCard } from '@/components/habit-today-card'
 import { WeekStepper, WEEK_DOW, mondayOf } from '@/components/week-stepper'
-import { useHabits, useHabitSummary, useDeleteHabit } from '@/hooks/use-habits'
+import {
+  useHabits,
+  useHabitSummary,
+  useDeleteHabit,
+  useCreateHabit,
+  useArchiveHabit,
+  useUnarchiveHabit,
+} from '@/hooks/use-habits'
+import { DynamicIcon } from '@/components/icon'
 import type { Habit } from '@/types/api'
 import { toast } from 'sonner'
+
+// Cor/ícone padrão da adição rápida; detalhes ficam pra depois via diálogo.
+const QUICK_ICON = 'circle-check'
+const QUICK_COLOR = '#64748b'
 
 export default function Habits() {
   const [week, setWeek] = useState(() => mondayOf(new Date()))
   const { data: habits = [], isLoading } = useHabits()
   const { data: summaries = [] } = useHabitSummary(week)
   const del = useDeleteHabit()
+  const create = useCreateHabit()
+  const archive = useArchiveHabit()
+  const unarchive = useUnarchiveHabit()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<Habit | null>(null)
+  const [quick, setQuick] = useState('')
+  const [showArchived, setShowArchived] = useState(false)
+  const { data: archived = [] } = useHabits(true, showArchived)
 
   function openNew() { setEditing(null); setDialogOpen(true) }
   function openEdit(h: Habit) { setEditing(h); setDialogOpen(true) }
+
   async function remove(h: Habit) {
     if (!confirm(`Apagar o hábito "${h.name}"?`)) return
     try { await del.mutateAsync(h.id) } catch { toast.error('Não foi possível apagar') }
   }
 
+  async function onArchive(h: Habit) {
+    try { await archive.mutateAsync(h.id); toast.success(`"${h.name}" arquivado`) }
+    catch { toast.error('Não foi possível arquivar') }
+  }
+
+  async function onRestore(h: Habit) {
+    try { await unarchive.mutateAsync(h.id); toast.success(`"${h.name}" restaurado`) }
+    catch { toast.error('Não foi possível restaurar') }
+  }
+
+  async function addQuick() {
+    const name = quick.trim()
+    if (!name) return
+    setQuick('')
+    try {
+      await create.mutateAsync({ name, icon: QUICK_ICON, color: QUICK_COLOR, target_per_week: null })
+    } catch {
+      toast.error('Não foi possível criar')
+      setQuick(name)
+    }
+  }
+
   return (
     <AppLayout title="Hábitos">
       <main className="min-h-0 flex-1 overflow-auto p-4 md:p-6">
-        <div className="mx-auto max-w-4xl">
-          <div className="mb-4 flex items-center justify-between">
-            <WeekStepper week={week} onChange={setWeek} />
-            <Button size="sm" onClick={openNew}><Plus className="mr-1.5 h-4 w-4" /> Novo hábito</Button>
+        <div className="mx-auto max-w-4xl space-y-5">
+          <HabitTodayCard habits={habits} />
+
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <form
+              onSubmit={(e) => { e.preventDefault(); addQuick() }}
+              className="flex items-center gap-2 rounded-md border bg-card px-2 py-1"
+            >
+              <Plus className="h-4 w-4 text-muted-foreground" />
+              <input
+                value={quick}
+                onChange={(e) => setQuick(e.target.value)}
+                className="w-48 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                placeholder="novo hábito… (Enter)"
+                aria-label="Novo hábito"
+              />
+            </form>
+            <div className="flex items-center gap-2">
+              <WeekStepper week={week} onChange={setWeek} />
+              <Button size="sm" variant="outline" onClick={openNew}>
+                <Plus className="mr-1.5 h-4 w-4" /> Detalhado
+              </Button>
+            </div>
           </div>
+
           <div className="overflow-hidden rounded-lg border bg-card">
             <div className="grid grid-cols-[1fr_auto] items-center gap-2 border-b bg-muted/40 px-4 py-2 text-xs font-medium text-muted-foreground">
-              <span>Hábito</span>
+              <span>Hábito <span className="text-muted-foreground/60">· semana</span></span>
               <div className="flex gap-1.5">
                 {WEEK_DOW.map((d) => <span key={d} className="w-8 text-center">{d}</span>)}
               </div>
@@ -47,8 +109,35 @@ export default function Habits() {
               habits.map((h) => (
                 <HabitRow key={h.id} habit={h} week={week}
                   summary={summaries.find((s) => s.habit_id === h.id)}
-                  onEdit={openEdit} onDelete={remove} />
+                  onEdit={openEdit} onDelete={remove} onArchive={onArchive} />
               ))
+            )}
+          </div>
+
+          <div>
+            <button
+              onClick={() => setShowArchived((v) => !v)}
+              aria-expanded={showArchived}
+              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <Archive className="h-3.5 w-3.5" /> Arquivados
+            </button>
+            {showArchived && (
+              <div className="mt-2 space-y-1 rounded-lg border bg-card/40 p-3">
+                {archived.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">Nenhum hábito arquivado.</p>
+                ) : (
+                  archived.map((h) => (
+                    <div key={h.id} className="flex items-center gap-3 rounded-md px-1 py-1.5">
+                      <DynamicIcon name={h.icon} className="h-4 w-4 shrink-0" style={{ color: h.color }} />
+                      <span className="flex-1 truncate text-sm">{h.name}</span>
+                      <Button size="sm" variant="ghost" onClick={() => onRestore(h)}>
+                        <RotateCcw className="mr-1.5 h-3.5 w-3.5" /> Restaurar
+                      </Button>
+                    </div>
+                  ))
+                )}
+              </div>
             )}
           </div>
         </div>
