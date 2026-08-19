@@ -23,6 +23,12 @@ services:
     # .env fica fora da imagem (.dockerignore) — montado aqui pra key:generate persistir.
     volumes:
       - ./backend/.env:/var/www/html/.env
+    # Resolvers públicos: o DNS do roteador (192.168.1.1) é intermitente e causava
+    # via DNS embutido do Docker.
+    dns:
+      - 1.1.1.1
+      - 1.0.0.1
+      - 8.8.8.8
     environment:
       DB_HOST: mysql
       DB_DATABASE: ${DB_DATABASE:-lifegui}
