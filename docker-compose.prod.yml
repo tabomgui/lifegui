@@ -1,0 +1,45 @@
+# Stack de produção single-origin do lifegui — atrás do Cloudflare Tunnel (termina TLS).
+# web (nginx) serve o SPA na :80 e faz proxy de /api e /sanctum pro backend Laravel.
+services:
+  mysql:
+    image: mysql:8
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-lifegui}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-p${DB_PASSWORD:-root}"]
+      interval: 5s
+      retries: 20
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    # .env fica fora da imagem (.dockerignore) — montado aqui pra key:generate persistir.
+    volumes:
+      - ./backend/.env:/var/www/html/.env
+    environment:
+      DB_HOST: mysql
+      DB_DATABASE: ${DB_DATABASE:-lifegui}
+      DB_USERNAME: ${DB_USERNAME:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-root}
+    # Gera APP_KEY se faltar, roda migrations e sobe o servidor.
+    command: sh -c "(grep -q '^APP_KEY=base64' .env || php artisan key:generate --force) && php artisan config:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql-data:
