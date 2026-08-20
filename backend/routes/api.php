@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CategoryController;
@@ -22,8 +21,8 @@ Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
     return new UserResource($request->user());
 });
 
-Route::get('/auth/google/redirect', [GoogleController::class, 'redirect']);
-Route::get('/auth/google/callback', [GoogleController::class, 'callback']);
+// Rotas OAuth do Google movidas para routes/web.php (precisam do middleware web:
+// sessão/cookies) — o callback vem do Google, fora do fluxo stateful do Sanctum.
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/categories', [CategoryController::class, 'index']);
