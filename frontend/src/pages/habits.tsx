@@ -63,7 +63,7 @@ export default function Habits() {
           <div className="overflow-hidden rounded-lg border bg-card">
             <div className="grid grid-cols-[1fr_auto] items-center gap-2 border-b bg-muted/40 px-4 py-2 text-xs font-medium text-muted-foreground">
               <span>Hábito <span className="text-muted-foreground/60">· semana</span></span>
-              <div className="flex gap-1.5">
+              <div className="hidden gap-1.5 md:flex">
                 {WEEK_DOW.map((d) => <span key={d} className="w-8 text-center">{d}</span>)}
               </div>
             </div>

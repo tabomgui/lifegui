@@ -89,7 +89,7 @@ export function StatTile({
         {label}
       </div>
       <div className="mt-2 flex items-end gap-2">
-        <span className="text-4xl font-semibold tracking-tight tabular-nums text-foreground">{value}</span>
+        <span className="text-3xl font-semibold tracking-tight tabular-nums break-words text-foreground sm:text-4xl">{value}</span>
         {hasDelta && (
           <span
             className={cn(

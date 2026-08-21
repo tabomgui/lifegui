@@ -71,7 +71,7 @@ function TaskDueControl({ task }: { task: Task }) {
         ) : (
           <button
             aria-label="Definir prazo"
-            className="inline-flex items-center gap-1 rounded px-1.5 py-1 text-xs text-muted-foreground opacity-0 transition-opacity hover:bg-accent group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100">
+            className="inline-flex items-center gap-1 rounded px-1.5 py-1 text-xs text-muted-foreground opacity-100 transition-opacity hover:bg-accent md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 md:focus-visible:opacity-100 data-[state=open]:opacity-100">
             <Calendar className="h-3.5 w-3.5" /> Prazo
           </button>
         )}
@@ -142,7 +142,7 @@ export function TaskCard({ task }: { task: Task }) {
           aria-pressed={task.is_priority}
           title={task.is_priority ? 'Remover prioridade' : 'Marcar como prioridade'}
           onClick={() => setPriority.mutate({ id: task.id, is_priority: !task.is_priority })}
-          className={`shrink-0 rounded p-0.5 hover:bg-accent ${task.is_priority ? '' : 'opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 group-focus-within:opacity-100'}`}>
+          className={`shrink-0 rounded p-0.5 hover:bg-accent ${task.is_priority ? '' : 'opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:group-focus-within:opacity-100'}`}>
           <Star className={`h-4 w-4 ${task.is_priority ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground'}`} />
         </button>
       </div>
@@ -170,10 +170,10 @@ export function TaskCard({ task }: { task: Task }) {
         </ul>
       )}
       <div className="mt-2.5 flex items-center justify-between gap-1">
-        <div className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 group-focus-within:opacity-100">
+        <div className="opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:group-focus-within:opacity-100">
           <TaskCategoryMenu task={task} />
         </div>
-        <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 group-focus-within:opacity-100">
+        <div className="flex items-center gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:group-focus-within:opacity-100">
           <button aria-label="Editar tarefa" title="Editar tarefa" onClick={() => setOpen(true)} className="rounded p-1 hover:bg-accent">
             <SquarePen className="h-3.5 w-3.5" />
           </button>

@@ -80,8 +80,8 @@ export function CategoryTabs({
             {c.name}
             <span className="ml-0.5 rounded-full bg-secondary px-1.5 text-[11px]">{countFor(c.id)}</span>
           </button>
-          <button onClick={() => openEdit(c)} aria-label={`Editar ${c.name}`} title={`Editar ${c.name}`} className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 group-focus-within:opacity-100"><Pencil className="h-3 w-3" /></button>
-          <button onClick={() => remove(c)} aria-label={`Apagar ${c.name}`} title={`Apagar ${c.name}`} className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 group-focus-within:opacity-100"><Trash2 className="h-3 w-3" /></button>
+          <button onClick={() => openEdit(c)} aria-label={`Editar ${c.name}`} title={`Editar ${c.name}`} className="opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:group-focus-within:opacity-100"><Pencil className="h-3 w-3" /></button>
+          <button onClick={() => remove(c)} aria-label={`Apagar ${c.name}`} title={`Apagar ${c.name}`} className="opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:group-focus-within:opacity-100"><Trash2 className="h-3 w-3" /></button>
         </div>
       ))}
       <button onClick={openNew} className="ml-1 inline-flex shrink-0 items-center gap-1 rounded-md border border-dashed px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent">

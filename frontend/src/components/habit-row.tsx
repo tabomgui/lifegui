@@ -25,7 +25,7 @@ export function HabitRow({
   const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
   return (
-    <div className="group grid grid-cols-[1fr_auto] items-center gap-2 border-b px-4 py-3 last:border-b-0">
+    <div className="group flex flex-col gap-2 border-b px-4 py-3 last:border-b-0 md:grid md:grid-cols-[1fr_auto] md:items-center">
       <div className="flex items-center gap-3">
         <ProgressRing value={doneCount} max={habit.target_per_week} color={habit.color} showText={false} className="h-7 w-7" />
         <DynamicIcon name={habit.icon} className="h-5 w-5" style={{ color: habit.color }} />
@@ -36,13 +36,13 @@ export function HabitRow({
             {streak > 0 && <span className="inline-flex items-center gap-0.5"><Flame className="h-3 w-3 text-orange-500" /> {streak}</span>}
           </p>
         </div>
-        <div className="ml-1 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+        <div className="ml-auto flex gap-1 opacity-100 transition-opacity md:ml-1 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100">
           <button onClick={() => onArchive(habit)} aria-label={`Arquivar ${habit.name}`} title="Arquivar" className="rounded p-1 hover:bg-accent"><Archive className="h-3.5 w-3.5" /></button>
           <button onClick={() => onEdit(habit)} aria-label={`Editar ${habit.name}`} title="Editar" className="rounded p-1 hover:bg-accent"><Pencil className="h-3.5 w-3.5" /></button>
           <button onClick={() => onDelete(habit)} aria-label={`Apagar ${habit.name}`} title="Apagar" className="rounded p-1 hover:bg-accent"><Trash2 className="h-3.5 w-3.5" /></button>
         </div>
       </div>
-      <div className="flex gap-1.5">
+      <div className="flex justify-between gap-1.5 md:justify-end">
         {days.map((d, i) => {
           const isFuture = d.date > todayStr
           const state = isFuture ? 'futuro' : d.done ? 'feito' : d.skipped ? 'pulado' : 'não feito'
