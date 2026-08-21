@@ -19,13 +19,14 @@ import {
 } from 'lucide-react'
 import { AppLayout } from '@/components/app-layout'
 import { TaskHeatmap } from '@/components/task-heatmap'
+import { HabitHeatmap } from '@/components/habit-heatmap'
 import { HabitRadar } from '@/components/habit-radar'
 import { StatTile } from '@/components/stat-tile'
 import { PeriodFilter, rangeForDays, PERIODS } from '@/components/period-filter'
 import { MonthNavigator, currentMonthKey } from '@/components/month-navigator'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { useTaskReport, useHabitReport } from '@/hooks/use-reports'
-import { useTaskHeatmap } from '@/hooks/use-heatmap'
+import { useTaskHeatmap, useHabitHeatmap } from '@/hooks/use-heatmap'
 import { useHabitStats } from '@/hooks/use-habit-stats'
 import { useEnabledModules } from '@/hooks/use-modules'
 import type { HabitReport, TaskReport } from '@/types/api'
@@ -826,6 +827,7 @@ function StreaksList({ items }: { items: HabitReport['perHabitStreaks'] }) {
 function HabitosTab({ from, to }: { from: string; to: string }) {
   const { data, isPending } = useHabitReport(from, to)
   const { data: stats, isPending: statsPending } = useHabitStats(from, to)
+  const { data: heatmap, isPending: heatmapPending } = useHabitHeatmap(from, to)
 
   if (isPending || !data) {
     return <div className="p-8 text-center text-sm text-muted-foreground">Carregando…</div>
@@ -925,6 +927,21 @@ function HabitosTab({ from, to }: { from: string; to: string }) {
           >
             <StreaksList items={data.perHabitStreaks} />
           </Panel>
+        </div>
+      </section>
+
+      {/* Heatmap */}
+      <section>
+        <SectionHeading icon={Grid3x3}>Heatmap de conclusões</SectionHeading>
+        <div className="rounded-xl border bg-card p-4 shadow-sm">
+          <h3 className="text-sm font-medium">Hábitos concluídos por dia</h3>
+          {heatmapPending || !heatmap ? (
+            <div className="p-6 text-center text-sm text-muted-foreground">Carregando…</div>
+          ) : (
+            <div className="mt-3">
+              <HabitHeatmap data={heatmap} />
+            </div>
+          )}
         </div>
       </section>
     </div>

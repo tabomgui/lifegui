@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Habit\HeatmapRequest;
 use App\Http\Requests\Habit\StatsRequest;
 use App\Http\Requests\Habit\StoreHabitRequest;
 use App\Http\Requests\Habit\SummaryRequest;
@@ -9,6 +10,7 @@ use App\Http\Requests\Habit\ToggleHabitRequest;
 use App\Http\Requests\Habit\UpdateHabitRequest;
 use App\Http\Resources\HabitResource;
 use App\Models\Habit;
+use App\Models\HabitLog;
 use App\Support\HabitSummary;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
@@ -177,6 +179,45 @@ class HabitController extends Controller
             'to' => $to->toDateString(),
             'period_days' => $periodDays,
             'habits' => $habitsData,
+        ]]);
+    }
+
+    public function heatmap(HeatmapRequest $request): JsonResponse
+    {
+        // habit_logs.date já é data-calendário local (sem timezone), então não há
+        // conversão de fuso como no heatmap de tarefas — basta contar por dia.
+        $fromInput = $request->validated('from');
+        $toInput = $request->validated('to');
+
+        if ($fromInput && $toInput) {
+            $from = Carbon::createFromFormat('Y-m-d', $fromInput)->startOfDay();
+            $to = Carbon::createFromFormat('Y-m-d', $toInput)->startOfDay();
+        } else {
+            $to = now()->startOfDay();
+            $from = $to->copy()->subDays(370);
+        }
+
+        // Inclui hábitos arquivados: as conclusões passadas continuam contando no histórico.
+        $habitIds = Habit::pluck('id');
+
+        $rows = HabitLog::whereIn('habit_id', $habitIds)
+            ->where('done', true)
+            ->whereBetween('date', [$from->toDateString(), $to->toDateString()])
+            ->selectRaw('DATE(`date`) as d, COUNT(*) as c')
+            ->groupBy('d')
+            ->pluck('c', 'd');
+
+        $counts = [];
+        foreach ($rows as $day => $count) {
+            $counts[substr((string) $day, 0, 10)] = (int) $count;
+        }
+
+        return response()->json(['data' => [
+            'from' => $from->toDateString(),
+            'to' => $to->toDateString(),
+            // (object) garante `{}` em vez de `[]` quando vazio — o front espera Record.
+            'counts' => (object) $counts,
+            'total' => array_sum($counts),
         ]]);
     }
 }

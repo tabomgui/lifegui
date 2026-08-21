@@ -81,6 +81,13 @@ export interface TaskHeatmap {
   total: number
 }
 
+export interface HabitHeatmap {
+  from: string
+  to: string
+  counts: Record<string, number>
+  total: number
+}
+
 export interface HabitStat {
   habit_id: number
   name: string

@@ -46,6 +46,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/habits/summary', [HabitController::class, 'summary']);
     Route::get('/habits/stats', [HabitController::class, 'stats']);
+    Route::get('/habits/heatmap', [HabitController::class, 'heatmap']);
     Route::get('/habits', [HabitController::class, 'index']);
     Route::post('/habits', [HabitController::class, 'store']);
     Route::patch('/habits/{habit}', [HabitController::class, 'update']);
