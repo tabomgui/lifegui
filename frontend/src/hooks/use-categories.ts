@@ -33,6 +33,32 @@ export function useUpdateCategory() {
   })
 }
 
+export function useReorderCategories() {
+  const qc = useQueryClient()
+  return useMutation({
+    // `ids` é a lista COMPLETA na nova ordem; o backend grava position = índice.
+    mutationFn: async (ids: number[]) => {
+      await csrf()
+      await api.patch('/categories/reorder', { ids })
+    },
+    // Otimista: reordena o cache na hora pra aba não "pular" esperando o request.
+    onMutate: async (ids) => {
+      await qc.cancelQueries({ queryKey: KEY })
+      const prev = qc.getQueryData<Category[]>(KEY)
+      if (prev) {
+        const byId = new Map(prev.map((c) => [c.id, c]))
+        const next = ids.map((id) => byId.get(id)).filter((c): c is Category => !!c)
+        qc.setQueryData(KEY, next)
+      }
+      return { prev }
+    },
+    onError: (_e, _ids, ctx) => {
+      if (ctx?.prev) qc.setQueryData(KEY, ctx.prev)
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: KEY }),
+  })
+}
+
 export function useDeleteCategory() {
   const qc = useQueryClient()
   return useMutation({
