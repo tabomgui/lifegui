@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
-import { LayoutGrid, Kanban, Repeat, BarChart3, Settings, Menu, X } from 'lucide-react'
+import { Kanban, Repeat, BarChart3, Settings, Menu, X } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useEnabledModules } from '@/hooks/use-modules'
 import { Button } from '@/components/ui/button'
@@ -18,9 +18,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <>
       <div className="flex h-14 items-center gap-2 border-b px-4">
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
-          <LayoutGrid className="h-4 w-4" />
-        </div>
+        <img src="/favicon.svg" alt="lifegui" className="h-7 w-7 rounded-md" />
         <span className="text-sm font-semibold tracking-tight">lifegui</span>
       </div>
       <nav className="flex flex-1 flex-col gap-1 p-2">
