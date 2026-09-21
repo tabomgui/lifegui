@@ -15,6 +15,7 @@ const navClass = ({ isActive }: { isActive: boolean }) =>
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { user, logout } = useAuth()
   const { isEnabled } = useEnabledModules()
+  const showReports = isEnabled('tasks') || isEnabled('habits')
   return (
     <>
       <div className="flex h-14 items-center gap-2 border-b px-4">

@@ -2,6 +2,7 @@ export type TaskStatus = 'todo' | 'doing' | 'done'
 
 // --- Módulos (GET /api/modules) ---
 
+export type ModuleKey = 'tasks' | 'habits'
 
 export interface ModuleInfo {
   key: ModuleKey
@@ -10,16 +11,6 @@ export interface ModuleInfo {
   icon: string
   version: string
   enabled: boolean
-}
-
-
-  configured: boolean
-  base_url: string | null
-  email: string | null
-  enabled: boolean
-  hasPassword: boolean
-  last_status: string | null
-  last_checked_at: string | null
 }
 
 export interface Category {
@@ -184,66 +175,6 @@ export interface HabitReport {
   recordPerfectStreak: number
   dailyConsistency: HabitReportDailyConsistency[]
   perHabitStreaks: HabitReportStreak[]
-}
-
-
-// Totais de um período (atual ou anterior). Números inteiros podem chegar como
-  net: number
-}
-
-  // null quando o total anterior é 0 (variação percentual indefinida).
-  // pontos percentuais na taxa de poupança (sempre definido).
-}
-
-  // Mês no formato "YYYY-MM".
-  date: string
-  net: number
-}
-
-  // linhas sem id não são clicáveis (não há como buscar suas transações).
-  id: string | null
-  name: string
-  color: string
-  total: number
-  percentage: number
-  previousTotal: number
-  // null quando previousTotal === 0 (categoria nova).
-  deltaPct: number | null
-}
-
-
-  id: string
-  // "YYYY-MM-DD".
-  date: string
-  description: string
-  payee: string | null
-  amount: number
-}
-
-  categoryId: string
-  from: string
-  to: string
-  currency: string
-  count: number
-  total: number
-}
-
-
-// or a deficit bullet must read as bad/alert even inside a period that's
-// otherwise fine, and vice-versa.
-
-  text: string
-}
-
-  headline: string
-}
-
-  currency: string
-  from: string
-  to: string
-  previous: { from: string; to: string }
-  // dias) e quais deles compõem a janela atual/anterior ("YYYY-MM", asc) —
-  // gráficos mensais, os mesmos meses cujo total aparece nos cards.
 }
 
 export interface TaskReport {

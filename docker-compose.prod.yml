@@ -24,7 +24,8 @@ services:
     volumes:
       - ./backend/.env:/var/www/html/.env
     # Resolvers públicos: o DNS do roteador (192.168.1.1) é intermitente e causava
-    # via DNS embutido do Docker.
+    # timeout ao resolver hosts externos (ex.: OAuth do Google). Nomes de serviço
+    # (mysql) continuam via DNS embutido do Docker.
     dns:
       - 1.1.1.1
       - 1.0.0.1

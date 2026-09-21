@@ -64,7 +64,4 @@ Route::middleware('auth:sanctum')->group(function () {
     // Per-user module on/off toggles.
     Route::get('/modules', [ModuleController::class, 'index']);
     Route::patch('/modules/{key}', [ModuleController::class, 'update']);
-
-
-
 });

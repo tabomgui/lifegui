@@ -15,7 +15,6 @@ import {
   Repeat,
   Target,
   Timer,
-  Wallet,
 } from 'lucide-react'
 import { AppLayout } from '@/components/app-layout'
 import { TaskHeatmap } from '@/components/task-heatmap'
@@ -23,7 +22,6 @@ import { HabitHeatmap } from '@/components/habit-heatmap'
 import { HabitRadar } from '@/components/habit-radar'
 import { StatTile } from '@/components/stat-tile'
 import { PeriodFilter, rangeForDays, PERIODS } from '@/components/period-filter'
-import { MonthNavigator, currentMonthKey } from '@/components/month-navigator'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { useTaskReport, useHabitReport } from '@/hooks/use-reports'
 import { useTaskHeatmap, useHabitHeatmap } from '@/hooks/use-heatmap'
@@ -47,22 +45,6 @@ function daysForKey(key: string): number {
 function parseLocalDate(value: string): Date {
   const [y, m, d] = value.split('-').map(Number)
   return new Date(y, m - 1, d)
-}
-
-// Formata uma data como 'Y-m-d' LOCAL (evita toISOString, que é UTC).
-function formatLocalDate(date: Date): string {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
-}
-
-// "YYYY-MM" -> primeiro/último dia do mês como datas locais 'Y-m-d'.
-function monthBoundaries(key: string): { from: string; to: string } {
-  const [y, m] = key.split('-').map(Number)
-  const first = new Date(y, (m || 1) - 1, 1)
-  const last = new Date(y, m || 1, 0)
-  return { from: formatLocalDate(first), to: formatLocalDate(last) }
 }
 
 function fmtDayMonth(value: string): string {
@@ -955,8 +937,9 @@ export default function Relatorios() {
   const tasksEnabled = isEnabled('tasks')
   const habitsEnabled = isEnabled('habits')
   // A rota (ReportsRoute) garante que ao menos um módulo relevante está habilitado.
+  // Ordem: tarefas -> hábitos; padrão é a primeira aba habilitada.
+  const defaultTab = tasksEnabled ? 'tarefas' : 'habitos'
 
-  // Tabs controladas: o filtro do topo troca entre pílulas de dias (Tarefas /
   const [tab, setTab] = useState<string>(defaultTab)
 
   return (
@@ -976,15 +959,11 @@ export default function Relatorios() {
                     <Repeat className="h-3.5 w-3.5" /> Hábitos
                   </TabsTrigger>
                 )}
-                  </TabsTrigger>
-                )}
               </TabsList>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">Período</span>
-                  <PeriodFilter value={period} onChange={setPeriod} />
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Período</span>
+                <PeriodFilter value={period} onChange={setPeriod} />
+              </div>
             </div>
 
             {tasksEnabled && (
@@ -996,9 +975,6 @@ export default function Relatorios() {
             {habitsEnabled && (
               <TabsContent value="habitos" className="mt-6">
                 <HabitosTab from={from} to={to} />
-              </TabsContent>
-            )}
-
               </TabsContent>
             )}
           </Tabs>

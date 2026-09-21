@@ -1,5 +1,6 @@
 # lifegui — convenções do projeto
 
+App de organização pessoal (tarefas + hábitos), multi-tenant. Frontend React/Vite/Tailwind v4/shadcn; backend Laravel 12 API + MySQL, tudo em Docker.
 
 ## UI
 

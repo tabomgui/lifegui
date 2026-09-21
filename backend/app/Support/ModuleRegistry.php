@@ -29,11 +29,6 @@ class ModuleRegistry
                 'version' => '0.1.0',
                 'default' => true,
             ],
-            [
-                'icon' => 'wallet',
-                'version' => '0.1.0',
-                'default' => false,
-            ],
         ];
     }
 
