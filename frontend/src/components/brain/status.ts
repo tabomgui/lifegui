@@ -16,3 +16,11 @@ export const STATUS_BADGE: Record<NoteStatus, string> = {
   concluido: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
   'a-revisar': 'bg-red-500/15 text-red-700 dark:text-red-400',
 }
+
+// Bolinha de status pros filtros compactos.
+export const STATUS_DOT: Record<NoteStatus, string> = {
+  novo: 'bg-blue-500',
+  estudando: 'bg-amber-500',
+  concluido: 'bg-emerald-500',
+  'a-revisar': 'bg-red-500',
+}

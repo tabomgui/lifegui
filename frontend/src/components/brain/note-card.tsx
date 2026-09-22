@@ -7,7 +7,7 @@ export function NoteCard({ note, onOpen }: { note: BrainNoteSummary; onOpen: (pa
     <button
       type="button"
       onClick={() => onOpen(note.path)}
-      className="flex w-full flex-col gap-1.5 rounded-lg border bg-card p-3 text-left transition-colors hover:bg-accent/50"
+      className="flex w-full flex-col gap-1.5 rounded-lg border bg-card p-3 text-left transition-colors hover:border-ring/40 hover:bg-accent/50"
     >
       <div className="flex items-start justify-between gap-2">
         <span className="text-sm font-medium leading-snug">{note.title}</span>
@@ -25,6 +25,9 @@ export function NoteCard({ note, onOpen }: { note: BrainNoteSummary; onOpen: (pa
             {tag}
           </span>
         ))}
+        {note.data_salvo && (
+          <span className="ml-auto text-[11px] text-muted-foreground/70">{note.data_salvo}</span>
+        )}
       </div>
     </button>
   )
