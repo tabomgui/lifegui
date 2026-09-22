@@ -7,6 +7,7 @@ use App\Http\Controllers\Brain\GraphController as BrainGraphController;
 use App\Http\Controllers\Brain\InboxController as BrainInboxController;
 use App\Http\Controllers\Brain\LinkController as BrainLinkController;
 use App\Http\Controllers\Brain\NoteController as BrainNoteController;
+use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HabitController;
 use App\Http\Controllers\ModuleController;
@@ -82,6 +83,16 @@ Route::middleware(['auth:sanctum', RestrictCaptureTokens::class])->group(functio
     Route::get('/tokens', [TokenController::class, 'index']);
     Route::post('/tokens', [TokenController::class, 'store']);
     Route::delete('/tokens/{tokenId}', [TokenController::class, 'destroy']);
+
+    // Agenda: leitura/escrita ao vivo no Google Calendar (fonte da verdade,
+    // sem espelho no banco). Literal /linked ANTES do curinga {eventId}.
+    Route::get('/calendar/status', [CalendarController::class, 'status']);
+    Route::delete('/calendar/connection', [CalendarController::class, 'disconnect']);
+    Route::get('/calendar/events/linked', [CalendarController::class, 'linked']);
+    Route::get('/calendar/events', [CalendarController::class, 'index']);
+    Route::post('/calendar/events', [CalendarController::class, 'store']);
+    Route::patch('/calendar/events/{eventId}', [CalendarController::class, 'update']);
+    Route::delete('/calendar/events/{eventId}', [CalendarController::class, 'destroy']);
 
     // Módulo Cérebro: gerencia o vault Obsidian do usuário (filesystem é a
     // fonte da verdade; nada de notas no banco). Rotas literais ANTES das
