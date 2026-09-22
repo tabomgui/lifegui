@@ -39,10 +39,18 @@ export default function Cerebro() {
     isInbox ? {} : { category: active, status, q: q || undefined },
   )
 
+  // Subfiltro por tag: chips derivados das notas visíveis da categoria.
+  const [tagFilter, setTagFilter] = useState<string | null>(null)
+  const categoryTags = [...new Set(notes.flatMap((n) => n.tags))].sort((a, b) =>
+    a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }),
+  )
+  const visibleNotes = tagFilter ? notes.filter((n) => n.tags.includes(tagFilter)) : notes
+
   function switchTab(next: string) {
     setTab(next)
     setStatus(null)
     setQ('')
+    setTagFilter(null)
   }
 
   return (
@@ -114,12 +122,31 @@ export default function Cerebro() {
                       </Button>
                     </div>
 
-                    {notes.length === 0 ? (
+                    {categoryTags.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {categoryTags.map((tag) => (
+                          <button
+                            key={tag}
+                            onClick={() => setTagFilter(tagFilter === tag ? null : tag)}
+                            aria-pressed={tagFilter === tag}
+                            className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${
+                              tagFilter === tag
+                                ? 'border-transparent bg-secondary'
+                                : 'border-border text-muted-foreground hover:bg-accent'
+                            }`}
+                          >
+                            #{tag}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {visibleNotes.length === 0 ? (
                       <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed px-6 py-12 text-center">
                         <div className="flex h-11 w-11 items-center justify-center rounded-full bg-muted">
                           <NotebookPen className="h-5 w-5 text-muted-foreground" />
                         </div>
-                        {q || status ? (
+                        {q || status || tagFilter ? (
                           <p className="text-sm text-muted-foreground">
                             Nenhuma nota com esses filtros.
                           </p>
@@ -139,7 +166,7 @@ export default function Cerebro() {
                       </div>
                     ) : (
                       <div className="grid gap-2 sm:grid-cols-2">
-                        {notes.map((note) => (
+                        {visibleNotes.map((note) => (
                           <NoteCard key={note.path} note={note} onOpen={setOpenPath} />
                         ))}
                       </div>

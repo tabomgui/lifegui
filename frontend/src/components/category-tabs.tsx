@@ -110,8 +110,8 @@ export function CategoryTabs({
   }
 
   return (
-    <div className="flex items-center gap-2 border-b px-4 py-2 md:px-6">
-      <div role="tablist" className="flex items-center gap-1 overflow-x-auto">
+    <div className="flex flex-wrap items-center gap-2 border-b px-4 py-2 md:px-6">
+      <div role="tablist" className="flex flex-wrap items-center gap-1">
       <button role="tab" aria-selected={active === 'today'} onClick={() => onChange('today')}
         className={`inline-flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium ${active === 'today' ? 'bg-secondary' : 'text-muted-foreground hover:bg-accent'}`}>
         <Sun className="h-3.5 w-3.5 text-amber-400" /> Hoje
