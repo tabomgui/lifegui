@@ -6,17 +6,19 @@ import type { HabitReport, TaskReport } from '@/types/api'
 // calendar days using this timezone, mirroring the heatmap.
 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
 
-export function useTaskReport(from: string, to: string) {
+export function useTaskReport(from: string, to: string, enabled = true) {
   return useQuery({
     queryKey: ['reports', 'tasks', from, to],
+    enabled,
     queryFn: async () =>
       (await api.get('/reports/tasks', { params: { from, to, tz } })).data.data as TaskReport,
   })
 }
 
-export function useHabitReport(from: string, to: string) {
+export function useHabitReport(from: string, to: string, enabled = true) {
   return useQuery({
     queryKey: ['reports', 'habits', from, to],
+    enabled,
     queryFn: async () =>
       (await api.get('/reports/habits', { params: { from, to, tz } })).data.data as HabitReport,
   })
