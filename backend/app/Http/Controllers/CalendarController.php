@@ -72,8 +72,9 @@ class CalendarController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'type' => ['required', Rule::in(['task', 'habit', 'note'])],
-            'ref' => ['required', 'string', 'max:500'],
+            // 'event' = avulso, criado direto na agenda, sem item vinculado.
+            'type' => ['required', Rule::in(['task', 'habit', 'note', 'event'])],
+            'ref' => ['required_unless:type,event', 'string', 'max:500'],
             'title' => ['required', 'string', 'max:255'],
             'start' => ['required', 'date'],
             'duration_minutes' => ['nullable', 'integer', 'min:5', 'max:1440'],
@@ -81,7 +82,9 @@ class CalendarController extends Controller
             'timezone' => ['nullable', 'timezone'],
         ]);
 
-        $this->assertRefOwned($request, $data['type'], $data['ref']);
+        if ($data['type'] !== 'event') {
+            $this->assertRefOwned($request, $data['type'], $data['ref']);
+        }
 
         $start = CarbonImmutable::parse($data['start']);
         $end = $start->addMinutes($data['duration_minutes'] ?? 60);
@@ -94,7 +97,7 @@ class CalendarController extends Controller
             'timezone' => $data['timezone'] ?? config('app.timezone'),
             'rrule' => $data['rrule'] ?? null,
             'type' => $data['type'],
-            'ref' => $data['ref'],
+            'ref' => $data['ref'] ?? '',
         ]);
 
         return response()->json(['data' => $event], 201);
@@ -162,6 +165,7 @@ class CalendarController extends Controller
             'task' => '/',
             'habit' => '/habits',
             'note' => '/cerebro',
+            'event' => '/agenda',
         };
 
         return config('app.frontend_url').$path;

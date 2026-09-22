@@ -260,7 +260,7 @@ export interface TaskReport {
 
 // --- Agenda (Google Calendar como fonte da verdade; GET /api/calendar/*) ---
 
-export type CalendarLinkType = 'task' | 'habit' | 'note'
+export type CalendarLinkType = 'task' | 'habit' | 'note' | 'event'
 
 export interface CalendarEvent {
   id: string

@@ -201,3 +201,24 @@ test('desconecta a conta', function () {
 
     expect($this->user->refresh()->google_calendar_refresh_token)->toBeNull();
 });
+
+test('cria evento avulso direto na agenda (sem vínculo)', function () {
+    fakeCalendar(function ($request) {
+        expect($request->data()['extendedProperties']['private'])
+            ->toBe(['lifegui_type' => 'event', 'lifegui_ref' => '']);
+
+        return Http::response([
+            'id' => 'avulso',
+            'summary' => 'Revisão da semana',
+            'start' => ['dateTime' => '2026-09-26T18:00:00-03:00'],
+            'end' => ['dateTime' => '2026-09-26T19:00:00-03:00'],
+            'extendedProperties' => ['private' => ['lifegui_type' => 'event', 'lifegui_ref' => '']],
+        ]);
+    });
+
+    $this->postJson('/api/calendar/events', [
+        'type' => 'event',
+        'title' => 'Revisão da semana',
+        'start' => '2026-09-26T18:00:00-03:00',
+    ])->assertCreated()->assertJsonPath('data.lifegui.type', 'event');
+});
