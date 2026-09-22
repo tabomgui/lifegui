@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import ReactMarkdown from 'react-markdown'
+import ReactMarkdown, { defaultUrlTransform } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { toast } from 'sonner'
 import { CodeXml, CornerUpRight, ExternalLink, Eye, Kanban, Pencil, Repeat, Scissors } from 'lucide-react'
@@ -213,6 +213,9 @@ export function NotePanel({ path, onNavigate, onClose }: {
                 <div className="prose prose-sm prose-neutral max-w-none dark:prose-invert">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
+                    // O sanitizador padrão apaga esquemas desconhecidos; o
+                    // wikilink: interno precisa sobreviver até o componente <a>.
+                    urlTransform={(url) => (url.startsWith('wikilink:') ? url : defaultUrlTransform(url))}
                     components={{
                       a: ({ href, children }) => {
                         if (href?.startsWith('wikilink:')) {
