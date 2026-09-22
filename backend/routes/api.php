@@ -2,6 +2,10 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Brain\CategoryController as BrainCategoryController;
+use App\Http\Controllers\Brain\InboxController as BrainInboxController;
+use App\Http\Controllers\Brain\LinkController as BrainLinkController;
+use App\Http\Controllers\Brain\NoteController as BrainNoteController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HabitController;
 use App\Http\Controllers\ModuleController;
@@ -64,4 +68,18 @@ Route::middleware('auth:sanctum')->group(function () {
     // Per-user module on/off toggles.
     Route::get('/modules', [ModuleController::class, 'index']);
     Route::patch('/modules/{key}', [ModuleController::class, 'update']);
+
+    // Módulo Cérebro: gerencia o vault Obsidian do usuário (filesystem é a
+    // fonte da verdade; nada de notas no banco). Rotas literais ANTES das
+    // curinga {path} — {path} aceita '/' via constraint .*.
+    Route::get('/brain/categories', [BrainCategoryController::class, 'index']);
+    Route::get('/brain/inbox', [BrainInboxController::class, 'index']);
+    Route::post('/brain/inbox', [BrainInboxController::class, 'store']);
+    Route::post('/brain/inbox/{path}/promote', [BrainInboxController::class, 'promote'])->where('path', '.*');
+    Route::post('/brain/links', [BrainLinkController::class, 'store']);
+    Route::delete('/brain/links/{link}', [BrainLinkController::class, 'destroy']);
+    Route::get('/brain/notes', [BrainNoteController::class, 'index']);
+    Route::post('/brain/notes', [BrainNoteController::class, 'store']);
+    Route::get('/brain/notes/{path}', [BrainNoteController::class, 'show'])->where('path', '.*');
+    Route::patch('/brain/notes/{path}', [BrainNoteController::class, 'update'])->where('path', '.*');
 });
