@@ -165,6 +165,19 @@ class VaultService
     }
 
     /**
+     * Alvos de [[wikilinks]] do corpo: ignora #âncora e |rótulo, preserva o
+     * nome do alvo como escrito (resolução por título fica com o chamador).
+     *
+     * @return array<int, string>
+     */
+    public function extractWikilinks(string $body): array
+    {
+        preg_match_all('/\[\[([^\]|#\n]+)(?:#[^\]|\n]*)?(?:\|[^\]\n]*)?\]\]/', $body, $matches);
+
+        return array_values(array_filter(array_map('trim', $matches[1]), fn ($t) => $t !== ''));
+    }
+
+    /**
      * Metadados de UI das categorias (ordem, ícone, cor) — vivem no próprio
      * vault, em .lifegui/categories.json: o Obsidian ignora o dotfile e o
      * arquivo sincroniza junto com as notas. Conteúdo continua sendo só .md.

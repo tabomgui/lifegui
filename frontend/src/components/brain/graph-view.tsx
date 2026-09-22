@@ -10,13 +10,14 @@ interface GraphNode {
   color: string | null
   degree: number
   ghost?: boolean
+  tag?: boolean
   x?: number
   y?: number
 }
 
 interface GraphData {
   nodes: GraphNode[]
-  links: { source: string; target: string }[]
+  links: { source: string; target: string; tag?: boolean }[]
 }
 
 function useBrainGraph() {
@@ -31,11 +32,15 @@ function useBrainGraph() {
  * tamanho pelo nº de conexões), wikilinks são arestas; alvo inexistente
  * aparece como nó fantasma apagado. Clique abre a nota.
  */
-export function GraphView({ onOpenNote }: { onOpenNote: (path: string) => void }) {
+export function GraphView({ onOpenNote, onCreateNote }: {
+  onOpenNote: (path: string) => void
+  onCreateNote: (title: string) => void
+}) {
   const { data } = useBrainGraph()
   const containerRef = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState({ w: 0, h: 0 })
   const [hover, setHover] = useState<string | null>(null)
+  const [showTags, setShowTags] = useState(false)
 
   useEffect(() => {
     const el = containerRef.current
@@ -48,12 +53,13 @@ export function GraphView({ onOpenNote }: { onOpenNote: (path: string) => void }
   }, [])
 
   // A lib muta os objetos (posições da simulação): entrega uma cópia.
+  // Tags entram só com o toggle ligado.
   const graphData = useMemo(
     () => ({
-      nodes: (data?.nodes ?? []).map((n) => ({ ...n })),
-      links: (data?.links ?? []).map((l) => ({ ...l })),
+      nodes: (data?.nodes ?? []).filter((n) => showTags || !n.tag).map((n) => ({ ...n })),
+      links: (data?.links ?? []).filter((l) => showTags || !l.tag).map((l) => ({ ...l })),
     }),
-    [data],
+    [data, showTags],
   )
 
   const dark = document.documentElement.classList.contains('dark')
@@ -70,7 +76,17 @@ export function GraphView({ onOpenNote }: { onOpenNote: (path: string) => void }
   }
 
   return (
-    <div ref={containerRef} className="h-full w-full">
+    <div ref={containerRef} className="relative h-full w-full">
+      <button
+        type="button"
+        onClick={() => setShowTags((t) => !t)}
+        aria-pressed={showTags}
+        className={`absolute right-3 top-3 z-10 rounded-md border px-2 py-1 text-xs font-medium ${
+          showTags ? 'bg-secondary text-foreground' : 'bg-card text-muted-foreground hover:bg-accent'
+        }`}
+      >
+        # Tags
+      </button>
       {size.w > 0 && (
         <ForceGraph2D
           width={size.w}
@@ -82,16 +98,24 @@ export function GraphView({ onOpenNote }: { onOpenNote: (path: string) => void }
           nodeRelSize={4}
           onNodeClick={(node) => {
             const n = node as GraphNode
-            if (!n.ghost) onOpenNote(n.id)
+            if (n.ghost) onCreateNote(n.title)
+            else if (!n.tag) onOpenNote(n.id)
           }}
           onNodeHover={(node) => setHover((node as GraphNode | null)?.id ?? null)}
           nodeCanvasObject={(node, ctx, globalScale) => {
             const n = node as GraphNode
-            const r = 3 + Math.min(6, n.degree)
+            const r = n.tag ? 2.5 : 3 + Math.min(6, n.degree)
             ctx.beginPath()
             ctx.arc(n.x ?? 0, n.y ?? 0, r, 0, 2 * Math.PI)
-            ctx.fillStyle = n.ghost ? ghostColor : (n.color ?? '#64748b')
-            ctx.fill()
+            if (n.tag) {
+              // Tag: círculo vazado, neutro — conecta sem competir com as notas.
+              ctx.strokeStyle = labelColor
+              ctx.lineWidth = 1 / globalScale
+              ctx.stroke()
+            } else {
+              ctx.fillStyle = n.ghost ? ghostColor : (n.color ?? '#64748b')
+              ctx.fill()
+            }
             if (hover === n.id) {
               ctx.strokeStyle = labelColor
               ctx.lineWidth = 1.5 / globalScale

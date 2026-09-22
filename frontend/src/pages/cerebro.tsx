@@ -31,6 +31,8 @@ export default function Cerebro() {
   const [openPath, setOpenPath] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const [graphMode, setGraphMode] = useState(false)
+  // Criar nota a partir de um nó fantasma clicado no grafo.
+  const [ghostCreate, setGhostCreate] = useState<string | null>(null)
 
   const isInbox = active === INBOX_TAB
   const { data: notes = [] } = useBrainNotes(
@@ -79,7 +81,7 @@ export default function Cerebro() {
 
             {graphMode ? (
               <div className="min-h-0 flex-1">
-                <GraphView onOpenNote={setOpenPath} />
+                <GraphView onOpenNote={setOpenPath} onCreateNote={setGhostCreate} />
               </div>
             ) : (
             <div className="min-h-0 flex-1 overflow-auto p-4 md:p-6">
@@ -160,6 +162,12 @@ export default function Cerebro() {
           onCreated={setOpenPath}
         />
       )}
+      <NewNoteDialog
+        open={ghostCreate !== null}
+        initialTitle={ghostCreate ?? undefined}
+        onClose={() => setGhostCreate(null)}
+        onCreated={(p) => { setGhostCreate(null); setOpenPath(p) }}
+      />
     </AppLayout>
   )
 }

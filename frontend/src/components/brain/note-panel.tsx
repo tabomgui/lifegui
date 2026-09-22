@@ -2,8 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { toast } from 'sonner'
-import { CodeXml, ExternalLink, Eye, Kanban, Pencil, Repeat } from 'lucide-react'
-import { NoteEditor } from '@/components/brain/note-editor'
+import { CodeXml, CornerUpRight, ExternalLink, Eye, Kanban, Pencil, Repeat, Scissors } from 'lucide-react'
+import { NoteEditor, type NoteEditorApi } from '@/components/brain/note-editor'
+import { NewNoteDialog } from '@/components/brain/new-note-dialog'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -35,12 +36,18 @@ export function NotePanel({ path, onNavigate, onClose }: {
   const update = useUpdateNote()
   const [editing, setEditing] = useState(false)
   // Modo padrão de edição é o editor rico (Crepe); "Texto puro" é a saída de
-  // segurança pra sintaxe que o WYSIWYG não conhece (ex.: [[wikilinks]]).
+  // segurança pra sintaxe que o WYSIWYG não conhece.
   const [rawMode, setRawMode] = useState(false)
   const [draft, setDraft] = useState('')
-  const getMarkdownRef = useRef<(() => string) | null>(null)
+  const editorApiRef = useRef<NoteEditorApi | null>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   // Força remount do editor quando o draft muda por fora (troca de modo).
   const [editorKey, setEditorKey] = useState(0)
+
+  // Criar nota a partir de [[link]] quebrado (clicado no texto).
+  const [ghostTitle, setGhostTitle] = useState<string | null>(null)
+  // Extração: trecho selecionado vira nota nova + [[link]] no lugar.
+  const [extract, setExtract] = useState<{ text: string; rawStart?: number; rawEnd?: number } | null>(null)
 
   useEffect(() => {
     setEditing(false)
@@ -48,25 +55,25 @@ export function NotePanel({ path, onNavigate, onClose }: {
     setDraft('')
   }, [path])
 
-  function currentContent(): string {
-    return rawMode ? draft : (getMarkdownRef.current?.() ?? draft)
-  }
-
-  function toggleRaw() {
-    if (rawMode) {
-      setEditorKey((k) => k + 1) // editor renasce com o draft editado
-      setRawMode(false)
-    } else {
-      setDraft(getMarkdownRef.current?.() ?? draft)
-      setRawMode(true)
-    }
-  }
-
-  // Índice título → path pra resolver wikilinks contra o vault carregado.
   const byTitle = useMemo(
     () => new Map(allNotes.map((n) => [n.title.toLowerCase(), n.path])),
     [allNotes],
   )
+  const noteTitles = useMemo(() => allNotes.map((n) => n.title), [allNotes])
+
+  function currentContent(): string {
+    return rawMode ? draft : (editorApiRef.current?.getMarkdown() ?? draft)
+  }
+
+  function toggleRaw() {
+    if (rawMode) {
+      setEditorKey((k) => k + 1)
+      setRawMode(false)
+    } else {
+      setDraft(currentContent())
+      setRawMode(true)
+    }
+  }
 
   async function setStatus(status: NoteStatus) {
     if (!note) return
@@ -86,6 +93,40 @@ export function NotePanel({ path, onNavigate, onClose }: {
     } catch {
       toast.error('Não foi possível salvar')
     }
+  }
+
+  function startExtract() {
+    if (rawMode) {
+      const el = textareaRef.current
+      if (!el || el.selectionStart === el.selectionEnd) {
+        toast.error('Selecione um trecho pra extrair')
+        return
+      }
+      setExtract({
+        text: draft.slice(el.selectionStart, el.selectionEnd),
+        rawStart: el.selectionStart,
+        rawEnd: el.selectionEnd,
+      })
+    } else {
+      const text = editorApiRef.current?.getSelectionText() ?? ''
+      if (!text.trim()) {
+        toast.error('Selecione um trecho pra extrair')
+        return
+      }
+      setExtract({ text })
+    }
+  }
+
+  function onExtracted(newPath: string) {
+    const title = newPath.split('/').pop()?.replace(/\.md$/, '') ?? ''
+    const link = `[[${title}]]`
+    if (extract?.rawStart !== undefined && extract.rawEnd !== undefined) {
+      setDraft((d) => d.slice(0, extract.rawStart) + link + d.slice(extract.rawEnd))
+    } else {
+      editorApiRef.current?.replaceSelection(link)
+    }
+    setExtract(null)
+    toast.success('Trecho extraído — salve a nota pra gravar o link')
   }
 
   return (
@@ -131,6 +172,10 @@ export function NotePanel({ path, onNavigate, onClose }: {
                 <div className="ml-auto">
                   {editing ? (
                     <div className="flex gap-1.5">
+                      <Button size="sm" variant="ghost" onClick={startExtract}
+                        title="Extrair trecho selecionado pra uma nota nova">
+                        <Scissors className="mr-1 h-3.5 w-3.5" /> Extrair
+                      </Button>
                       <Button size="sm" variant="ghost" onClick={toggleRaw}
                         title={rawMode ? 'Voltar pro editor' : 'Editar como texto puro'}>
                         <CodeXml className="mr-1 h-3.5 w-3.5" /> {rawMode ? 'Editor' : 'Texto'}
@@ -156,12 +201,13 @@ export function NotePanel({ path, onNavigate, onClose }: {
               {editing ? (
                 rawMode ? (
                   <Textarea
+                    ref={textareaRef}
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
                     className="h-full min-h-[50vh] resize-none font-mono text-sm"
                   />
                 ) : (
-                  <NoteEditor key={editorKey} defaultValue={draft} getMarkdownRef={getMarkdownRef} />
+                  <NoteEditor key={editorKey} defaultValue={draft} apiRef={editorApiRef} noteTitles={noteTitles} />
                 )
               ) : (
                 <div className="prose prose-sm prose-neutral max-w-none dark:prose-invert">
@@ -181,7 +227,14 @@ export function NotePanel({ path, onNavigate, onClose }: {
                               {children}
                             </a>
                           ) : (
-                            <span className="text-muted-foreground">{children}</span>
+                            <a
+                              href="#"
+                              onClick={(e) => { e.preventDefault(); setGhostTitle(target) }}
+                              title="Nota ainda não existe — clique pra criar"
+                              className="cursor-pointer text-muted-foreground underline decoration-dashed underline-offset-2"
+                            >
+                              {children}
+                            </a>
                           )
                         }
                         return <a href={href} target="_blank" rel="noreferrer">{children}</a>
@@ -194,24 +247,64 @@ export function NotePanel({ path, onNavigate, onClose }: {
               )}
             </div>
 
-            {note.links.length > 0 && (
-              <div className="border-t p-3">
-                <p className="mb-1.5 text-xs font-medium text-muted-foreground">Vinculado a</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {note.links.map((link) => (
-                    <span
-                      key={link.id}
-                      className="inline-flex items-center gap-1 rounded bg-muted px-2 py-0.5 text-xs"
-                    >
-                      {link.type === 'task' ? <Kanban className="h-3 w-3" /> : <Repeat className="h-3 w-3" />}
-                      {link.name ?? `#${link.linkable_id}`}
-                    </span>
-                  ))}
-                </div>
+            {(note.links.length > 0 || note.backlinks.length > 0) && !editing && (
+              <div className="space-y-2 border-t p-3">
+                {note.backlinks.length > 0 && (
+                  <div>
+                    <p className="mb-1.5 text-xs font-medium text-muted-foreground">Mencionada em</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {note.backlinks.map((b) => (
+                        <button
+                          key={b.path}
+                          type="button"
+                          onClick={() => onNavigate(b.path)}
+                          className="inline-flex items-center gap-1 rounded bg-muted px-2 py-0.5 text-xs hover:bg-accent"
+                        >
+                          <CornerUpRight className="h-3 w-3" />
+                          {b.title}
+                          <span className="text-muted-foreground/70">· {b.category}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {note.links.length > 0 && (
+                  <div>
+                    <p className="mb-1.5 text-xs font-medium text-muted-foreground">Vinculado a</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {note.links.map((link) => (
+                        <span
+                          key={link.id}
+                          className="inline-flex items-center gap-1 rounded bg-muted px-2 py-0.5 text-xs"
+                        >
+                          {link.type === 'task' ? <Kanban className="h-3 w-3" /> : <Repeat className="h-3 w-3" />}
+                          {link.name ?? `#${link.linkable_id}`}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </>
         )}
+
+        {/* Criar nota a partir de [[link]] quebrado clicado no texto. */}
+        <NewNoteDialog
+          open={ghostTitle !== null}
+          initialTitle={ghostTitle ?? undefined}
+          onClose={() => setGhostTitle(null)}
+          onCreated={(p) => { setGhostTitle(null); onNavigate(p) }}
+        />
+
+        {/* Extrair trecho selecionado pra nota nova. */}
+        <NewNoteDialog
+          open={extract !== null}
+          initialTitle={extract?.text.split(/\s+/).slice(0, 6).join(' ').slice(0, 60)}
+          initialBody={extract ? `${extract.text.trim()}\n` : undefined}
+          onClose={() => setExtract(null)}
+          onCreated={onExtracted}
+        />
       </SheetContent>
     </Sheet>
   )

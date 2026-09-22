@@ -87,6 +87,8 @@ export interface BrainNote extends BrainNoteSummary {
   frontmatter: Record<string, unknown>
   body: string
   links: BrainNoteBacklink[]
+  // Notas cujo corpo tem [[wikilink]] apontando pra esta.
+  backlinks: { path: string; title: string; category: string }[]
 }
 
 export interface InboxItem {

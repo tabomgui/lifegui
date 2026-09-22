@@ -166,7 +166,41 @@ MD;
             'frontmatter' => $note['frontmatter'],
             'body' => $note['body'],
             'links' => $links,
+            'backlinks' => $this->backlinks($path),
         ];
+    }
+
+    /**
+     * Notas cujo corpo tem um [[wikilink]] apontando pra esta (por título,
+     * sem diferenciar maiúsculas). Varredura direta: escala pessoal.
+     *
+     * @return array<int, array{path: string, title: string, category: string}>
+     */
+    private function backlinks(string $path): array
+    {
+        $title = mb_strtolower(basename($path, '.md'));
+        $result = [];
+
+        foreach ($this->vault->categories() as $category) {
+            foreach ($this->vault->listMarkdown($category) as $otherPath) {
+                if ($otherPath === $path) {
+                    continue;
+                }
+                $body = $this->vault->read($otherPath)['body'] ?? '';
+                foreach ($this->vault->extractWikilinks($body) as $target) {
+                    if (mb_strtolower($target) === $title) {
+                        $result[] = [
+                            'path' => $otherPath,
+                            'title' => basename($otherPath, '.md'),
+                            'category' => $category,
+                        ];
+                        break;
+                    }
+                }
+            }
+        }
+
+        return $result;
     }
 
     private function matches(array $summary, string $q): bool

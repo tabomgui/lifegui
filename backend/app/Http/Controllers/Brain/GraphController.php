@@ -29,10 +29,13 @@ class GraphController extends Controller
         foreach ($this->vault->categories() as $category) {
             foreach ($this->vault->listMarkdown($category) as $path) {
                 $title = basename($path, '.md');
+                $note = $this->vault->read($path) ?? ['frontmatter' => [], 'body' => ''];
+                $tags = $note['frontmatter']['tags'] ?? [];
                 $notes[$path] = [
                     'category' => $category,
                     'title' => $title,
-                    'body' => $this->vault->read($path)['body'] ?? '',
+                    'body' => $note['body'],
+                    'tags' => is_array($tags) ? array_values(array_filter($tags, 'is_string')) : [],
                 ];
                 $byTitle[mb_strtolower($title)] = $path;
             }
@@ -45,14 +48,7 @@ class GraphController extends Controller
         $ghosts = [];
 
         foreach ($notes as $path => $note) {
-            preg_match_all('/\[\[([^\]|#\n]+)(?:#[^\]|\n]*)?(?:\|[^\]\n]*)?\]\]/', $note['body'], $matches);
-
-            foreach ($matches[1] as $rawTarget) {
-                $target = trim($rawTarget);
-                if ($target === '') {
-                    continue;
-                }
-
+            foreach ($this->vault->extractWikilinks($note['body']) as $target) {
                 $resolved = $byTitle[mb_strtolower($target)] ?? null;
 
                 if ($resolved !== null) {
@@ -72,6 +68,19 @@ class GraphController extends Controller
             }
         }
 
+        // Tags do frontmatter como nós opcionais (o front decide exibir):
+        // ligam notas que compartilham assunto mesmo sem wikilink direto.
+        $tagNodes = [];
+        $tagLinks = [];
+        foreach ($notes as $path => $note) {
+            foreach ($note['tags'] as $tag) {
+                $tagId = 'tag:'.mb_strtolower($tag);
+                $tagNodes[$tagId] ??= ['title' => '#'.$tag, 'degree' => 0];
+                $tagNodes[$tagId]['degree']++;
+                $tagLinks[] = ['source' => $path, 'target' => $tagId, 'tag' => true];
+            }
+        }
+
         $nodes = [];
         foreach ($notes as $path => $note) {
             $nodes[] = [
@@ -82,6 +91,17 @@ class GraphController extends Controller
                 'degree' => $degree[$path],
             ];
         }
+        foreach ($tagNodes as $id => $tagNode) {
+            $nodes[] = [
+                'id' => $id,
+                'title' => $tagNode['title'],
+                'category' => null,
+                'color' => null,
+                'degree' => $tagNode['degree'],
+                'tag' => true,
+            ];
+        }
+        $links = [...$links, ...$tagLinks];
         foreach ($ghosts as $id => $ghost) {
             $nodes[] = [
                 'id' => $id,

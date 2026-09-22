@@ -58,6 +58,34 @@ test('resolve título sem diferenciar maiúsculas e ignora âncora', function ()
         ->and($links[0]['target'])->toBe('Bateria/Paradiddle.md');
 });
 
+test('tags do frontmatter viram nós marcados', function () {
+    makeNote('Bateria/Aula 1.md', ['tags' => ['groove']], "x\n");
+    makeNote('Bateria/Aula 2.md', ['tags' => ['groove', 'rudimento']], "x\n");
+
+    $res = $this->getJson('/api/brain/graph')->assertOk();
+    $nodes = collect($res->json('data.nodes'));
+    $links = collect($res->json('data.links'));
+
+    $groove = $nodes->firstWhere('id', 'tag:groove');
+    expect($groove['tag'])->toBeTrue()
+        ->and($groove['title'])->toBe('#groove')
+        ->and($groove['degree'])->toBe(2)
+        ->and($nodes->firstWhere('id', 'tag:rudimento'))->not->toBeNull()
+        ->and($links->where('tag', true))->toHaveCount(3);
+});
+
+test('nota mostra backlinks de quem aponta pra ela', function () {
+    makeNote('Bateria/Paradiddle.md', [], "base\n");
+    makeNote('Bateria/Aula 1.md', [], "ver [[Paradiddle]]\n");
+    makeNote('Calistenia/Treino.md', [], "tempo de [[paradiddle]] também\n");
+
+    $this->getJson('/api/brain/notes/Bateria/Paradiddle.md')
+        ->assertOk()
+        ->assertJsonCount(2, 'data.backlinks')
+        ->assertJsonPath('data.backlinks.0.path', 'Bateria/Aula 1.md')
+        ->assertJsonPath('data.backlinks.1.category', 'Calistenia');
+});
+
 test('vault ausente responde vazio e rota exige auth', function () {
     $fresh = User::factory()->create();
     $this->actingAs($fresh);
