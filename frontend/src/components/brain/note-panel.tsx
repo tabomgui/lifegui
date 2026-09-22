@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { toast } from 'sonner'
-import { ExternalLink, Eye, Kanban, Pencil, Repeat } from 'lucide-react'
+import { CodeXml, ExternalLink, Eye, Kanban, Pencil, Repeat } from 'lucide-react'
+import { NoteEditor } from '@/components/brain/note-editor'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -33,12 +34,33 @@ export function NotePanel({ path, onNavigate, onClose }: {
   const { data: allNotes = [] } = useBrainNotes()
   const update = useUpdateNote()
   const [editing, setEditing] = useState(false)
+  // Modo padrão de edição é o editor rico (Crepe); "Texto puro" é a saída de
+  // segurança pra sintaxe que o WYSIWYG não conhece (ex.: [[wikilinks]]).
+  const [rawMode, setRawMode] = useState(false)
   const [draft, setDraft] = useState('')
+  const getMarkdownRef = useRef<(() => string) | null>(null)
+  // Força remount do editor quando o draft muda por fora (troca de modo).
+  const [editorKey, setEditorKey] = useState(0)
 
   useEffect(() => {
     setEditing(false)
+    setRawMode(false)
     setDraft('')
   }, [path])
+
+  function currentContent(): string {
+    return rawMode ? draft : (getMarkdownRef.current?.() ?? draft)
+  }
+
+  function toggleRaw() {
+    if (rawMode) {
+      setEditorKey((k) => k + 1) // editor renasce com o draft editado
+      setRawMode(false)
+    } else {
+      setDraft(getMarkdownRef.current?.() ?? draft)
+      setRawMode(true)
+    }
+  }
 
   // Índice título → path pra resolver wikilinks contra o vault carregado.
   const byTitle = useMemo(
@@ -58,7 +80,7 @@ export function NotePanel({ path, onNavigate, onClose }: {
   async function saveBody() {
     if (!note) return
     try {
-      await update.mutateAsync({ path: note.path, body: draft })
+      await update.mutateAsync({ path: note.path, body: currentContent() })
       setEditing(false)
       toast.success('Nota salva')
     } catch {
@@ -109,6 +131,10 @@ export function NotePanel({ path, onNavigate, onClose }: {
                 <div className="ml-auto">
                   {editing ? (
                     <div className="flex gap-1.5">
+                      <Button size="sm" variant="ghost" onClick={toggleRaw}
+                        title={rawMode ? 'Voltar pro editor' : 'Editar como texto puro'}>
+                        <CodeXml className="mr-1 h-3.5 w-3.5" /> {rawMode ? 'Editor' : 'Texto'}
+                      </Button>
                       <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
                         <Eye className="mr-1 h-3.5 w-3.5" /> Cancelar
                       </Button>
@@ -117,7 +143,7 @@ export function NotePanel({ path, onNavigate, onClose }: {
                       </Button>
                     </div>
                   ) : (
-                    <Button size="sm" variant="ghost" onClick={() => { setDraft(note.body); setEditing(true) }}>
+                    <Button size="sm" variant="ghost" onClick={() => { setDraft(note.body); setEditorKey((k) => k + 1); setEditing(true) }}>
                       <Pencil className="mr-1 h-3.5 w-3.5" /> Editar
                     </Button>
                   )}
@@ -128,11 +154,15 @@ export function NotePanel({ path, onNavigate, onClose }: {
 
             <div className="min-h-0 flex-1 overflow-auto p-4">
               {editing ? (
-                <Textarea
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  className="h-full min-h-[50vh] resize-none font-mono text-sm"
-                />
+                rawMode ? (
+                  <Textarea
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    className="h-full min-h-[50vh] resize-none font-mono text-sm"
+                  />
+                ) : (
+                  <NoteEditor key={editorKey} defaultValue={draft} getMarkdownRef={getMarkdownRef} />
+                )
               ) : (
                 <div className="prose prose-sm prose-neutral max-w-none dark:prose-invert">
                   <ReactMarkdown
