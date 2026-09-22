@@ -31,30 +31,14 @@ class InboxController extends Controller
         return response()->json(['data' => $items, 'initialized' => $this->vault->initialized()]);
     }
 
-    public function store(StoreInboxRequest $request): JsonResponse
+    public function store(StoreInboxRequest $request, \App\Support\Vault\InboxCaptureService $capture): JsonResponse
     {
-        $title = $request->validated('title');
-        $name = $title !== null
-            ? trim(str_replace(['/', '\\', ':', '*', '?', '"', '<', '>', '|', '#', '[', ']'], '', $title))
-            : '';
+        // Lógica compartilhada com a tool MCP `capturar`.
+        $created = $capture->capture($request->validated('content'), $request->validated('title'));
 
-        if ($name === '') {
-            $name = 'captura-'.now()->format('Y-m-d-His');
-        }
+        abort_if($created === null, 422, 'Inbox não encontrado no vault.');
 
-        $path = self::INBOX."/{$name}.md";
-
-        // Colisão de nome: sufixa com horário em vez de sobrescrever.
-        if ($this->vault->resolve($path) !== null) {
-            $path = self::INBOX."/{$name}-".now()->format('His').'.md';
-        }
-
-        $frontmatter = ['data_salvo' => now()->format('Y-m-d'), 'status' => 'novo'];
-        $written = $this->vault->write($path, $frontmatter, $request->validated('content'), mustExist: false);
-
-        abort_if($written === null, 422, 'Inbox não encontrado no vault.');
-
-        return response()->json(['data' => ['path' => $path, 'title' => basename($path, '.md')]], 201);
+        return response()->json(['data' => $created], 201);
     }
 
     public function promote(StoreNoteRequest $request, NoteController $notes, string $path): JsonResponse
