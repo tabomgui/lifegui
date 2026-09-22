@@ -23,6 +23,9 @@ services:
     # .env fica fora da imagem (.dockerignore) — montado aqui pra key:generate persistir.
     volumes:
       - ./backend/.env:/var/www/html/.env
+      # Vaults Obsidian do módulo Cérebro (um por usuário, {user_id}/).
+      # Fonte da verdade em arquivos .md; a pasta no host é a futura raiz do sync.
+      - ${VAULTS_PATH_HOST:-./vaults}:/vaults
     # Resolvers públicos: o DNS do roteador (192.168.1.1) é intermitente e causava
     # timeout ao resolver hosts externos (ex.: OAuth do Google). Nomes de serviço
     # (mysql) continuam via DNS embutido do Docker.
@@ -35,6 +38,7 @@ services:
       DB_DATABASE: ${DB_DATABASE:-lifegui}
       DB_USERNAME: ${DB_USERNAME:-root}
       DB_PASSWORD: ${DB_PASSWORD:-root}
+      VAULTS_PATH: /vaults
     # Gera APP_KEY se faltar, roda migrations e sobe o servidor.
     command: sh -c "(grep -q '^APP_KEY=base64' .env || php artisan key:generate --force) && php artisan config:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
 
