@@ -8,7 +8,7 @@ import ptBrLocale from '@fullcalendar/core/locales/pt-br'
 import type { DateSelectArg, EventClickArg, EventDropArg, EventInput } from '@fullcalendar/core'
 import type { EventResizeDoneArg } from '@fullcalendar/interaction'
 import { toast } from 'sonner'
-import { ArrowUpRight, CalendarDays, ExternalLink, Pencil, Plus, Trash2 } from 'lucide-react'
+import { ArrowUpRight, CalendarDays, ChevronDown, ExternalLink, Pencil, Plus, Repeat, Trash2 } from 'lucide-react'
 import { AppLayout } from '@/components/app-layout'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,6 +18,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { NotePanel } from '@/components/brain/note-panel'
 import { AgendaCreateDialog, type CreateSlot } from '@/components/calendar/agenda-create-dialog'
 import { AgendaEditDialog } from '@/components/calendar/agenda-edit-dialog'
@@ -266,31 +272,40 @@ export default function Agenda() {
           {detail && (
             <>
               <DialogHeader>
-                <DialogTitle className="pr-6">{detail.title}</DialogTitle>
+                <DialogTitle className="pr-6 text-left">{detail.title}</DialogTitle>
               </DialogHeader>
-              <div className="space-y-1.5 text-sm text-muted-foreground">
-                <p>{formatRange(detail)}</p>
-                <p className="flex items-center gap-1.5">
-                  <span
-                    className="h-1.5 w-1.5 rounded-full"
-                    style={{ background: detail.external ? '#94a3b8' : TYPE_COLOR[detail.lifegui?.type ?? 'event'] }}
-                  />
-                  {TYPE_LABEL[filterKeyOf(detail)]}
-                  {detail.recurring_event_id && ' · recorrente'}
-                </p>
-              </div>
-              <DialogFooter className="gap-2 sm:justify-between">
-                {detail.html_link && (
-                  <Button size="sm" variant="ghost" asChild>
-                    <a href={detail.html_link} target="_blank" rel="noreferrer">
-                      <ExternalLink className="mr-1 h-3.5 w-3.5" /> Google
+              <div className="space-y-2 text-sm">
+                <p className="text-muted-foreground">{formatRange(detail)}</p>
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
+                    <span
+                      className="h-1.5 w-1.5 rounded-full"
+                      style={{ background: detail.external ? '#94a3b8' : TYPE_COLOR[detail.lifegui?.type ?? 'event'] }}
+                    />
+                    {TYPE_LABEL[filterKeyOf(detail)]}
+                  </span>
+                  {detail.recurring_event_id && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
+                      <Repeat className="h-3 w-3" /> Recorrente
+                    </span>
+                  )}
+                  {detail.html_link && (
+                    <a
+                      href={detail.html_link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="ml-auto inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      <ExternalLink className="h-3 w-3" /> Google
                     </a>
-                  </Button>
-                )}
+                  )}
+                </div>
+              </div>
+              <DialogFooter className="mt-1 flex-row justify-end gap-2">
                 {!detail.external && (
-                  <div className="flex flex-wrap gap-2">
+                  <>
                     {detail.lifegui?.type !== 'event' && (
-                      <Button size="sm" variant="outline" onClick={() => openItem(detail)}>
+                      <Button size="sm" variant="ghost" className="mr-auto" onClick={() => openItem(detail)}>
                         <ArrowUpRight className="mr-1 h-3.5 w-3.5" /> Abrir {TYPE_LABEL[detail.lifegui?.type ?? 'event'].toLowerCase()}
                       </Button>
                     )}
@@ -298,20 +313,30 @@ export default function Agenda() {
                       <Pencil className="mr-1 h-3.5 w-3.5" /> Editar
                     </Button>
                     {detail.recurring_event_id ? (
-                      <>
-                        <Button size="sm" variant="destructive" disabled={remove.isPending} onClick={() => removeDetail(false)}>
-                          <Trash2 className="mr-1 h-3.5 w-3.5" /> Só esta
-                        </Button>
-                        <Button size="sm" variant="destructive" disabled={remove.isPending} onClick={() => removeDetail(true)}>
-                          <Trash2 className="mr-1 h-3.5 w-3.5" /> Série
-                        </Button>
-                      </>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button size="sm" variant="outline" disabled={remove.isPending}
+                            className="text-destructive hover:text-destructive">
+                            <Trash2 className="mr-1 h-3.5 w-3.5" /> Remover
+                            <ChevronDown className="ml-1 h-3 w-3" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => removeDetail(false)}>
+                            Só esta ocorrência
+                          </DropdownMenuItem>
+                          <DropdownMenuItem variant="destructive" onClick={() => removeDetail(true)}>
+                            Toda a série
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     ) : (
-                      <Button size="sm" variant="destructive" disabled={remove.isPending} onClick={() => removeDetail(true)}>
+                      <Button size="sm" variant="outline" disabled={remove.isPending}
+                        className="text-destructive hover:text-destructive" onClick={() => removeDetail(true)}>
                         <Trash2 className="mr-1 h-3.5 w-3.5" /> Remover
                       </Button>
                     )}
-                  </div>
+                  </>
                 )}
               </DialogFooter>
             </>
