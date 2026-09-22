@@ -225,3 +225,11 @@ export function useDeleteNoteLink() {
     },
   })
 }
+
+export function useBrainTags(enabled = true) {
+  return useQuery({
+    queryKey: ['brain', 'tags'],
+    queryFn: async () => (await api.get('/brain/tags')).data.data as string[],
+    enabled,
+  })
+}

@@ -45,6 +45,26 @@ MD;
 
     public function __construct(private readonly VaultService $vault) {}
 
+    /** Todas as tags do vault (frontmatter), únicas e ordenadas — autocomplete do editor de tags. */
+    public function tags(): JsonResponse
+    {
+        $tags = [];
+        foreach ($this->vault->categories() as $category) {
+            foreach ($this->vault->listMarkdown($category) as $path) {
+                $note = $this->vault->read($path);
+                foreach ((array) ($note['frontmatter']['tags'] ?? []) as $tag) {
+                    if (is_string($tag) && $tag !== '') {
+                        $tags[$tag] = true;
+                    }
+                }
+            }
+        }
+        $tags = array_keys($tags);
+        sort($tags, SORT_FLAG_CASE | SORT_STRING);
+
+        return response()->json(['data' => $tags]);
+    }
+
     public function index(Request $request): JsonResponse
     {
         $category = $request->query('category');

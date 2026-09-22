@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { CodeXml, CornerUpRight, ExternalLink, Eye, Kanban, Pencil, Repeat, Scissors } from 'lucide-react'
 import { NoteEditor, type NoteEditorApi } from '@/components/brain/note-editor'
 import { ScheduleSection } from '@/components/calendar/schedule-section'
+import { TagEditor } from '@/components/brain/tag-editor'
 import { NewNoteDialog } from '@/components/brain/new-note-dialog'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
@@ -165,11 +166,7 @@ export function NotePanel({ path, onNavigate, onClose }: {
                     <ExternalLink className="h-3 w-3" /> fonte
                   </a>
                 )}
-                {note.tags.map((tag) => (
-                  <span key={tag} className="rounded bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
-                    {tag}
-                  </span>
-                ))}
+                <TagEditor path={note.path} tags={note.tags} />
                 <div className="ml-auto">
                   {editing ? (
                     <div className="flex gap-1.5">

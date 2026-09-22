@@ -182,3 +182,20 @@ test('patch valida status e rejeita nota inexistente', function () {
         ->assertStatus(422);
     $this->patchJson('/api/brain/notes/Receitas/Nada.md', ['body' => 'x'])->assertNotFound();
 });
+
+test('lista todas as tags do vault, únicas e ordenadas', function () {
+    makeNote('Receitas/Frango.md', ['status' => 'novo', 'tags' => ['airfryer', 'proteina']]);
+    makeNote('Receitas/Bolo2.md', ['status' => 'novo', 'tags' => ['doce', 'airfryer']]);
+
+    $this->getJson('/api/brain/tags')
+        ->assertOk()
+        ->assertJson(['data' => ['airfryer', 'doce', 'proteina']]);
+});
+
+test('atualiza as tags de uma nota via frontmatter', function () {
+    makeNote('Receitas/Frango.md', ['status' => 'novo']);
+
+    $this->patchJson('/api/brain/notes/Receitas/Frango.md', [
+        'frontmatter' => ['tags' => ['airfryer', 'rapido']],
+    ])->assertOk()->assertJsonPath('data.tags', ['airfryer', 'rapido']);
+});
