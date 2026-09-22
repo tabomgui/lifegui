@@ -13,6 +13,8 @@ use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SubtaskController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TokenController;
+use App\Http\Middleware\RestrictCaptureTokens;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -29,7 +31,7 @@ Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
 // Rotas OAuth do Google movidas para routes/web.php (precisam do middleware web:
 // sessão/cookies) — o callback vem do Google, fora do fluxo stateful do Sanctum.
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', RestrictCaptureTokens::class])->group(function () {
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::post('/categories', [CategoryController::class, 'store']);
     Route::patch('/categories/reorder', [CategoryController::class, 'reorder']);
@@ -73,6 +75,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Configurações globais da instância (hoje: raiz dos vaults do Cérebro).
     Route::get('/settings/vault', [SettingsController::class, 'show']);
     Route::patch('/settings/vault', [SettingsController::class, 'update']);
+
+    // Tokens de captura (Atalho do iPhone). RestrictCaptureTokens (no grupo)
+    // garante que um token vazado só consegue capturar no inbox.
+    Route::get('/tokens', [TokenController::class, 'index']);
+    Route::post('/tokens', [TokenController::class, 'store']);
+    Route::delete('/tokens/{tokenId}', [TokenController::class, 'destroy']);
 
     // Módulo Cérebro: gerencia o vault Obsidian do usuário (filesystem é a
     // fonte da verdade; nada de notas no banco). Rotas literais ANTES das

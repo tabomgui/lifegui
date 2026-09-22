@@ -1,6 +1,7 @@
 import { AppLayout } from '@/components/app-layout'
 import { ModulesSettings } from '@/components/settings/modules-settings'
 import { VaultSettings } from '@/components/settings/vault-settings'
+import { CaptureSettings } from '@/components/settings/capture-settings'
 
 export default function Configuracoes() {
   return (
@@ -9,6 +10,7 @@ export default function Configuracoes() {
         <div className="mx-auto w-full max-w-2xl space-y-4">
           <ModulesSettings />
           <VaultSettings />
+          <CaptureSettings />
         </div>
       </main>
     </AppLayout>
