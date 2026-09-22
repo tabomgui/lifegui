@@ -35,6 +35,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'google_calendar_refresh_token',
     ];
 
     /**
@@ -47,6 +48,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'google_calendar_refresh_token' => 'encrypted',
+            'google_calendar_connected_at' => 'datetime',
         ];
     }
 }
