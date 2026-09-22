@@ -25,6 +25,70 @@ export function useBrainCategories(enabled = true) {
   })
 }
 
+export function useCreateBrainCategory() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: { name: string; icon?: string; color?: string }) => {
+      await csrf()
+      return (await api.post('/brain/categories', input)).data.data as BrainCategory
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: BRAIN }),
+  })
+}
+
+export function useUpdateBrainCategory() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ current, ...input }: { current: string; name?: string; icon?: string; color?: string }) => {
+      await csrf()
+      return (await api.patch(`/brain/categories/${encodeURIComponent(current)}`, input)).data
+        .data as Pick<BrainCategory, 'name' | 'icon' | 'color'>
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: BRAIN }),
+  })
+}
+
+export function useReorderBrainCategories() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (order: string[]) => {
+      await csrf()
+      return (await api.patch('/brain/categories/reorder', { order })).data.data as string[]
+    },
+    // Otimista: reflete a nova ordem nas abas imediatamente; onSettled reconcilia.
+    onMutate: async (order) => {
+      await qc.cancelQueries({ queryKey: ['brain', 'categories'] })
+      const prev = qc.getQueryData<CategoriesResponse>(['brain', 'categories'])
+      if (prev) {
+        const byName = new Map(prev.data.map((c) => [c.name, c]))
+        qc.setQueryData<CategoriesResponse>(['brain', 'categories'], {
+          ...prev,
+          data: [
+            ...order.map((n) => byName.get(n)).filter((c): c is BrainCategory => c !== undefined),
+            ...prev.data.filter((c) => !order.includes(c.name)),
+          ],
+        })
+      }
+      return { prev }
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(['brain', 'categories'], ctx.prev)
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: BRAIN }),
+  })
+}
+
+export function useDeleteBrainCategory() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (name: string) => {
+      await csrf()
+      await api.delete(`/brain/categories/${encodeURIComponent(name)}`)
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: BRAIN }),
+  })
+}
+
 export function useBrainNotes(params: { category?: string; status?: NoteStatus | null; q?: string } = {}) {
   const { category, status, q } = params
   return useQuery({

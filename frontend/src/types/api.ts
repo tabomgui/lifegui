@@ -59,6 +59,8 @@ export type NoteStatus = 'novo' | 'estudando' | 'concluido' | 'a-revisar'
 
 export interface BrainCategory {
   name: string
+  icon: string
+  color: string
   counts: Partial<Record<NoteStatus, number>>
   total: number
 }
