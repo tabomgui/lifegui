@@ -72,6 +72,20 @@ export function BrainCategoryTabs({
   return (
     <div className="flex items-center gap-2 border-b px-4 py-2 md:px-6">
       <div role="tablist" className="flex items-center gap-1 overflow-x-auto">
+        <button
+          role="tab"
+          aria-selected={active === INBOX_TAB}
+          onClick={() => onChange(INBOX_TAB)}
+          className={`inline-flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium ${
+            active === INBOX_TAB ? 'bg-secondary' : 'text-muted-foreground hover:bg-accent'
+          }`}
+        >
+          <Inbox className="h-3.5 w-3.5" />
+          Inbox
+          <span className={`ml-0.5 rounded-full px-1.5 text-[11px] ${inboxCount > 0 ? 'bg-amber-500/20 text-amber-500' : 'bg-secondary'}`}>
+            {inboxCount}
+          </span>
+        </button>
         {categories.map((c) => (
           <div
             key={c.name}
@@ -115,20 +129,6 @@ export function BrainCategoryTabs({
             </button>
           </div>
         ))}
-        <button
-          role="tab"
-          aria-selected={active === INBOX_TAB}
-          onClick={() => onChange(INBOX_TAB)}
-          className={`inline-flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium ${
-            active === INBOX_TAB ? 'bg-secondary' : 'text-muted-foreground hover:bg-accent'
-          }`}
-        >
-          <Inbox className="h-3.5 w-3.5" />
-          Inbox
-          <span className={`ml-0.5 rounded-full px-1.5 text-[11px] ${inboxCount > 0 ? 'bg-amber-500/20 text-amber-500' : 'bg-secondary'}`}>
-            {inboxCount}
-          </span>
-        </button>
         <button onClick={openNew} className="ml-1 inline-flex shrink-0 items-center gap-1 rounded-md border border-dashed px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent">
           <Plus className="h-3.5 w-3.5" /> Categoria
         </button>
