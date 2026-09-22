@@ -257,3 +257,20 @@ export interface TaskReport {
   overdueByAgeBucket: TaskReportOverdueByAgeBucket
   noDueDate: TaskReportNoDueDate
 }
+
+// --- Agenda (Google Calendar como fonte da verdade; GET /api/calendar/*) ---
+
+export type CalendarLinkType = 'task' | 'habit' | 'note'
+
+export interface CalendarEvent {
+  id: string
+  title: string
+  start: string | null
+  end: string | null
+  all_day: boolean
+  external: boolean
+  lifegui: { type: CalendarLinkType; ref: string } | null
+  recurring_event_id: string | null
+  recurrence: string[] | null
+  html_link: string | null
+}
