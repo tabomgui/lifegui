@@ -26,6 +26,9 @@ services:
       # Vaults Obsidian do módulo Cérebro (um por usuário, {user_id}/).
       # Fonte da verdade em arquivos .md; a pasta no host é a futura raiz do sync.
       - ${VAULTS_PATH_HOST:-./vaults}:/vaults
+      # Chaves OAuth do Passport (servidor MCP): fora da imagem pra rebuild
+      # não invalidar os tokens dos clientes conectados.
+      - ./oauth-keys:/var/www/html/storage/oauth
     # Resolvers públicos: o DNS do roteador (192.168.1.1) é intermitente e causava
     # timeout ao resolver hosts externos (ex.: OAuth do Google). Nomes de serviço
     # (mysql) continuam via DNS embutido do Docker.
@@ -39,8 +42,8 @@ services:
       DB_USERNAME: ${DB_USERNAME:-root}
       DB_PASSWORD: ${DB_PASSWORD:-root}
       VAULTS_PATH: /vaults
-    # Gera APP_KEY se faltar, roda migrations e sobe o servidor.
-    command: sh -c "(grep -q '^APP_KEY=base64' .env || php artisan key:generate --force) && php artisan config:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
+    # Gera APP_KEY/chaves do Passport se faltarem, roda migrations e sobe o servidor.
+    command: sh -c "(grep -q '^APP_KEY=base64' .env || php artisan key:generate --force) && ([ -f storage/oauth/oauth-private.key ] || php artisan passport:keys) && php artisan config:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
 
   web:
     build:

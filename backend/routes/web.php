@@ -18,3 +18,8 @@ Route::get('/api/auth/google/callback', [GoogleController::class, 'callback']);
 // é a mesma do Sanctum stateful) e só adiciona o escopo de agenda.
 Route::get('/api/auth/google-calendar/redirect', [GoogleCalendarController::class, 'redirect']);
 Route::get('/api/auth/google-calendar/callback', [GoogleCalendarController::class, 'callback']);
+
+// Deslogado no /oauth/authorize do MCP, o middleware manda pra route('login').
+// A tela real é a do SPA (mesmo domínio); depois de logar, refaça a conexão
+// no cliente MCP — a sessão web já estará de pé.
+Route::redirect('/login', config('app.frontend_url').'/login')->name('login');
