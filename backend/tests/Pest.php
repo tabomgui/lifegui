@@ -45,3 +45,26 @@ function something()
 {
     // ..
 }
+
+// ---- Helpers do módulo Cérebro (tests/Feature/Brain) ----
+// Pressupõem beforeEach que define $this->vaultRoot (config vault.root) e
+// $this->user autenticado.
+
+function vaultPath(): string
+{
+    return test()->vaultRoot.'/'.test()->user->id;
+}
+
+function makeNote(string $relative, array $frontmatter = [], string $body = "corpo\n"): void
+{
+    $absolute = vaultPath().'/'.$relative;
+    Illuminate\Support\Facades\File::ensureDirectoryExists(dirname($absolute));
+    $yaml = '';
+    if ($frontmatter !== []) {
+        $lines = collect($frontmatter)
+            ->map(fn ($v, $k) => is_array($v) ? "$k: [".implode(', ', $v).']' : "$k: $v")
+            ->implode("\n");
+        $yaml = "---\n{$lines}\n---\n";
+    }
+    file_put_contents($absolute, $yaml.$body);
+}

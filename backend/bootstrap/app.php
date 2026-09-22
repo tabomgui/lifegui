@@ -21,6 +21,10 @@ return Application::configure(basePath: dirname(__DIR__))
             | Request::HEADER_X_FORWARDED_PROTO);
 
         $middleware->statefulApi();
+
+        // Corpo markdown das notas do vault vai byte a byte pro arquivo;
+        // trim aqui corromperia whitespace significativo (fences, quebras finais).
+        $middleware->trimStrings(except: ['body', 'content']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

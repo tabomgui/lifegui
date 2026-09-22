@@ -13,25 +13,6 @@ afterEach(function () {
     File::deleteDirectory($this->vaultRoot);
 });
 
-function vaultPath(): string
-{
-    return test()->vaultRoot.'/'.test()->user->id;
-}
-
-function makeNote(string $relative, array $frontmatter = [], string $body = "corpo\n"): void
-{
-    $absolute = vaultPath().'/'.$relative;
-    File::ensureDirectoryExists(dirname($absolute));
-    $yaml = '';
-    if ($frontmatter !== []) {
-        $lines = collect($frontmatter)
-            ->map(fn ($v, $k) => is_array($v) ? "$k: [".implode(', ', $v).']' : "$k: $v")
-            ->implode("\n");
-        $yaml = "---\n{$lines}\n---\n";
-    }
-    file_put_contents($absolute, $yaml.$body);
-}
-
 test('vault ausente responde vazio com initialized false', function () {
     $this->getJson('/api/brain/categories')
         ->assertOk()
