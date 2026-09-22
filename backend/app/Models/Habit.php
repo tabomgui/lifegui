@@ -5,6 +5,7 @@ use App\Models\Concerns\BelongsToUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Habit extends Model
 {
@@ -21,5 +22,10 @@ class Habit extends Model
     public function logs(): HasMany
     {
         return $this->hasMany(HabitLog::class);
+    }
+
+    public function noteLinks(): MorphMany
+    {
+        return $this->morphMany(NoteLink::class, 'linkable');
     }
 }

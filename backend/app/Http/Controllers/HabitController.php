@@ -29,6 +29,7 @@ class HabitController extends Controller
                 fn ($q) => $q->whereNotNull('archived_at'),
                 fn ($q) => $q->whereNull('archived_at'),
             )
+            ->with('noteLinks')
             ->orderBy('id')
             ->get();
 

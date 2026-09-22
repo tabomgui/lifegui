@@ -16,6 +16,7 @@ class HabitResource extends JsonResource
             'target_per_week' => $this->target_per_week,
             'color' => $this->color,
             'archived_at' => $this->archived_at?->toIso8601String(),
+            'note_links' => NoteLinkResource::collection($this->whenLoaded('noteLinks')),
         ];
     }
 }

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Brain;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Brain\StoreNoteRequest;
 use App\Http\Requests\Brain\UpdateNoteRequest;
+use App\Models\NoteLink;
+use App\Models\Task;
 use App\Support\Vault\VaultService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -147,9 +149,23 @@ MD;
 
     private function full(string $path, array $note): array
     {
+        $links = NoteLink::query()
+            ->where('note_path', $path)
+            ->with('linkable')
+            ->get()
+            ->map(fn ($link) => [
+                'id' => $link->id,
+                'type' => $link->linkable_type === Task::class ? 'task' : 'habit',
+                'linkable_id' => $link->linkable_id,
+                'name' => $link->linkable?->title ?? $link->linkable?->name,
+            ])
+            ->values()
+            ->all();
+
         return $this->summary($path) + [
             'frontmatter' => $note['frontmatter'],
             'body' => $note['body'],
+            'links' => $links,
         ];
     }
 

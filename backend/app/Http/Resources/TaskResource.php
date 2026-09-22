@@ -20,6 +20,7 @@ class TaskResource extends JsonResource
             'subtasks' => SubtaskResource::collection($this->whenLoaded('subtasks')),
             'subtasks_count' => $this->whenCounted('subtasks'),
             'subtasks_done_count' => $this->whenCounted('subtasks_done_count'),
+            'note_links' => NoteLinkResource::collection($this->whenLoaded('noteLinks')),
         ];
     }
 }

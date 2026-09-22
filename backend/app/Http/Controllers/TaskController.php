@@ -20,7 +20,7 @@ class TaskController extends Controller
             ->when($request->filled('category_id'), fn ($q) => $q->where('category_id', $request->integer('category_id')))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
             ->withCount(['subtasks', 'subtasks as subtasks_done_count' => fn ($q) => $q->where('done', true)])
-            ->with('subtasks') // inclui as subtarefas para a prévia no card
+            ->with(['subtasks', 'noteLinks']) // subtarefas pra prévia no card; noteLinks pro módulo Cérebro
             ->orderBy('position')->orderBy('id')
             ->get();
 
@@ -29,7 +29,7 @@ class TaskController extends Controller
 
     public function show(Task $task): JsonResponse
     {
-        return (new TaskResource($task->load('subtasks')))->response();
+        return (new TaskResource($task->load(['subtasks', 'noteLinks'])))->response();
     }
 
     public function store(StoreTaskRequest $request): JsonResponse
