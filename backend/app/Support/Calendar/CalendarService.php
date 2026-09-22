@@ -38,7 +38,7 @@ class CalendarService
                 'pageToken' => $pageToken,
             ]));
 
-            $response = $this->http($user)->get(self::BASE.'?'.$query)->throw();
+            $response = $this->guard($this->http($user)->get(self::BASE.'?'.$query));
             $items = array_merge($items, $response->json('items') ?? []);
             $pageToken = $response->json('nextPageToken');
         } while ($pageToken);
@@ -61,7 +61,7 @@ class CalendarService
             'maxResults=50',
         ]);
 
-        $items = $this->http($user)->get(self::BASE.'?'.$query)->throw()->json('items') ?? [];
+        $items = $this->guard($this->http($user)->get(self::BASE.'?'.$query))->json('items') ?? [];
 
         // status=cancelled aparece em masters apagados; não interessa.
         $items = array_values(array_filter($items, fn ($e) => ($e['status'] ?? '') !== 'cancelled'));
@@ -71,7 +71,7 @@ class CalendarService
 
     public function get(User $user, string $eventId): array
     {
-        $event = $this->http($user)->get(self::BASE.'/'.rawurlencode($eventId))->throw()->json();
+        $event = $this->guard($this->http($user)->get(self::BASE.'/'.rawurlencode($eventId)))->json();
 
         return $this->normalize($event);
     }
@@ -81,7 +81,7 @@ class CalendarService
      */
     public function create(User $user, array $data): array
     {
-        $event = $this->http($user)->post(self::BASE, $this->payload($data))->throw()->json();
+        $event = $this->guard($this->http($user)->post(self::BASE, $this->payload($data)))->json();
 
         return $this->normalize($event);
     }
@@ -91,10 +91,9 @@ class CalendarService
      */
     public function update(User $user, string $eventId, array $patch): array
     {
-        $event = $this->http($user)
-            ->patch(self::BASE.'/'.rawurlencode($eventId), $this->payload($patch))
-            ->throw()
-            ->json();
+        $event = $this->guard(
+            $this->http($user)->patch(self::BASE.'/'.rawurlencode($eventId), $this->payload($patch)),
+        )->json();
 
         return $this->normalize($event);
     }
@@ -105,8 +104,18 @@ class CalendarService
 
         // 404/410: já não existe no Google — o estado desejado.
         if ($response->failed() && ! in_array($response->status(), [404, 410], true)) {
-            $response->throw();
+            throw CalendarApiException::fromResponse($response);
         }
+    }
+
+    /** Falha do Google vira exceção com a razão real (renderiza 502/404 no controller). */
+    private function guard(\Illuminate\Http\Client\Response $response): \Illuminate\Http\Client\Response
+    {
+        if ($response->failed()) {
+            throw CalendarApiException::fromResponse($response);
+        }
+
+        return $response;
     }
 
     private function http(User $user): PendingRequest

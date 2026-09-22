@@ -73,8 +73,9 @@ class CalendarController extends Controller
     {
         $data = $request->validate([
             // 'event' = avulso, criado direto na agenda, sem item vinculado.
+            // nullable: o front manda ref:"" pra avulso e o middleware vira null.
             'type' => ['required', Rule::in(['task', 'habit', 'note', 'event'])],
-            'ref' => ['required_unless:type,event', 'string', 'max:500'],
+            'ref' => ['nullable', 'required_unless:type,event', 'string', 'max:500'],
             'title' => ['required', 'string', 'max:255'],
             'start' => ['required', 'date'],
             'duration_minutes' => ['nullable', 'integer', 'min:5', 'max:1440'],

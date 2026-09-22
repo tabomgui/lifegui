@@ -74,8 +74,9 @@ export function ScheduleDialog({ open, type, refId, defaultTitle, defaultRecurri
       toast.success('Agendado no Google Calendar')
       onClose()
     } catch (e) {
-      const status = (e as { response?: { status?: number } }).response?.status
-      toast.error(status === 409 ? 'Conecte o Google Calendar em Configurações' : 'Não foi possível agendar')
+      const res = (e as { response?: { status?: number; data?: { message?: string } } }).response
+      if (res?.status === 409) toast.error('Conecte o Google Calendar em Configurações')
+      else toast.error(res?.data?.message ?? 'Não foi possível agendar')
     }
   }
 

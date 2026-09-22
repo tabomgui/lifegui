@@ -222,3 +222,31 @@ test('cria evento avulso direto na agenda (sem vínculo)', function () {
         'start' => '2026-09-26T18:00:00-03:00',
     ])->assertCreated()->assertJsonPath('data.lifegui.type', 'event');
 });
+
+test('evento avulso aceita ref vazio (como o front manda)', function () {
+    fakeCalendar([
+        'id' => 'avulso2',
+        'summary' => 'Café',
+        'start' => ['dateTime' => '2026-09-26T09:00:00-03:00'],
+        'end' => ['dateTime' => '2026-09-26T09:30:00-03:00'],
+        'extendedProperties' => ['private' => ['lifegui_type' => 'event', 'lifegui_ref' => '']],
+    ]);
+
+    $this->postJson('/api/calendar/events', [
+        'type' => 'event',
+        'ref' => '',
+        'title' => 'Café',
+        'start' => '2026-09-26T09:00:00-03:00',
+        'duration_minutes' => 30,
+    ])->assertCreated();
+});
+
+test('Calendar API desativada no Google vira 502 com mensagem clara', function () {
+    fakeCalendar(fn () => Http::response([
+        'error' => ['code' => 403, 'message' => 'Google Calendar API has not been used in project 123 before or it is disabled.'],
+    ], 403));
+
+    $this->getJson('/api/calendar/events?from=2026-09-21&to=2026-09-28')
+        ->assertStatus(502)
+        ->assertJsonPath('message', fn ($m) => str_contains($m, 'desativada'));
+});
