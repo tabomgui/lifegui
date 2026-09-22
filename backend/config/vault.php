@@ -13,6 +13,10 @@ return [
     |
     */
 
-    'root' => env('VAULTS_PATH', storage_path('vaults')),
+    // `?:` e não default do env(): VAULTS_PATH= vazio no .env deve cair no
+    // fallback. E o valor PRECISA estar no .env (não só no environment do
+    // container): `artisan serve` repassa ao filho apenas o que o Dotenv
+    // carregou — env vars do container somem no processo que serve HTTP.
+    'root' => env('VAULTS_PATH') ?: storage_path('vaults'),
 
 ];
