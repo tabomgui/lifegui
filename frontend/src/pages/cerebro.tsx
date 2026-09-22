@@ -1,5 +1,12 @@
 import { useState } from 'react'
-import { FolderOpen, NotebookPen, Plus } from 'lucide-react'
+import { Check, ChevronDown, FolderOpen, Hash, NotebookPen, Plus } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { AppLayout } from '@/components/app-layout'
 import { Button } from '@/components/ui/button'
 import { NoteCard } from '@/components/brain/note-card'
@@ -117,29 +124,47 @@ export default function Cerebro() {
                           {STATUS_LABEL[s]}
                         </button>
                       ))}
+                      {categoryTags.length > 0 && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              aria-pressed={tagFilter !== null}
+                              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium ${
+                                tagFilter
+                                  ? 'border-transparent bg-secondary'
+                                  : 'border-border text-muted-foreground hover:bg-accent'
+                              }`}
+                            >
+                              <Hash className="h-3 w-3" />
+                              {tagFilter ?? 'Tags'}
+                              <ChevronDown className="h-3 w-3 opacity-60" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start" className="max-h-64 overflow-auto">
+                            {tagFilter && (
+                              <>
+                                <DropdownMenuItem onClick={() => setTagFilter(null)}>
+                                  Limpar filtro
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                              </>
+                            )}
+                            {categoryTags.map((tag) => (
+                              <DropdownMenuItem
+                                key={tag}
+                                onClick={() => setTagFilter(tagFilter === tag ? null : tag)}
+                              >
+                                <Hash className="h-3 w-3" /> {tag}
+                                {tagFilter === tag && <Check className="ml-auto h-3.5 w-3.5" />}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                       <Button size="sm" className="ml-auto h-8" onClick={() => setCreating(true)}>
                         <Plus className="mr-1 h-3.5 w-3.5" /> Nova nota
                       </Button>
                     </div>
-
-                    {categoryTags.length > 0 && (
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        {categoryTags.map((tag) => (
-                          <button
-                            key={tag}
-                            onClick={() => setTagFilter(tagFilter === tag ? null : tag)}
-                            aria-pressed={tagFilter === tag}
-                            className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${
-                              tagFilter === tag
-                                ? 'border-transparent bg-secondary'
-                                : 'border-border text-muted-foreground hover:bg-accent'
-                            }`}
-                          >
-                            #{tag}
-                          </button>
-                        ))}
-                      </div>
-                    )}
 
                     {visibleNotes.length === 0 ? (
                       <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed px-6 py-12 text-center">

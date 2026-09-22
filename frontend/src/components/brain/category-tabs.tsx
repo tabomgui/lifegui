@@ -1,7 +1,14 @@
 import { useState } from 'react'
 import type { DragEvent } from 'react'
-import { Inbox, Pencil, Plus, Search, Trash2, Waypoints } from 'lucide-react'
+import { ChevronDown, Inbox, Pencil, Plus, Search, Trash2, Waypoints } from 'lucide-react'
 import { DynamicIcon } from '@/components/icon'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { BrainCategoryDialog } from '@/components/brain/category-dialog'
 import { useDeleteBrainCategory, useReorderBrainCategories } from '@/hooks/use-brain'
 import type { BrainCategory } from '@/types/api'
@@ -71,9 +78,64 @@ export function BrainCategoryTabs({
     reorder.mutate(names)
   }
 
+  const current = active === INBOX_TAB ? null : categories.find((c) => c.name === active) ?? null
+
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b px-4 py-2 md:px-6">
-      <div role="tablist" className="flex flex-wrap items-center gap-1">
+    <div className="flex items-center gap-2 border-b px-4 py-2 md:px-6">
+      {/* Mobile: seletor compacto (1 linha sempre); desktop: abas. */}
+      <div className="md:hidden">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="inline-flex max-w-[60vw] items-center gap-1.5 rounded-md border bg-card px-3 py-1.5 text-sm font-medium">
+              {current ? (
+                <>
+                  <DynamicIcon name={current.icon} className="h-3.5 w-3.5 shrink-0" style={{ color: current.color }} />
+                  <span className="truncate">{current.name}</span>
+                  <span className="rounded-full bg-secondary px-1.5 text-[11px]">{current.total}</span>
+                </>
+              ) : (
+                <>
+                  <Inbox className="h-3.5 w-3.5 shrink-0" />
+                  Inbox
+                  <span className={`rounded-full px-1.5 text-[11px] ${inboxCount > 0 ? 'bg-amber-500/20 text-amber-500' : 'bg-secondary'}`}>
+                    {inboxCount}
+                  </span>
+                </>
+              )}
+              <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="max-h-72 overflow-auto">
+            <DropdownMenuItem onClick={() => onChange(INBOX_TAB)}>
+              <Inbox className="h-3.5 w-3.5" /> Inbox
+              <span className="ml-auto text-xs text-muted-foreground">{inboxCount}</span>
+            </DropdownMenuItem>
+            {categories.map((c) => (
+              <DropdownMenuItem key={c.name} onClick={() => onChange(c.name)}>
+                <DynamicIcon name={c.icon} className="h-3.5 w-3.5" style={{ color: c.color }} />
+                {c.name}
+                <span className="ml-auto text-xs text-muted-foreground">{c.total}</span>
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={openNew}>
+              <Plus className="h-3.5 w-3.5" /> Nova categoria
+            </DropdownMenuItem>
+            {current && (
+              <>
+                <DropdownMenuItem onClick={() => openEdit(current)}>
+                  <Pencil className="h-3.5 w-3.5" /> Editar {current.name}
+                </DropdownMenuItem>
+                <DropdownMenuItem variant="destructive" onClick={() => remove(current)}>
+                  <Trash2 className="h-3.5 w-3.5" /> Apagar {current.name}
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      <div role="tablist" className="hidden min-w-0 items-center gap-1 overflow-x-auto md:flex">
         <button
           role="tab"
           aria-selected={active === INBOX_TAB}

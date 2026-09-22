@@ -1,6 +1,13 @@
 import { useState } from 'react'
 import type { DragEvent } from 'react'
-import { Plus, Pencil, Trash2, Layers, Sun, Search } from 'lucide-react'
+import { ChevronDown, Plus, Pencil, Trash2, Layers, Sun, Search } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { useCategories, useDeleteCategory, useReorderCategories } from '@/hooks/use-categories'
 import { useTasks, useUpdateTaskCategory } from '@/hooks/use-tasks'
 import { CategoryDialog } from '@/components/category-dialog'
@@ -109,9 +116,70 @@ export function CategoryTabs({
     reorder.mutate(ids)
   }
 
+  const current = typeof active === 'number' ? categories.find((c) => c.id === active) ?? null : null
+
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b px-4 py-2 md:px-6">
-      <div role="tablist" className="flex flex-wrap items-center gap-1">
+    <div className="flex items-center gap-2 border-b px-4 py-2 md:px-6">
+      {/* Mobile: seletor compacto (1 linha sempre); desktop: abas. */}
+      <div className="md:hidden">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="inline-flex max-w-[60vw] items-center gap-1.5 rounded-md border bg-card px-3 py-1.5 text-sm font-medium">
+              {current ? (
+                <>
+                  <DynamicIcon name={current.icon} className="h-3.5 w-3.5 shrink-0" style={{ color: current.color }} />
+                  <span className="truncate">{current.name}</span>
+                  <span className="rounded-full bg-secondary px-1.5 text-[11px]">{countFor(current.id)}</span>
+                </>
+              ) : active === 'today' ? (
+                <>
+                  <Sun className="h-3.5 w-3.5 shrink-0 text-amber-400" /> Hoje
+                  <span className={`rounded-full px-1.5 text-[11px] ${todayCount > 0 ? 'bg-red-500/20 text-red-400' : 'bg-secondary'}`}>{todayCount}</span>
+                </>
+              ) : (
+                <>
+                  <Layers className="h-3.5 w-3.5 shrink-0" /> Todas
+                  <span className="rounded-full bg-secondary px-1.5 text-[11px]">{countFor('all')}</span>
+                </>
+              )}
+              <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="max-h-72 overflow-auto">
+            <DropdownMenuItem onClick={() => onChange('today')}>
+              <Sun className="h-3.5 w-3.5 text-amber-400" /> Hoje
+              <span className="ml-auto text-xs text-muted-foreground">{todayCount}</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onChange('all')}>
+              <Layers className="h-3.5 w-3.5" /> Todas
+              <span className="ml-auto text-xs text-muted-foreground">{countFor('all')}</span>
+            </DropdownMenuItem>
+            {categories.map((c) => (
+              <DropdownMenuItem key={c.id} onClick={() => onChange(c.id)}>
+                <DynamicIcon name={c.icon} className="h-3.5 w-3.5" style={{ color: c.color }} />
+                {c.name}
+                <span className="ml-auto text-xs text-muted-foreground">{countFor(c.id)}</span>
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={openNew}>
+              <Plus className="h-3.5 w-3.5" /> Nova categoria
+            </DropdownMenuItem>
+            {current && (
+              <>
+                <DropdownMenuItem onClick={() => openEdit(current)}>
+                  <Pencil className="h-3.5 w-3.5" /> Editar {current.name}
+                </DropdownMenuItem>
+                <DropdownMenuItem variant="destructive" onClick={() => remove(current)}>
+                  <Trash2 className="h-3.5 w-3.5" /> Apagar {current.name}
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      <div role="tablist" className="hidden min-w-0 items-center gap-1 overflow-x-auto md:flex">
       <button role="tab" aria-selected={active === 'today'} onClick={() => onChange('today')}
         className={`inline-flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium ${active === 'today' ? 'bg-secondary' : 'text-muted-foreground hover:bg-accent'}`}>
         <Sun className="h-3.5 w-3.5 text-amber-400" /> Hoje
