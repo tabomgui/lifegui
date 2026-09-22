@@ -19,6 +19,11 @@ Route::get('/api/auth/google/callback', [GoogleController::class, 'callback']);
 Route::get('/api/auth/google-calendar/redirect', [GoogleCalendarController::class, 'redirect']);
 Route::get('/api/auth/google-calendar/callback', [GoogleCalendarController::class, 'callback']);
 
+// Sobrescreve o GET /oauth/authorize do Passport (rota registrada por último
+// vence): versão que não regenera o authToken em GETs duplicados (prerender).
+Route::get('/oauth/authorize', [\App\Http\Controllers\Auth\McpAuthorizationController::class, 'authorize'])
+    ->name('passport.authorizations.authorize');
+
 // Deslogado no /oauth/authorize do MCP, o middleware manda pra route('login').
 // A tela real é a do SPA (mesmo domínio); depois de logar, refaça a conexão
 // no cliente MCP — a sessão web já estará de pé.
