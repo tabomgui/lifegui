@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
-import { Kanban, Repeat, Brain, BarChart3, Settings, Menu, X } from 'lucide-react'
+import { Kanban, Repeat, Brain, CalendarDays, BarChart3, Settings, Menu, X } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useEnabledModules } from '@/hooks/use-modules'
 import { Button } from '@/components/ui/button'
@@ -38,6 +38,9 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             <Brain className="h-4 w-4" /> Cérebro
           </NavLink>
         )}
+        <NavLink to="/agenda" className={navClass} onClick={onNavigate}>
+          <CalendarDays className="h-4 w-4" /> Agenda
+        </NavLink>
         {showReports && (
           <NavLink to="/relatorios" className={navClass} onClick={onNavigate}>
             <BarChart3 className="h-4 w-4" /> Relatórios

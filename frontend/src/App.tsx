@@ -8,6 +8,7 @@ import Register from '@/pages/register'
 import Dashboard from '@/pages/dashboard'
 import Habits from '@/pages/habits'
 import Cerebro from '@/pages/cerebro'
+import Agenda from '@/pages/agenda'
 import Relatorios from '@/pages/relatorios'
 import Configuracoes from '@/pages/configuracoes'
 
@@ -24,6 +25,7 @@ export default function App() {
             <Route path="/" element={<IndexRoute><Dashboard /></IndexRoute>} />
             <Route path="/habits" element={<ModuleRoute module="habits"><Habits /></ModuleRoute>} />
             <Route path="/cerebro" element={<ModuleRoute module="brain"><Cerebro /></ModuleRoute>} />
+            <Route path="/agenda" element={<Agenda />} />
             <Route path="/relatorios" element={<ReportsRoute><Relatorios /></ReportsRoute>} />
             <Route path="/configuracoes" element={<Configuracoes />} />
           </Route>

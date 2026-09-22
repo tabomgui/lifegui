@@ -135,3 +135,57 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* FullCalendar (página Agenda): casa o widget com o tema shadcn. */
+.agenda-calendar .fc {
+  --fc-border-color: hsl(var(--border));
+  --fc-page-bg-color: transparent;
+  --fc-today-bg-color: hsl(var(--accent) / 0.4);
+  --fc-now-indicator-color: hsl(var(--destructive));
+  font-size: 0.8125rem;
+}
+.agenda-calendar .fc .fc-toolbar-title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+.agenda-calendar .fc .fc-button {
+  background: transparent;
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--foreground));
+  font-size: 0.8125rem;
+  padding: 0.25rem 0.625rem;
+  text-transform: capitalize;
+}
+.agenda-calendar .fc .fc-button:hover {
+  background: hsl(var(--accent));
+}
+.agenda-calendar .fc .fc-button-active,
+.agenda-calendar .fc .fc-button-primary:not(:disabled).fc-button-active {
+  background: hsl(var(--secondary));
+  border-color: transparent;
+  color: hsl(var(--secondary-foreground));
+}
+.agenda-calendar .fc .fc-button:focus,
+.agenda-calendar .fc .fc-button-primary:focus {
+  box-shadow: none;
+}
+.agenda-calendar .fc .fc-col-header-cell-cushion,
+.agenda-calendar .fc .fc-daygrid-day-number {
+  color: hsl(var(--muted-foreground));
+  font-weight: 500;
+}
+.agenda-calendar .fc .fc-event {
+  border-radius: calc(var(--radius) - 4px);
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+/* Eventos pessoais (fora do lifegui): neutros, só leitura. */
+.agenda-calendar .fc .lifegui-external {
+  background: hsl(var(--muted));
+  border-color: hsl(var(--border));
+  color: hsl(var(--muted-foreground));
+  opacity: 0.9;
+}
+.agenda-calendar .fc .lifegui-external .fc-event-main {
+  color: hsl(var(--muted-foreground));
+}
