@@ -29,6 +29,15 @@ class ModuleRegistry
                 'version' => '0.1.0',
                 'default' => true,
             ],
+            [
+                // Opt-in: depende de um vault Obsidian montado em VAULTS_PATH.
+                'key' => 'brain',
+                'label' => 'Cérebro',
+                'description' => 'Biblioteca de conteúdos e notas do vault Obsidian.',
+                'icon' => 'brain',
+                'version' => '0.1.0',
+                'default' => false,
+            ],
         ];
     }
 

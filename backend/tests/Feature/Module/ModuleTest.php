@@ -7,14 +7,16 @@ beforeEach(fn () => $this->actingAs($this->user = User::factory()->create()));
 test('retorna defaults do registry quando não há linhas', function () {
     $this->getJson('/api/modules')
         ->assertOk()
-        ->assertJsonCount(2, 'data')
+        ->assertJsonCount(3, 'data')
         ->assertJsonPath('data.0.key', 'tasks')
         ->assertJsonPath('data.0.label', 'Tarefas')
         ->assertJsonPath('data.0.icon', 'kanban')
         ->assertJsonPath('data.0.version', '0.1.0')
         ->assertJsonPath('data.0.enabled', true)
         ->assertJsonPath('data.1.key', 'habits')
-        ->assertJsonPath('data.1.enabled', true);
+        ->assertJsonPath('data.1.enabled', true)
+        ->assertJsonPath('data.2.key', 'brain')
+        ->assertJsonPath('data.2.enabled', false);
 });
 
 test('override do usuário é refletido no index', function () {
