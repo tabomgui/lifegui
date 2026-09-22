@@ -139,6 +139,30 @@ function PromoteDialog({ item, categories, onClose }: {
   )
 }
 
+// Torna URLs do preview clicáveis (abre em nova aba), mantendo o resto como texto.
+function LinkifiedPreview({ text }: { text: string }) {
+  const parts = text.split(/(https?:\/\/[^\s]+)/g)
+  return (
+    <p className="line-clamp-2 break-all text-xs text-muted-foreground">
+      {parts.map((part, i) =>
+        /^https?:\/\//.test(part) ? (
+          <a
+            key={i}
+            href={part}
+            target="_blank"
+            rel="noreferrer"
+            className="text-foreground underline underline-offset-2 hover:text-primary"
+          >
+            {part}
+          </a>
+        ) : (
+          part
+        ),
+      )}
+    </p>
+  )
+}
+
 export function InboxList({ categories }: { categories: BrainCategory[] }) {
   const { data } = useBrainInbox()
   const items = data?.data ?? []
@@ -160,7 +184,7 @@ export function InboxList({ categories }: { categories: BrainCategory[] }) {
           <div key={item.path} className="flex items-start justify-between gap-3 rounded-lg border bg-card p-3">
             <div className="min-w-0">
               <p className="text-sm font-medium">{item.title}</p>
-              <p className="line-clamp-2 break-all text-xs text-muted-foreground">{item.preview}</p>
+              <LinkifiedPreview text={item.preview} />
               {item.captured_at && (
                 <p className="mt-1 text-[11px] text-muted-foreground/70">{item.captured_at}</p>
               )}
