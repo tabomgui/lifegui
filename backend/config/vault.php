@@ -13,10 +13,9 @@ return [
     |
     */
 
-    // `?:` e não default do env(): VAULTS_PATH= vazio no .env deve cair no
-    // fallback. E o valor PRECISA estar no .env (não só no environment do
-    // container): `artisan serve` repassa ao filho apenas o que o Dotenv
-    // carregou — env vars do container somem no processo que serve HTTP.
+    // FALLBACK apenas: a raiz efetiva vem de app_settings (vaults_path),
+    // editável em Configurações. Este valor só vale sem nada salvo no banco.
+    // `?:` e não default do env(): VAULTS_PATH= vazio deve cair no fallback.
     'root' => env('VAULTS_PATH') ?: storage_path('vaults'),
 
 ];

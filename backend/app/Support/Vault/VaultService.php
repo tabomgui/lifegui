@@ -16,9 +16,21 @@ use Symfony\Component\Yaml\Yaml;
  */
 class VaultService
 {
+    // Memo por instância (uma por request): evita repetir a query de setting
+    // a cada arquivo listado. Não pode ser static — o php -S vive entre requests.
+    private ?string $rootBase = null;
+
     public function root(): string
     {
-        return rtrim(config('vault.root'), '/').'/'.Auth::id();
+        // Raiz configurável pela UI (app_settings) com fallback pro config
+        // (storage/vaults) — nada de .env: env do container não chega ao
+        // processo do artisan serve.
+        $this->rootBase ??= rtrim(
+            \App\Models\AppSetting::get('vaults_path') ?: config('vault.root'),
+            '/'
+        );
+
+        return $this->rootBase.'/'.Auth::id();
     }
 
     public function initialized(): bool

@@ -10,6 +10,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HabitController;
 use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\ReportsController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SubtaskController;
 use App\Http\Controllers\TaskController;
 use App\Http\Resources\UserResource;
@@ -68,6 +69,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Per-user module on/off toggles.
     Route::get('/modules', [ModuleController::class, 'index']);
     Route::patch('/modules/{key}', [ModuleController::class, 'update']);
+
+    // Configurações globais da instância (hoje: raiz dos vaults do Cérebro).
+    Route::get('/settings/vault', [SettingsController::class, 'show']);
+    Route::patch('/settings/vault', [SettingsController::class, 'update']);
 
     // Módulo Cérebro: gerencia o vault Obsidian do usuário (filesystem é a
     // fonte da verdade; nada de notas no banco). Rotas literais ANTES das
