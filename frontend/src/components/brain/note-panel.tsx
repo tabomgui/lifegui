@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm'
 import { toast } from 'sonner'
 import { CodeXml, CornerUpRight, ExternalLink, Eye, Kanban, Pencil, Repeat, Scissors } from 'lucide-react'
 import { NoteEditor, type NoteEditorApi } from '@/components/brain/note-editor'
+import { ScheduleSection } from '@/components/calendar/schedule-section'
 import { NewNoteDialog } from '@/components/brain/new-note-dialog'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
@@ -250,8 +251,9 @@ export function NotePanel({ path, onNavigate, onClose }: {
               )}
             </div>
 
-            {(note.links.length > 0 || note.backlinks.length > 0) && !editing && (
+            {!editing && (
               <div className="space-y-2 border-t p-3">
+                <ScheduleSection type="note" refId={note.path} title={`Estudar: ${note.title}`} />
                 {note.backlinks.length > 0 && (
                   <div>
                     <p className="mb-1.5 text-xs font-medium text-muted-foreground">Mencionada em</p>

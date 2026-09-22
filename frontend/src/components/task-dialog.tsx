@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useTaskDetail, useUpdateTask, useAddSubtask, useUpdateSubtask, useDeleteSubtask } from '@/hooks/use-tasks'
 import { useCategories } from '@/hooks/use-categories'
 import { NoteLinksSection } from '@/components/brain/note-link-picker'
+import { ScheduleSection } from '@/components/calendar/schedule-section'
 import type { Subtask } from '@/types/api'
 
 function SubtaskRow({ taskId, subtask }: { taskId: number; subtask: Subtask }) {
@@ -172,6 +173,7 @@ export function TaskDialog({
               </div>
               <SubtasksSection taskId={task.id} subtasks={task.subtasks ?? []} />
               <NoteLinksSection type="task" id={task.id} links={task.note_links ?? []} />
+              <ScheduleSection type="task" refId={String(task.id)} title={task.title} />
             </div>
             <DialogFooter className="mt-4">
               <Button type="submit" disabled={updateTask.isPending}>Salvar</Button>
