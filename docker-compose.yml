@@ -18,6 +18,9 @@ services:
     volumes:
       - ./backend:/var/www/html
       - /var/www/html/vendor
+      # Vaults Obsidian (um por usuário, {user_id}/). Fonte da verdade do
+      # módulo Cérebro; na VM, apontar VAULTS_PATH_HOST pra pasta sincronizada.
+      - ${VAULTS_PATH_HOST:-./vaults}:/vaults
     depends_on:
       mysql:
         condition: service_healthy
@@ -26,6 +29,7 @@ services:
       DB_DATABASE: ${DB_DATABASE:-lifegui}
       DB_USERNAME: ${DB_USERNAME:-root}
       DB_PASSWORD: ${DB_PASSWORD:-root}
+      VAULTS_PATH: /vaults
     command: sh -c "composer install --no-interaction --prefer-dist && (grep -q '^APP_KEY=base64' .env || php artisan key:generate --force) && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
     ports:
       - "8000:8000"
