@@ -12,6 +12,10 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
+    // Só o trait do Sanctum (SPA + token de captura). O Passport (OAuth do
+    // servidor MCP) NÃO usa o dele aqui: os dois definem $accessToken de forma
+    // incompatível, e o TokenGuard do Passport só precisa de withAccessToken()
+    // — o do Sanctum (sem typehint) atende. Scopes de OAuth não são usados.
     use HasApiTokens, HasFactory, Notifiable;
 
     /**

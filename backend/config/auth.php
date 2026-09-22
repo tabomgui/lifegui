@@ -42,6 +42,12 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Tokens OAuth do servidor MCP (Passport). O SPA continua no Sanctum.
+        'api' => [
+            'driver' => 'passport',
+            'provider' => 'users',
+        ],
     ],
 
     /*
