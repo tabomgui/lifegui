@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useCreateHabit, useUpdateHabit } from '@/hooks/use-habits'
 import { HABIT_ICONS, DynamicIcon } from '@/components/icon'
+import { NoteLinksSection } from '@/components/brain/note-link-picker'
 import type { Habit } from '@/types/api'
 import { toast } from 'sonner'
 
@@ -80,6 +81,7 @@ export function HabitDialog({
               ))}
             </div>
           </div>
+          {habit && <NoteLinksSection type="habit" id={habit.id} links={habit.note_links ?? []} />}
           <DialogFooter className="mt-2">
             <Button type="submit">Salvar</Button>
           </DialogFooter>
