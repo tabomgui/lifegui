@@ -153,6 +153,37 @@ class VaultService
     }
 
     /**
+     * Metadados de UI das categorias (ordem, ícone, cor) — vivem no próprio
+     * vault, em .lifegui/categories.json: o Obsidian ignora o dotfile e o
+     * arquivo sincroniza junto com as notas. Conteúdo continua sendo só .md.
+     *
+     * @return array{order: array<int, string>, meta: array<string, array{icon?: string, color?: string}>}
+     */
+    public function readCategoryMeta(): array
+    {
+        $file = $this->root().'/.lifegui/categories.json';
+        $json = is_file($file) ? json_decode((string) file_get_contents($file), true) : null;
+
+        return [
+            'order' => array_values(array_filter((array) ($json['order'] ?? []), 'is_string')),
+            'meta' => is_array($json['meta'] ?? null) ? $json['meta'] : [],
+        ];
+    }
+
+    public function writeCategoryMeta(array $meta): void
+    {
+        $dir = $this->root().'/.lifegui';
+        if (! is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        file_put_contents(
+            $dir.'/categories.json',
+            json_encode($meta, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+        );
+    }
+
+    /**
      * @return array{frontmatter: array<string, mixed>, body: string}|null
      */
     public function read(string $relative): ?array

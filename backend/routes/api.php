@@ -73,6 +73,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // fonte da verdade; nada de notas no banco). Rotas literais ANTES das
     // curinga {path} — {path} aceita '/' via constraint .*.
     Route::get('/brain/categories', [BrainCategoryController::class, 'index']);
+    Route::post('/brain/categories', [BrainCategoryController::class, 'store']);
+    Route::patch('/brain/categories/reorder', [BrainCategoryController::class, 'reorder']);
+    Route::patch('/brain/categories/{category}', [BrainCategoryController::class, 'update']);
+    Route::delete('/brain/categories/{category}', [BrainCategoryController::class, 'destroy']);
     Route::get('/brain/inbox', [BrainInboxController::class, 'index']);
     Route::post('/brain/inbox', [BrainInboxController::class, 'store']);
     Route::post('/brain/inbox/{path}/promote', [BrainInboxController::class, 'promote'])->where('path', '.*');
