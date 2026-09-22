@@ -7,6 +7,7 @@ import { NotePanel } from '@/components/brain/note-panel'
 import { NewNoteDialog } from '@/components/brain/new-note-dialog'
 import { CaptureBar, InboxList } from '@/components/brain/inbox'
 import { BrainCategoryTabs, INBOX_TAB } from '@/components/brain/category-tabs'
+import { GraphView } from '@/components/brain/graph-view'
 import { NOTE_STATUSES, STATUS_DOT, STATUS_LABEL } from '@/components/brain/status'
 import { useBrainCategories, useBrainInbox, useBrainNotes } from '@/hooks/use-brain'
 import type { NoteStatus } from '@/types/api'
@@ -29,6 +30,7 @@ export default function Cerebro() {
   const [q, setQ] = useState('')
   const [openPath, setOpenPath] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
+  const [graphMode, setGraphMode] = useState(false)
 
   const isInbox = active === INBOX_TAB
   const { data: notes = [] } = useBrainNotes(
@@ -68,11 +70,18 @@ export default function Cerebro() {
               categories={categories}
               active={active}
               inboxCount={inboxCount}
-              onChange={switchTab}
+              onChange={(tab) => { setGraphMode(false); switchTab(tab) }}
               search={q}
               onSearchChange={setQ}
+              graphMode={graphMode}
+              onToggleGraph={() => setGraphMode((g) => !g)}
             />
 
+            {graphMode ? (
+              <div className="min-h-0 flex-1">
+                <GraphView onOpenNote={setOpenPath} />
+              </div>
+            ) : (
             <div className="min-h-0 flex-1 overflow-auto p-4 md:p-6">
               <div className="mx-auto max-w-4xl space-y-4">
                 {isInbox ? (
@@ -137,6 +146,7 @@ export default function Cerebro() {
                 )}
               </div>
             </div>
+            )}
           </>
         )}
       </main>

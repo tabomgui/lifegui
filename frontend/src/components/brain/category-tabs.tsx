@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { DragEvent } from 'react'
-import { Inbox, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { Inbox, Pencil, Plus, Search, Trash2, Waypoints } from 'lucide-react'
 import { DynamicIcon } from '@/components/icon'
 import { BrainCategoryDialog } from '@/components/brain/category-dialog'
 import { useDeleteBrainCategory, useReorderBrainCategories } from '@/hooks/use-brain'
@@ -13,7 +13,7 @@ export const INBOX_TAB = '__inbox__'
 const CAT_DND = 'application/x-lifegui-brain-category'
 
 export function BrainCategoryTabs({
-  categories, active, inboxCount, onChange, search, onSearchChange,
+  categories, active, inboxCount, onChange, search, onSearchChange, graphMode, onToggleGraph,
 }: {
   categories: BrainCategory[]
   active: string
@@ -21,6 +21,8 @@ export function BrainCategoryTabs({
   onChange: (tab: string) => void
   search: string
   onSearchChange: (value: string) => void
+  graphMode: boolean
+  onToggleGraph: () => void
 }) {
   const del = useDeleteBrainCategory()
   const reorder = useReorderBrainCategories()
@@ -133,18 +135,30 @@ export function BrainCategoryTabs({
           <Plus className="h-3.5 w-3.5" /> Categoria
         </button>
       </div>
-      {active !== INBOX_TAB && (
-        <div className="ml-auto flex shrink-0 items-center gap-1.5 rounded-md border bg-card px-2 py-1">
-          <Search className="h-3.5 w-3.5 text-muted-foreground" />
-          <input
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            aria-label="Buscar notas"
-            placeholder="Buscar notas…"
-            className="w-28 bg-transparent text-xs outline-none placeholder:text-muted-foreground sm:w-40"
-          />
-        </div>
-      )}
+      <div className="ml-auto flex shrink-0 items-center gap-1.5">
+        {active !== INBOX_TAB && !graphMode && (
+          <div className="flex items-center gap-1.5 rounded-md border bg-card px-2 py-1">
+            <Search className="h-3.5 w-3.5 text-muted-foreground" />
+            <input
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              aria-label="Buscar notas"
+              placeholder="Buscar notas…"
+              className="w-28 bg-transparent text-xs outline-none placeholder:text-muted-foreground sm:w-40"
+            />
+          </div>
+        )}
+        <button
+          onClick={onToggleGraph}
+          aria-pressed={graphMode}
+          title={graphMode ? 'Voltar pras notas' : 'Visão de grafo'}
+          className={`inline-flex items-center rounded-md border px-2 py-1.5 ${
+            graphMode ? 'bg-secondary text-foreground' : 'bg-card text-muted-foreground hover:bg-accent'
+          }`}
+        >
+          <Waypoints className="h-3.5 w-3.5" />
+        </button>
+      </div>
       <BrainCategoryDialog open={dialogOpen} onOpenChange={setDialogOpen} category={editing} />
     </div>
   )

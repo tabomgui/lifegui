@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Brain\CategoryController as BrainCategoryController;
+use App\Http\Controllers\Brain\GraphController as BrainGraphController;
 use App\Http\Controllers\Brain\InboxController as BrainInboxController;
 use App\Http\Controllers\Brain\LinkController as BrainLinkController;
 use App\Http\Controllers\Brain\NoteController as BrainNoteController;
@@ -90,6 +91,7 @@ Route::middleware(['auth:sanctum', RestrictCaptureTokens::class])->group(functio
     Route::patch('/brain/categories/reorder', [BrainCategoryController::class, 'reorder']);
     Route::patch('/brain/categories/{category}', [BrainCategoryController::class, 'update']);
     Route::delete('/brain/categories/{category}', [BrainCategoryController::class, 'destroy']);
+    Route::get('/brain/graph', [BrainGraphController::class, 'index']);
     Route::get('/brain/inbox', [BrainInboxController::class, 'index']);
     Route::post('/brain/inbox', [BrainInboxController::class, 'store']);
     Route::post('/brain/inbox/{path}/promote', [BrainInboxController::class, 'promote'])->where('path', '.*');
