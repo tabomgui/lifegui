@@ -104,29 +104,68 @@ class CalendarController extends Controller
         return response()->json(['data' => $event], 201);
     }
 
+    public function show(Request $request, string $eventId): JsonResponse
+    {
+        return response()->json(['data' => $this->calendar->get($request->user(), $eventId)]);
+    }
+
     public function update(Request $request, string $eventId): JsonResponse
     {
         $data = $request->validate([
+            'title' => ['sometimes', 'required', 'string', 'max:255'],
             'start' => ['sometimes', 'required', 'date'],
             'end' => ['sometimes', 'required', 'date'],
             'rrule' => ['sometimes', 'nullable', 'string', 'regex:/^RRULE:/'],
             'timezone' => ['nullable', 'timezone'],
+            // occurrence (padrão): só o evento clicado; series: o "pai" da
+            // recorrência inteira.
+            'scope' => ['sometimes', Rule::in(['occurrence', 'series'])],
         ]);
 
-        $this->assertOwnEvent($request, $eventId);
+        $user = $request->user();
+        $event = $this->calendar->get($user, $eventId);
+        abort_if($event['external'], 403, 'Evento não gerenciado pelo lifegui.');
 
-        $patch = ['timezone' => $data['timezone'] ?? config('app.timezone')];
-        if (isset($data['start'])) {
-            $patch['start'] = CarbonImmutable::parse($data['start'])->toRfc3339String();
+        $tz = $data['timezone'] ?? config('app.timezone');
+        $targetId = $eventId;
+        $patch = ['timezone' => $tz];
+
+        if (($data['scope'] ?? 'occurrence') === 'series' && $event['recurring_event_id']) {
+            // Edição em massa: aplica no pai. A data da série vem da RRULE;
+            // do request só interessa a HORA nova, transplantada pra data
+            // original do pai (senão a série inteira mudaria de dia).
+            $targetId = $event['recurring_event_id'];
+            $master = $this->calendar->get($user, $targetId);
+
+            if (isset($data['start'])) {
+                $requestStart = CarbonImmutable::parse($data['start'])->setTimezone($tz);
+                $duration = isset($data['end'])
+                    ? $requestStart->diffInMinutes(CarbonImmutable::parse($data['end'])->setTimezone($tz))
+                    : CarbonImmutable::parse($master['start'])->diffInMinutes(CarbonImmutable::parse($master['end']));
+
+                $newStart = CarbonImmutable::parse($master['start'])
+                    ->setTimezone($tz)
+                    ->setTime($requestStart->hour, $requestStart->minute);
+                $patch['start'] = $newStart->toRfc3339String();
+                $patch['end'] = $newStart->addMinutes($duration)->toRfc3339String();
+            }
+        } else {
+            if (isset($data['start'])) {
+                $patch['start'] = CarbonImmutable::parse($data['start'])->toRfc3339String();
+            }
+            if (isset($data['end'])) {
+                $patch['end'] = CarbonImmutable::parse($data['end'])->toRfc3339String();
+            }
         }
-        if (isset($data['end'])) {
-            $patch['end'] = CarbonImmutable::parse($data['end'])->toRfc3339String();
+
+        if (isset($data['title'])) {
+            $patch['title'] = $data['title'];
         }
         if (array_key_exists('rrule', $data)) {
             $patch['rrule'] = $data['rrule'];
         }
 
-        return response()->json(['data' => $this->calendar->update($request->user(), $eventId, $patch)]);
+        return response()->json(['data' => $this->calendar->update($user, $targetId, $patch)]);
     }
 
     public function destroy(Request $request, string $eventId): Response

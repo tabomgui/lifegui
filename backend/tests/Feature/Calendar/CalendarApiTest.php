@@ -250,3 +250,65 @@ test('Calendar API desativada no Google vira 502 com mensagem clara', function (
         ->assertStatus(502)
         ->assertJsonPath('message', fn ($m) => str_contains($m, 'desativada'));
 });
+
+test('mostra um evento único', function () {
+    fakeCalendar([
+        'id' => 'um',
+        'summary' => 'Leitura',
+        'start' => ['dateTime' => '2026-09-23T21:30:00-03:00'],
+        'end' => ['dateTime' => '2026-09-23T22:00:00-03:00'],
+        'recurrence' => ['RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR'],
+        'extendedProperties' => ['private' => ['lifegui_type' => 'habit', 'lifegui_ref' => '3']],
+    ]);
+
+    $this->getJson('/api/calendar/events/um')
+        ->assertOk()
+        ->assertJsonPath('data.recurrence.0', 'RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR');
+});
+
+test('edita a série inteira: hora nova transplantada pra data do pai, título e RRULE', function () {
+    fakeCalendar(function ($request) {
+        $path = parse_url($request->url(), PHP_URL_PATH);
+
+        if ($request->method() === 'GET' && str_ends_with($path, '/events/occ1')) {
+            return Http::response([
+                'id' => 'occ1', 'summary' => 'Leitura',
+                'start' => ['dateTime' => '2026-10-05T21:30:00-03:00'],
+                'end' => ['dateTime' => '2026-10-05T22:00:00-03:00'],
+                'recurringEventId' => 'master1',
+                'extendedProperties' => ['private' => ['lifegui_type' => 'habit', 'lifegui_ref' => '3']],
+            ]);
+        }
+
+        return Http::response([
+            'id' => 'master1', 'summary' => 'Leitura noturna',
+            'start' => ['dateTime' => '2026-09-23T21:30:00-03:00'],
+            'end' => ['dateTime' => '2026-09-23T22:00:00-03:00'],
+            'recurrence' => ['RRULE:FREQ=WEEKLY;BYDAY=MO,WE'],
+            'extendedProperties' => ['private' => ['lifegui_type' => 'habit', 'lifegui_ref' => '3']],
+        ]);
+    });
+
+    $this->patchJson('/api/calendar/events/occ1', [
+        'scope' => 'series',
+        'title' => 'Leitura noturna',
+        'start' => '2026-10-05T22:00:00-03:00',
+        'end' => '2026-10-05T22:30:00-03:00',
+        'rrule' => 'RRULE:FREQ=WEEKLY;BYDAY=MO,WE',
+        'timezone' => 'America/Sao_Paulo',
+    ])->assertOk();
+
+    Http::assertSent(function ($request) {
+        if ($request->method() !== 'PATCH') {
+            return false;
+        }
+        $body = $request->data();
+
+        // Hora nova (22:00) na data original do pai (23/09), não na da ocorrência.
+        return str_ends_with(parse_url($request->url(), PHP_URL_PATH), '/events/master1')
+            && $body['summary'] === 'Leitura noturna'
+            && str_starts_with($body['start']['dateTime'], '2026-09-23T22:00:00')
+            && str_starts_with($body['end']['dateTime'], '2026-09-23T22:30:00')
+            && $body['recurrence'] === ['RRULE:FREQ=WEEKLY;BYDAY=MO,WE'];
+    });
+});

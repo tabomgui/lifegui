@@ -40,6 +40,17 @@ export function useLinkedEvents(type: CalendarLinkType, ref: string | number, en
   })
 }
 
+export function useCalendarEvent(id: string | null) {
+  return useQuery({
+    queryKey: ['calendar', 'event', id],
+    queryFn: async () =>
+      (await api.get(`/calendar/events/${encodeURIComponent(id!)}`)).data.data as CalendarEvent,
+    enabled: id !== null,
+    staleTime: 60_000,
+    retry: false,
+  })
+}
+
 export interface SchedulePayload {
   type: CalendarLinkType
   ref: string
@@ -64,7 +75,15 @@ export function useScheduleEvent() {
 export function useUpdateEvent() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, ...patch }: { id: string; start?: string; end?: string; rrule?: string | null; timezone?: string }) => {
+    mutationFn: async ({ id, ...patch }: {
+      id: string
+      title?: string
+      start?: string
+      end?: string
+      rrule?: string | null
+      timezone?: string
+      scope?: 'occurrence' | 'series'
+    }) => {
       await csrf()
       return (await api.patch(`/calendar/events/${encodeURIComponent(id)}`, patch)).data.data as CalendarEvent
     },

@@ -8,7 +8,7 @@ import ptBrLocale from '@fullcalendar/core/locales/pt-br'
 import type { DateSelectArg, EventClickArg, EventDropArg, EventInput } from '@fullcalendar/core'
 import type { EventResizeDoneArg } from '@fullcalendar/interaction'
 import { toast } from 'sonner'
-import { ArrowUpRight, CalendarDays, ExternalLink, Plus, Trash2 } from 'lucide-react'
+import { ArrowUpRight, CalendarDays, ExternalLink, Pencil, Plus, Trash2 } from 'lucide-react'
 import { AppLayout } from '@/components/app-layout'
 import { Button } from '@/components/ui/button'
 import {
@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dialog'
 import { NotePanel } from '@/components/brain/note-panel'
 import { AgendaCreateDialog, type CreateSlot } from '@/components/calendar/agenda-create-dialog'
+import { AgendaEditDialog } from '@/components/calendar/agenda-edit-dialog'
 import {
   browserTimezone,
   useCalendarEvents,
@@ -104,6 +105,7 @@ export default function Agenda() {
   const [openNote, setOpenNote] = useState<string | null>(null)
   const [slot, setSlot] = useState<CreateSlot | null>(null)
   const [detail, setDetail] = useState<CalendarEvent | null>(null)
+  const [editing, setEditing] = useState<CalendarEvent | null>(null)
 
   const inputs = useMemo(
     () => events.filter((e) => visible.has(filterKeyOf(e))).map(toEventInput),
@@ -167,13 +169,13 @@ export default function Agenda() {
     }
   }
 
-  async function removeDetail() {
+  async function removeDetail(seriesToo: boolean) {
     if (!detail) return
-    // Ocorrência de recorrente: apagar o mestre remove a série toda.
-    const id = detail.recurring_event_id ?? detail.id
+    // Só esta ocorrência = apaga a instância; série = apaga o evento "pai".
+    const id = seriesToo ? (detail.recurring_event_id ?? detail.id) : detail.id
     try {
       await remove.mutateAsync(id)
-      toast.success('Removido do calendário')
+      toast.success(seriesToo && detail.recurring_event_id ? 'Série removida' : 'Removido do calendário')
       setDetail(null)
     } catch {
       toast.error('Não foi possível remover')
@@ -286,15 +288,29 @@ export default function Agenda() {
                   </Button>
                 )}
                 {!detail.external && (
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     {detail.lifegui?.type !== 'event' && (
                       <Button size="sm" variant="outline" onClick={() => openItem(detail)}>
                         <ArrowUpRight className="mr-1 h-3.5 w-3.5" /> Abrir {TYPE_LABEL[detail.lifegui?.type ?? 'event'].toLowerCase()}
                       </Button>
                     )}
-                    <Button size="sm" variant="destructive" disabled={remove.isPending} onClick={removeDetail}>
-                      <Trash2 className="mr-1 h-3.5 w-3.5" /> Remover
+                    <Button size="sm" variant="outline" onClick={() => { setEditing(detail); setDetail(null) }}>
+                      <Pencil className="mr-1 h-3.5 w-3.5" /> Editar
                     </Button>
+                    {detail.recurring_event_id ? (
+                      <>
+                        <Button size="sm" variant="destructive" disabled={remove.isPending} onClick={() => removeDetail(false)}>
+                          <Trash2 className="mr-1 h-3.5 w-3.5" /> Só esta
+                        </Button>
+                        <Button size="sm" variant="destructive" disabled={remove.isPending} onClick={() => removeDetail(true)}>
+                          <Trash2 className="mr-1 h-3.5 w-3.5" /> Série
+                        </Button>
+                      </>
+                    ) : (
+                      <Button size="sm" variant="destructive" disabled={remove.isPending} onClick={() => removeDetail(true)}>
+                        <Trash2 className="mr-1 h-3.5 w-3.5" /> Remover
+                      </Button>
+                    )}
                   </div>
                 )}
               </DialogFooter>
@@ -304,6 +320,7 @@ export default function Agenda() {
       </Dialog>
 
       <AgendaCreateDialog open={slot !== null} slot={slot} onClose={() => setSlot(null)} />
+      <AgendaEditDialog event={editing} onClose={() => setEditing(null)} />
       <NotePanel path={openNote} onNavigate={setOpenNote} onClose={() => setOpenNote(null)} />
     </AppLayout>
   )

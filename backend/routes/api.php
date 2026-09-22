@@ -91,6 +91,7 @@ Route::middleware(['auth:sanctum', RestrictCaptureTokens::class])->group(functio
     Route::get('/calendar/events/linked', [CalendarController::class, 'linked']);
     Route::get('/calendar/events', [CalendarController::class, 'index']);
     Route::post('/calendar/events', [CalendarController::class, 'store']);
+    Route::get('/calendar/events/{eventId}', [CalendarController::class, 'show']);
     Route::patch('/calendar/events/{eventId}', [CalendarController::class, 'update']);
     Route::delete('/calendar/events/{eventId}', [CalendarController::class, 'destroy']);
 
