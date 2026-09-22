@@ -4,6 +4,8 @@
    Sem este import esses utilitários não existem e os overlays/menus surgem
    sem transição (o "pop" abrupto que parecia quebrado). */
 @import "tw-animate-css";
+/* Markdown das notas do módulo Cérebro (classes prose). */
+@plugin "@tailwindcss/typography";
 
 /* dark mode por CLASSE (.dark) em vez de prefers-color-scheme — o next-themes
    alterna a classe no <html>, então os utilitários dark: seguem o toggle. */

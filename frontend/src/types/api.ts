@@ -2,7 +2,7 @@ export type TaskStatus = 'todo' | 'doing' | 'done'
 
 // --- Módulos (GET /api/modules) ---
 
-export type ModuleKey = 'tasks' | 'habits'
+export type ModuleKey = 'tasks' | 'habits' | 'brain'
 
 export interface ModuleInfo {
   key: ModuleKey
@@ -40,6 +40,7 @@ export interface Task {
   subtasks?: Subtask[]
   subtasks_count?: number
   subtasks_done_count?: number
+  note_links?: NoteLink[]
 }
 
 export interface Habit {
@@ -49,6 +50,56 @@ export interface Habit {
   target_per_week: number | null
   color: string
   archived_at: string | null
+  note_links?: NoteLink[]
+}
+
+// --- Módulo Cérebro (vault Obsidian; GET /api/brain/*) ---
+
+export type NoteStatus = 'novo' | 'estudando' | 'concluido' | 'a-revisar'
+
+export interface BrainCategory {
+  name: string
+  counts: Partial<Record<NoteStatus, number>>
+  total: number
+}
+
+export interface BrainNoteSummary {
+  path: string
+  title: string
+  status: NoteStatus | null
+  tags: string[]
+  fonte: string | null
+  resumo: string | null
+  data_salvo: string | null
+}
+
+// Task/hábito apontando pra nota (no show da nota).
+export interface BrainNoteBacklink {
+  id: number
+  type: 'task' | 'habit'
+  linkable_id: number
+  name: string | null
+}
+
+export interface BrainNote extends BrainNoteSummary {
+  frontmatter: Record<string, unknown>
+  body: string
+  links: BrainNoteBacklink[]
+}
+
+export interface InboxItem {
+  path: string
+  title: string
+  captured_at: string | null
+  preview: string
+}
+
+// Vínculo nota↔task/hábito visto do lado da task/hábito.
+export interface NoteLink {
+  id: number
+  note_path: string
+  title: string
+  exists: boolean
 }
 
 export interface HabitDay {

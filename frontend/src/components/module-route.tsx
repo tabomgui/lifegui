@@ -7,8 +7,9 @@ import type { ModuleInfo, ModuleKey } from '@/types/api'
 const MODULE_ROUTE: Record<ModuleKey, string> = {
   tasks: '/',
   habits: '/habits',
+  brain: '/cerebro',
 }
-const ORDER: ModuleKey[] = ['tasks', 'habits']
+const ORDER: ModuleKey[] = ['tasks', 'habits', 'brain']
 
 export function firstEnabledRoute(modules: ModuleInfo[] | undefined): string {
   const enabled = enabledSet(modules)
