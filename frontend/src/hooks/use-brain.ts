@@ -194,6 +194,17 @@ export function usePromoteInbox() {
   })
 }
 
+export function useDiscardInbox() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (path: string) => {
+      await csrf()
+      await api.delete(`/brain/inbox/${path}`)
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: BRAIN }),
+  })
+}
+
 export function useCreateNoteLink() {
   const qc = useQueryClient()
   return useMutation({

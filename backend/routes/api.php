@@ -108,6 +108,7 @@ Route::middleware(['auth:sanctum', RestrictCaptureTokens::class])->group(functio
     Route::get('/brain/inbox', [BrainInboxController::class, 'index']);
     Route::post('/brain/inbox', [BrainInboxController::class, 'store']);
     Route::post('/brain/inbox/{path}/promote', [BrainInboxController::class, 'promote'])->where('path', '.*');
+    Route::delete('/brain/inbox/{path}', [BrainInboxController::class, 'destroy'])->where('path', '.*');
     Route::post('/brain/links', [BrainLinkController::class, 'store']);
     Route::delete('/brain/links/{link}', [BrainLinkController::class, 'destroy']);
     Route::get('/brain/tags', [BrainNoteController::class, 'tags']);

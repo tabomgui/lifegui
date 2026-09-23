@@ -66,6 +66,33 @@ class InboxController extends Controller
         return response()->json(['data' => array_merge($created, ['body' => $body])], 201);
     }
 
+    public function destroy(string $path): JsonResponse
+    {
+        abort_unless(
+            str_starts_with($path, self::INBOX.'/')
+                && ! str_contains($path, '/processados/')
+                && ! str_contains($path, '/descartados/'),
+            404
+        );
+
+        $absolute = $this->vault->resolve($path);
+        abort_if($absolute === null, 404);
+
+        // Nunca apaga: move pra descartados com a data no nome (par do
+        // promote/processados). A pasta é criada sob demanda.
+        $dir = $this->vault->root().'/'.self::INBOX.'/descartados';
+        if (! is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        $target = self::INBOX.'/descartados/'.now()->format('Y-m-d').'-'.basename($path);
+        $absoluteTarget = $this->vault->resolve($target, mustExist: false);
+        abort_if($absoluteTarget === null, 422, 'Pasta descartados não encontrada no vault.');
+        rename($absolute, $absoluteTarget);
+
+        return response()->json(['data' => ['path' => $target]]);
+    }
+
     private function appendToAnnotations(string $body, string $content): string
     {
         if ($content === '') {

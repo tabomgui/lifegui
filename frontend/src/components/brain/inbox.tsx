@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { ArrowRight, Inbox as InboxIcon, Plus } from 'lucide-react'
+import { ArrowRight, Inbox as InboxIcon, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -18,7 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useBrainInbox, useCaptureInbox, usePromoteInbox } from '@/hooks/use-brain'
+import { useBrainInbox, useCaptureInbox, useDiscardInbox, usePromoteInbox } from '@/hooks/use-brain'
 import type { BrainCategory, InboxItem } from '@/types/api'
 
 export function CaptureBar() {
@@ -167,6 +167,17 @@ export function InboxList({ categories }: { categories: BrainCategory[] }) {
   const { data } = useBrainInbox()
   const items = data?.data ?? []
   const [promoting, setPromoting] = useState<InboxItem | null>(null)
+  const discard = useDiscardInbox()
+
+  async function discardItem(item: InboxItem) {
+    if (!confirm(`Descartar "${item.title}"? Vai pra 00-Inbox/descartados no vault.`)) return
+    try {
+      await discard.mutateAsync(item.path)
+      toast.success('Captura descartada')
+    } catch {
+      toast.error('Não foi possível descartar')
+    }
+  }
 
   if (items.length === 0) {
     return (
@@ -189,9 +200,22 @@ export function InboxList({ categories }: { categories: BrainCategory[] }) {
                 <p className="mt-1 text-[11px] text-muted-foreground/70">{item.captured_at}</p>
               )}
             </div>
-            <Button size="sm" variant="outline" className="shrink-0" onClick={() => setPromoting(item)}>
-              <ArrowRight className="mr-1 h-3.5 w-3.5" /> Virar nota
-            </Button>
+            <div className="flex shrink-0 items-center gap-1">
+              <Button size="sm" variant="outline" onClick={() => setPromoting(item)}>
+                <ArrowRight className="mr-1 h-3.5 w-3.5" /> Virar nota
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-muted-foreground hover:text-destructive"
+                onClick={() => discardItem(item)}
+                disabled={discard.isPending}
+                aria-label={`Descartar ${item.title}`}
+                title="Descartar"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
           </div>
         ))}
       </div>

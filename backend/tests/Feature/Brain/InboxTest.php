@@ -83,3 +83,24 @@ test('promote rejeita path fora do inbox e captura inexistente', function () {
         'category' => 'Receitas', 'title' => 'X',
     ])->assertNotFound();
 });
+
+test('descartar move a captura pra descartados sem apagar', function () {
+    makeNote('00-Inbox/spam.md', [], "não interessa\n");
+
+    $this->deleteJson('/api/brain/inbox/00-Inbox/spam.md')
+        ->assertOk()
+        ->assertJsonPath('data.path', '00-Inbox/descartados/'.now()->format('Y-m-d').'-spam.md');
+
+    expect(file_exists(vaultPath().'/00-Inbox/spam.md'))->toBeFalse()
+        ->and(file_exists(vaultPath().'/00-Inbox/descartados/'.now()->format('Y-m-d').'-spam.md'))->toBeTrue();
+
+    $this->getJson('/api/brain/inbox')->assertOk()->assertJsonCount(0, 'data');
+});
+
+test('descartar rejeita path fora do inbox, já descartado e inexistente', function () {
+    makeNote('Receitas/Bolo.md');
+
+    $this->deleteJson('/api/brain/inbox/Receitas/Bolo.md')->assertNotFound();
+    $this->deleteJson('/api/brain/inbox/00-Inbox/descartados/x.md')->assertNotFound();
+    $this->deleteJson('/api/brain/inbox/00-Inbox/nao-existe.md')->assertNotFound();
+});
