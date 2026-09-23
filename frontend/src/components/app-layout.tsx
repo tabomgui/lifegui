@@ -15,7 +15,7 @@ const navClass = ({ isActive }: { isActive: boolean }) =>
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { user, logout } = useAuth()
   const { isEnabled } = useEnabledModules()
-  const showReports = isEnabled('tasks') || isEnabled('habits')
+  const showReports = isEnabled('tasks') || isEnabled('habits') || isEnabled('brain')
   return (
     <>
       <div className="flex h-14 items-center gap-2 border-b px-4">
@@ -42,8 +42,8 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           <CalendarDays className="h-4 w-4" /> Agenda
         </NavLink>
         {showReports && (
-          <NavLink to="/relatorios" className={navClass} onClick={onNavigate}>
-            <BarChart3 className="h-4 w-4" /> Relatórios
+          <NavLink to="/dashboards" className={navClass} onClick={onNavigate}>
+            <BarChart3 className="h-4 w-4" /> Dashboards
           </NavLink>
         )}
         <div className="mt-auto" />

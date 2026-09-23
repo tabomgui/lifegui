@@ -3,8 +3,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Report\HabitReportRequest;
 use App\Http\Requests\Report\TaskReportRequest;
+use App\Support\BrainReport;
 use App\Support\HabitReport;
 use App\Support\TaskReport;
+use App\Support\Vault\VaultService;
 use Illuminate\Http\JsonResponse;
 
 /**
@@ -25,6 +27,13 @@ class ReportsController extends Controller
         [$from, $to, $tz] = $this->window($request, 30);
 
         return response()->json(['data' => HabitReport::build($from, $to, $tz)]);
+    }
+
+    public function brain(HabitReportRequest $request, VaultService $vault): JsonResponse
+    {
+        [$from, $to, $tz] = $this->window($request, 30);
+
+        return response()->json(['data' => BrainReport::build($from, $to, $tz, $vault)]);
     }
 
     /**

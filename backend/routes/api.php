@@ -69,6 +69,7 @@ Route::middleware(['auth:sanctum', RestrictCaptureTokens::class])->group(functio
     // /tasks/{task} or /habits/{habit}).
     Route::get('/reports/tasks', [ReportsController::class, 'tasks']);
     Route::get('/reports/habits', [ReportsController::class, 'habits']);
+    Route::get('/reports/brain', [ReportsController::class, 'brain']);
 
     // Per-user module on/off toggles.
     Route::get('/modules', [ModuleController::class, 'index']);

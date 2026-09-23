@@ -9,7 +9,7 @@ import Dashboard from '@/pages/dashboard'
 import Habits from '@/pages/habits'
 import Cerebro from '@/pages/cerebro'
 import Agenda from '@/pages/agenda'
-import Relatorios from '@/pages/relatorios'
+import Dashboards from '@/pages/dashboards'
 import Configuracoes from '@/pages/configuracoes'
 
 export default function App() {
@@ -26,7 +26,9 @@ export default function App() {
             <Route path="/habits" element={<ModuleRoute module="habits"><Habits /></ModuleRoute>} />
             <Route path="/cerebro" element={<ModuleRoute module="brain"><Cerebro /></ModuleRoute>} />
             <Route path="/agenda" element={<Agenda />} />
-            <Route path="/relatorios" element={<ReportsRoute><Relatorios /></ReportsRoute>} />
+            <Route path="/dashboards" element={<ReportsRoute><Dashboards /></ReportsRoute>} />
+            {/* Rota antiga: favoritos/histórico continuam funcionando. */}
+            <Route path="/relatorios" element={<Navigate to="/dashboards" replace />} />
             <Route path="/configuracoes" element={<Configuracoes />} />
           </Route>
         </Routes>

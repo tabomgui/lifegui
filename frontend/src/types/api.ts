@@ -232,6 +232,19 @@ export interface HabitReport {
   perHabitStreaks: HabitReportStreak[]
 }
 
+export interface BrainReportWeek {
+  weekStart: string
+  created: number
+  updated: number
+}
+
+export interface BrainReport {
+  totals: { notes: number; estudando: number; concluidas: number; inbox: number }
+  statuses: Record<'novo' | 'estudando' | 'concluido' | 'a-revisar' | 'sem-status', number>
+  weekly: BrainReportWeek[]
+  inboxWeekly: { weekStart: string; entered: number }[]
+}
+
 export interface TaskReport {
   from: string
   to: string

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
-import type { HabitReport, TaskReport } from '@/types/api'
+import type { BrainReport, HabitReport, TaskReport } from '@/types/api'
 
 // The backend buckets UTC timestamps (created_at/completed_at) into the client's
 // calendar days using this timezone, mirroring the heatmap.
@@ -12,6 +12,15 @@ export function useTaskReport(from: string, to: string, enabled = true) {
     enabled,
     queryFn: async () =>
       (await api.get('/reports/tasks', { params: { from, to, tz } })).data.data as TaskReport,
+  })
+}
+
+export function useBrainReport(from: string, to: string, enabled = true) {
+  return useQuery({
+    queryKey: ['reports', 'brain', from, to],
+    enabled,
+    queryFn: async () =>
+      (await api.get('/reports/brain', { params: { from, to, tz } })).data.data as BrainReport,
   })
 }
 

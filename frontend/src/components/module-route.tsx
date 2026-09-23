@@ -48,12 +48,12 @@ export function IndexRoute({ children }: { children: ReactNode }) {
   return <>{children}</>
 }
 
-// Rota de relatórios: faz sentido com tarefas ou hábitos habilitados.
+// Rota de dashboards: faz sentido com qualquer módulo de conteúdo habilitado.
 export function ReportsRoute({ children }: { children: ReactNode }) {
   const { data, isLoading, isError } = useModules()
   if (isLoading) return <ModulesLoading />
   const enabled = enabledSet(data)
-  if (!isError && !enabled.has('tasks') && !enabled.has('habits')) {
+  if (!isError && !enabled.has('tasks') && !enabled.has('habits') && !enabled.has('brain')) {
     return <Navigate to={firstEnabledRoute(data)} replace />
   }
   return <>{children}</>
