@@ -99,6 +99,7 @@ Route::middleware(['auth:sanctum', RestrictCaptureTokens::class])->group(functio
     // Módulo Cérebro: gerencia o vault Obsidian do usuário (filesystem é a
     // fonte da verdade; nada de notas no banco). Rotas literais ANTES das
     // curinga {path} — {path} aceita '/' via constraint .*.
+    Route::post('/brain/init', [BrainCategoryController::class, 'init']);
     Route::get('/brain/categories', [BrainCategoryController::class, 'index']);
     Route::post('/brain/categories', [BrainCategoryController::class, 'store']);
     Route::patch('/brain/categories/reorder', [BrainCategoryController::class, 'reorder']);

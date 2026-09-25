@@ -45,3 +45,17 @@ test('exige autenticação', function () {
     $this->app['auth']->forgetGuards();
     $this->getJson('/api/brain/categories')->assertUnauthorized();
 });
+
+test('init cria o vault zero touch e é idempotente', function () {
+    $this->getJson('/api/brain/categories')->assertJsonPath('initialized', false);
+
+    $this->postJson('/api/brain/init')->assertCreated()->assertJsonPath('data.initialized', true);
+
+    expect(is_dir(vaultPath().'/00-Inbox/processados'))->toBeTrue();
+    $this->getJson('/api/brain/categories')->assertOk()->assertJsonPath('initialized', true);
+
+    // Segunda chamada não quebra nem apaga nada.
+    file_put_contents(vaultPath().'/00-Inbox/captura.md', "oi\n");
+    $this->postJson('/api/brain/init')->assertCreated();
+    expect(file_exists(vaultPath().'/00-Inbox/captura.md'))->toBeTrue();
+});

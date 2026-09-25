@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Check, ChevronDown, FolderOpen, Hash, NotebookPen, Plus } from 'lucide-react'
+import { toast } from 'sonner'
+import { Brain, Check, ChevronDown, Hash, NotebookPen, Plus } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,8 +17,42 @@ import { CaptureBar, InboxList } from '@/components/brain/inbox'
 import { BrainCategoryTabs, INBOX_TAB } from '@/components/brain/category-tabs'
 import { GraphView } from '@/components/brain/graph-view'
 import { NOTE_STATUSES, STATUS_DOT, STATUS_LABEL } from '@/components/brain/status'
-import { useBrainCategories, useBrainInbox, useBrainNotes } from '@/hooks/use-brain'
+import { useBrainCategories, useBrainInbox, useBrainNotes, useInitVault } from '@/hooks/use-brain'
 import type { NoteStatus } from '@/types/api'
+
+// Vault ainda não existe: um clique cria a estrutura no servidor (zero touch).
+function ActivateBrain() {
+  const init = useInitVault()
+
+  async function activate() {
+    try {
+      await init.mutateAsync()
+      toast.success('Cérebro ativado')
+    } catch {
+      toast.error('Não foi possível ativar o Cérebro')
+    }
+  }
+
+  return (
+    <div className="flex flex-1 items-center justify-center p-6">
+      <div className="flex max-w-md flex-col items-center gap-4 text-center">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+          <Brain className="h-6 w-6 text-muted-foreground" />
+        </div>
+        <div className="space-y-1">
+          <p className="text-sm font-medium">Seu segundo cérebro ainda não existe</p>
+          <p className="text-sm text-muted-foreground">
+            O Cérebro guarda suas notas num vault Obsidian no servidor: capture links e
+            ideias no inbox, transforme em notas por categoria e conecte tudo com wikilinks.
+          </p>
+        </div>
+        <Button onClick={activate} disabled={init.isPending}>
+          <Brain className="mr-1.5 h-4 w-4" /> Ativar Cérebro
+        </Button>
+      </div>
+    </div>
+  )
+}
 
 export default function Cerebro() {
   const { data: categoriesData, isLoading } = useBrainCategories()
@@ -68,19 +103,7 @@ export default function Cerebro() {
             Carregando…
           </div>
         ) : !initialized ? (
-          <div className="flex flex-1 items-center justify-center p-6">
-            <div className="flex max-w-md flex-col items-center gap-3 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                <FolderOpen className="h-6 w-6 text-muted-foreground" />
-              </div>
-              <p className="text-sm font-medium">Vault não encontrado</p>
-              <p className="text-sm text-muted-foreground">
-                O módulo Cérebro gerencia um vault Obsidian no servidor. Crie a pasta do seu
-                vault em <code className="rounded bg-muted px-1">VAULTS_PATH/&#123;seu id&#125;</code> com
-                as pastas de categoria e recarregue.
-              </p>
-            </div>
-          </div>
+          <ActivateBrain />
         ) : (
           <>
             <BrainCategoryTabs

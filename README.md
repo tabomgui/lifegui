@@ -37,7 +37,7 @@ docker compose up
 - Frontend: http://localhost:5173
 - API: http://localhost:8000
 
-O container do backend instala dependências, gera `APP_KEY` e roda as migrations sozinho. Pro módulo Cérebro, crie a pasta do vault do seu usuário em `vaults/{user_id}` (com as subpastas de categoria e `00-Inbox/processados`).
+O container do backend instala dependências, gera `APP_KEY` e roda as migrations sozinho. O módulo Cérebro é zero touch: o botão "Ativar Cérebro" na própria UI cria o vault do usuário no servidor.
 
 Integração com Google Calendar e o servidor MCP exigem credenciais próprias (Google Cloud OAuth client e chaves do Passport) — veja `backend/.env.example`.
 

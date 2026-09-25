@@ -25,6 +25,17 @@ export function useBrainCategories(enabled = true) {
   })
 }
 
+export function useInitVault() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async () => {
+      await csrf()
+      await api.post('/brain/init')
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: BRAIN }),
+  })
+}
+
 export function useCreateBrainCategory() {
   const qc = useQueryClient()
   return useMutation({

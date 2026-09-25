@@ -18,6 +18,20 @@ class CategoryController extends Controller
 
     public function __construct(private readonly VaultService $vault) {}
 
+    /**
+     * Zero touch: cria o vault do usuário (raiz + 00-Inbox/processados) por
+     * dentro do sistema. Idempotente — chamar de novo não faz nada.
+     */
+    public function init(): JsonResponse
+    {
+        $inbox = $this->vault->root().'/00-Inbox/processados';
+        if (! is_dir($inbox)) {
+            mkdir($inbox, 0755, true);
+        }
+
+        return response()->json(['data' => ['initialized' => true]], 201);
+    }
+
     public function index(): JsonResponse
     {
         if (! $this->vault->initialized()) {
