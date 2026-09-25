@@ -37,3 +37,6 @@ npm-debug.log*
 
 # Vaults Obsidian locais (fonte da verdade do modulo Cerebro; nunca versionar)
 vaults/
+
+# Mockups locais de UI (rascunho, fora do repo)
+mockup/
