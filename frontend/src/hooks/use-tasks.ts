@@ -21,6 +21,22 @@ export function useTaskDetail(id: number | null) {
   })
 }
 
+export function useCreateTask() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: {
+      title: string
+      notes?: string
+      category_id?: number | null
+      due_date?: string | null
+    }) => {
+      await csrf()
+      return (await api.post('/tasks', input)).data.data as Task
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  })
+}
+
 export function useUpdateTask() {
   const qc = useQueryClient()
   return useMutation({

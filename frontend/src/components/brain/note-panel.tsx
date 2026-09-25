@@ -6,6 +6,7 @@ import { CodeXml, CornerUpRight, ExternalLink, Eye, Kanban, Pencil, Repeat, Scis
 import { NoteEditor, type NoteEditorApi } from '@/components/brain/note-editor'
 import { ScheduleSection } from '@/components/calendar/schedule-section'
 import { TagEditor } from '@/components/brain/tag-editor'
+import { TaskFromNote } from '@/components/brain/task-from-note'
 import { NewNoteDialog } from '@/components/brain/new-note-dialog'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
@@ -296,9 +297,12 @@ export function NotePanel({ path, onNavigate, onClose }: {
                     </div>
                   </div>
                 )}
-                {note.links.length > 0 && (
-                  <div>
-                    <p className="mb-1.5 text-xs font-medium text-muted-foreground">Vinculado a</p>
+                <div>
+                  <div className="mb-1.5 flex items-center justify-between">
+                    <p className="text-xs font-medium text-muted-foreground">Vinculado a</p>
+                    <TaskFromNote notePath={note.path} noteTitle={note.title} />
+                  </div>
+                  {note.links.length > 0 ? (
                     <div className="flex flex-wrap gap-1.5">
                       {note.links.map((link) => (
                         <span
@@ -310,8 +314,12 @@ export function NotePanel({ path, onNavigate, onClose }: {
                         </span>
                       ))}
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <p className="text-xs text-muted-foreground/70">
+                      Nenhuma tarefa ou hábito vinculado ainda.
+                    </p>
+                  )}
+                </div>
               </div>
             )}
           </>
