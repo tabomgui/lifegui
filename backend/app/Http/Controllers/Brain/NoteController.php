@@ -148,6 +148,31 @@ MD;
         return response()->json(['data' => $this->full($path, $this->vault->read($path))]);
     }
 
+    public function destroy(string $path): JsonResponse
+    {
+        // Inbox tem descarte próprio (InboxController@destroy); aqui só notas
+        // de categoria. Nunca apaga: move pra .trash (lixeira do Obsidian).
+        abort_if(str_starts_with($path, '00-Inbox/') || str_starts_with($path, '.trash/'), 404);
+
+        $absolute = $this->vault->resolve($path);
+        abort_if($absolute === null, 404);
+
+        $trash = $this->vault->root().'/.trash';
+        if (! is_dir($trash)) {
+            mkdir($trash, 0755, true);
+        }
+
+        $target = '.trash/'.now()->format('Y-m-d').'-'.basename($path);
+        $absoluteTarget = $this->vault->resolve($target, mustExist: false);
+        abort_if($absoluteTarget === null, 422, 'Lixeira não encontrada no vault.');
+        rename($absolute, $absoluteTarget);
+
+        // Vínculos com tarefas/hábitos apontam pro path antigo: limpa.
+        \App\Models\NoteLink::where('note_path', $path)->delete();
+
+        return response()->json(['data' => ['path' => $target]]);
+    }
+
     /**
      * @return array{path: string, title: string, status: mixed, tags: array, fonte: mixed, resumo: mixed, data_salvo: mixed}
      */

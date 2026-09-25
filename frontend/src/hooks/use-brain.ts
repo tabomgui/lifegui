@@ -150,6 +150,17 @@ export function useUpdateNote() {
   })
 }
 
+export function useDeleteNote() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (path: string) => {
+      await csrf()
+      await api.delete(`/brain/notes/${path}`)
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: BRAIN }),
+  })
+}
+
 interface InboxResponse {
   data: InboxItem[]
   initialized: boolean

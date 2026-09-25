@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import ReactMarkdown, { defaultUrlTransform } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { toast } from 'sonner'
-import { CodeXml, CornerUpRight, ExternalLink, Eye, Kanban, Pencil, Repeat, Scissors } from 'lucide-react'
+import { CodeXml, CornerUpRight, ExternalLink, Eye, Kanban, Pencil, Repeat, Scissors, Trash2 } from 'lucide-react'
 import { NoteEditor, type NoteEditorApi } from '@/components/brain/note-editor'
 import { ScheduleSection } from '@/components/calendar/schedule-section'
 import { TagEditor } from '@/components/brain/tag-editor'
@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { NOTE_STATUSES, STATUS_BADGE, STATUS_LABEL } from '@/components/brain/status'
-import { useBrainNote, useBrainNotes, useUpdateNote } from '@/hooks/use-brain'
+import { useBrainNote, useBrainNotes, useDeleteNote, useUpdateNote } from '@/hooks/use-brain'
 import type { NoteStatus } from '@/types/api'
 
 // Converte [[wikilinks]] em links markdown com esquema próprio pra interceptar
@@ -36,6 +36,7 @@ export function NotePanel({ path, onNavigate, onClose }: {
   const { data: note } = useBrainNote(path)
   const { data: allNotes = [] } = useBrainNotes()
   const update = useUpdateNote()
+  const del = useDeleteNote()
   const [editing, setEditing] = useState(false)
   // Modo padrão de edição é o editor rico (Crepe); "Texto puro" é a saída de
   // segurança pra sintaxe que o WYSIWYG não conhece.
@@ -94,6 +95,18 @@ export function NotePanel({ path, onNavigate, onClose }: {
       toast.success('Nota salva')
     } catch {
       toast.error('Não foi possível salvar')
+    }
+  }
+
+  async function deleteNote() {
+    if (!note) return
+    if (!confirm(`Excluir "${note.title}"? Vai pra .trash no vault (recuperável pelo Obsidian).`)) return
+    try {
+      await del.mutateAsync(note.path)
+      toast.success('Nota movida pra lixeira')
+      onClose()
+    } catch {
+      toast.error('Não foi possível excluir')
     }
   }
 
@@ -186,9 +199,22 @@ export function NotePanel({ path, onNavigate, onClose }: {
                       </Button>
                     </div>
                   ) : (
-                    <Button size="sm" variant="ghost" onClick={() => { setDraft(note.body); setEditorKey((k) => k + 1); setEditing(true) }}>
-                      <Pencil className="mr-1 h-3.5 w-3.5" /> Editar
-                    </Button>
+                    <div className="flex gap-1.5">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-muted-foreground hover:text-destructive"
+                        onClick={deleteNote}
+                        disabled={del.isPending}
+                        aria-label={`Excluir ${note.title}`}
+                        title="Excluir nota"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => { setDraft(note.body); setEditorKey((k) => k + 1); setEditing(true) }}>
+                        <Pencil className="mr-1 h-3.5 w-3.5" /> Editar
+                      </Button>
+                    </div>
                   )}
                 </div>
               </div>

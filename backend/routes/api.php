@@ -116,4 +116,5 @@ Route::middleware(['auth:sanctum', RestrictCaptureTokens::class])->group(functio
     Route::post('/brain/notes', [BrainNoteController::class, 'store']);
     Route::get('/brain/notes/{path}', [BrainNoteController::class, 'show'])->where('path', '.*');
     Route::patch('/brain/notes/{path}', [BrainNoteController::class, 'update'])->where('path', '.*');
+    Route::delete('/brain/notes/{path}', [BrainNoteController::class, 'destroy'])->where('path', '.*');
 });

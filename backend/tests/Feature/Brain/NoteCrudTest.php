@@ -199,3 +199,32 @@ test('atualiza as tags de uma nota via frontmatter', function () {
         'frontmatter' => ['tags' => ['airfryer', 'rapido']],
     ])->assertOk()->assertJsonPath('data.tags', ['airfryer', 'rapido']);
 });
+
+// ---------- destroy ----------
+
+test('excluir move a nota pra .trash e limpa vínculos', function () {
+    makeNote('Receitas/Velha.md', ['status' => 'novo']);
+    $task = App\Models\Task::factory()->for($this->user)->create();
+    App\Models\NoteLink::factory()->for($this->user)->create([
+        'linkable_type' => App\Models\Task::class, 'linkable_id' => $task->id,
+        'note_path' => 'Receitas/Velha.md',
+    ]);
+
+    $this->deleteJson('/api/brain/notes/Receitas/Velha.md')
+        ->assertOk()
+        ->assertJsonPath('data.path', '.trash/'.now()->format('Y-m-d').'-Velha.md');
+
+    expect(file_exists(vaultPath().'/Receitas/Velha.md'))->toBeFalse()
+        ->and(file_exists(vaultPath().'/.trash/'.now()->format('Y-m-d').'-Velha.md'))->toBeTrue()
+        ->and(App\Models\NoteLink::count())->toBe(0);
+
+    $this->getJson('/api/brain/notes?category=Receitas')->assertOk()->assertJsonCount(0, 'data');
+});
+
+test('excluir rejeita inbox, .trash e nota inexistente', function () {
+    makeNote('00-Inbox/captura.md');
+
+    $this->deleteJson('/api/brain/notes/00-Inbox/captura.md')->assertNotFound();
+    $this->deleteJson('/api/brain/notes/.trash/x.md')->assertNotFound();
+    $this->deleteJson('/api/brain/notes/Receitas/nao-existe.md')->assertNotFound();
+});
