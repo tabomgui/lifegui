@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 
 use function Pest\Laravel\getJson;
 use function Pest\Laravel\postJson;
@@ -80,4 +81,19 @@ test('setup valida os campos', function () {
     postJson('/api/setup', setupPayload(['password_confirmation' => 'diferente']))
         ->assertStatus(422)
         ->assertJsonValidationErrors('password');
+});
+
+test('setup responde 409 quando o lock está ocupado', function () {
+    $lock = Cache::lock('lifegui:setup', 10);
+    $lock->get();
+
+    try {
+        postJson('/api/setup', setupPayload())
+            ->assertStatus(409)
+            ->assertJsonPath('message', 'Configuração em andamento. Tente de novo em instantes.');
+
+        expect(User::count())->toBe(0);
+    } finally {
+        $lock->forceRelease();
+    }
 });
