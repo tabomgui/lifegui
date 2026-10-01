@@ -77,7 +77,7 @@ class DemoSeeder extends Seeder
         // [título, status, prazo em dias (null = sem prazo), prioridade, subtarefas]
         $board = [
             ['Trabalho', 'briefcase', '#3b82f6', [
-                ['Revisar proposta do cliente', 'doing', 1, true, ['Ler escopo', 'Ajustar prazos', 'Enviar resposta']],
+                ['Revisar proposta do cliente', 'doing', 0, true, ['Ler escopo', 'Ajustar prazos', 'Enviar resposta']],
                 ['Preparar apresentação trimestral', 'todo', 4, false, []],
                 ['Atualizar documentação da API', 'todo', 9, false, []],
                 ['Reunião de alinhamento com o time', 'done', -2, false, []],
@@ -90,7 +90,7 @@ class DemoSeeder extends Seeder
                 ['Revisar flashcards de inglês', 'done', -1, false, []],
             ]],
             ['Casa', 'home', '#10b981', [
-                ['Pagar conta de luz', 'todo', 3, true, []],
+                ['Pagar conta de luz', 'todo', 0, true, []],
                 ['Organizar armário do escritório', 'todo', null, false, []],
                 ['Agendar manutenção do ar-condicionado', 'doing', 5, false, []],
                 ['Comprar filtro de água', 'done', -3, false, []],
@@ -151,18 +151,22 @@ class DemoSeeder extends Seeder
             ['Exercício', 'dumbbell', '#ef4444', 3, 0.7],
             ['Meditar', 'brain', '#8b5cf6', 5, 0.75],
             ['Beber água', 'droplet', '#10b981', 7, 0.9],
-            ['Dormir antes das 23h', 'moon', '#64748b', 5, 0.6],
+            ['Dormir cedo', 'moon', '#64748b', 5, 0.6],
         ];
 
         $start = $today->subWeeks(12)->startOfWeek();
+        $recentStart = $today->subDays(5);
 
         foreach ($habits as [$name, $icon, $color, $target, $adherence]) {
             $habit = Habit::create(['name' => $name, 'icon' => $icon, 'color' => $color, 'target_per_week' => $target]);
             $chance = $adherence * $target / 7;
 
-            // Hoje fica em aberto: o check-in do dia aparece pendente na tela.
-            for ($day = $start; $day->lt($today); $day = $day->addDay()) {
-                if (mt_rand() / mt_getrandmax() < $chance) {
+            // Últimos 6 dias (de hoje para trás, hoje incluso) fecham 100%:
+            // "Dias perfeitos", streaks e o gráfico de consistência diária
+            // não zeram bem no fim do período mostrado nas telas.
+            for ($day = $start; $day->lte($today); $day = $day->addDay()) {
+                $done = $day->gte($recentStart) || mt_rand() / mt_getrandmax() < $chance;
+                if ($done) {
                     HabitLog::create(['habit_id' => $habit->id, 'date' => $day->toDateString(), 'done' => true, 'skipped' => false]);
                 }
             }
