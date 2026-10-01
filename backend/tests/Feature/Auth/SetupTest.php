@@ -3,6 +3,17 @@
 use App\Models\User;
 
 use function Pest\Laravel\getJson;
+use function Pest\Laravel\postJson;
+
+function setupPayload(array $overrides = []): array
+{
+    return array_merge([
+        'name' => 'Gui',
+        'email' => 'gui@example.com',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+    ], $overrides);
+}
 
 test('status pede setup quando não há usuários', function () {
     config([
@@ -38,4 +49,35 @@ test('status reflete cadastro aberto e login Google configurado', function () {
     getJson('/api/setup/status')
         ->assertJsonPath('data.registration_enabled', true)
         ->assertJsonPath('data.google_login_enabled', true);
+});
+
+test('setup cria a primeira conta e autentica', function () {
+    postJson('/api/setup', setupPayload())
+        ->assertCreated()
+        ->assertJsonPath('data.email', 'gui@example.com');
+
+    $this->assertDatabaseHas('users', ['email' => 'gui@example.com']);
+    $this->assertAuthenticated();
+});
+
+test('setup responde 409 quando a instância já tem usuário', function () {
+    User::factory()->create();
+
+    postJson('/api/setup', setupPayload(['email' => 'outro@example.com']))
+        ->assertStatus(409)
+        ->assertJsonPath('message', 'Esta instância já foi configurada.');
+
+    expect(User::count())->toBe(1);
+});
+
+test('setup funciona com cadastro público fechado', function () {
+    config(['lifegui.registration_enabled' => false]);
+
+    postJson('/api/setup', setupPayload())->assertCreated();
+});
+
+test('setup valida os campos', function () {
+    postJson('/api/setup', setupPayload(['password_confirmation' => 'diferente']))
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('password');
 });

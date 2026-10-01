@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Route;
 
 // Primeira conta da instância (só funciona com a tabela users vazia).
 Route::get('/setup/status', [SetupController::class, 'status']);
+Route::post('/setup', [SetupController::class, 'store'])->middleware('throttle:10,1');
 
 Route::post('/register', RegisterController::class);
 
