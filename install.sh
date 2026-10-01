@@ -243,6 +243,12 @@ configure() {
       [ -n "$(tail -c 1 .env)" ] && printf '\n' >> .env
       printf 'LIFEGUI_PORT=%s\n' "$port" >> .env
     fi
+    if [ -z "$db_password" ]; then
+      # .env existente sem DB_PASSWORD: gera uma pra compose e backend/.env baterem.
+      db_password="$(openssl rand -hex 24)"
+      [ -n "$(tail -c 1 .env)" ] && printf '\n' >> .env
+      printf 'DB_PASSWORD=%s\n' "$db_password" >> .env
+    fi
   else
     # backend/.env já existe: reaproveita a senha pra bater com o que ele espera.
     [ -f backend/.env ] && db_password="$(env_value DB_PASSWORD backend/.env)"
