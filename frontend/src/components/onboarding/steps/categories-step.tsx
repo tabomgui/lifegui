@@ -9,10 +9,11 @@ import { SuggestionChip } from '@/components/onboarding/suggestion-chip'
 import { CATEGORY_SUGGESTIONS, nameKey } from '@/components/onboarding/suggestions'
 
 export function CategoriesStep() {
-  const { data: categories = [] } = useCategories()
+  const { data: categories = [], isSuccess } = useCategories()
   const create = useCreateCategory()
   const [custom, setCustom] = useState('')
   const existing = new Set(categories.map((c) => nameKey(c.name)))
+  const customKey = nameKey(custom)
 
   async function add(name: string, icon: string, color: string): Promise<boolean> {
     try {
@@ -45,14 +46,18 @@ export function CategoriesStep() {
             icon={s.icon}
             color={s.color}
             added={existing.has(nameKey(s.name))}
-            disabled={create.isPending}
+            disabled={create.isPending || !isSuccess}
             onAdd={() => add(s.name, s.icon, s.color)}
           />
         ))}
       </div>
       <form onSubmit={onCustom} className="flex gap-2">
         <Input value={custom} onChange={(e) => setCustom(e.target.value)} placeholder="Outra categoria" maxLength={255} />
-        <Button type="submit" variant="outline" disabled={!custom.trim() || create.isPending}>
+        <Button
+          type="submit"
+          variant="outline"
+          disabled={!custom.trim() || create.isPending || !isSuccess || existing.has(customKey)}
+        >
           Adicionar
         </Button>
       </form>

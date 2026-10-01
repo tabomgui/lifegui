@@ -7,17 +7,24 @@ import { StepHeader } from '@/components/onboarding/step-header'
 import type { ModuleInfo } from '@/types/api'
 
 export function ModulesStep() {
-  const { data: modules = [], isLoading } = useModules()
+  const { data: modules = [], isLoading, isError } = useModules()
   const toggle = useToggleModule()
   const initVault = useInitVault()
 
   async function onToggle(module: ModuleInfo, enabled: boolean) {
     try {
       await toggle.mutateAsync({ key: module.key, enabled })
-      // O Cérebro precisa do vault criado no servidor; o init é idempotente.
-      if (module.key === 'brain' && enabled) await initVault.mutateAsync()
     } catch {
       toast.error(`Não foi possível ${enabled ? 'ativar' : 'desativar'} ${module.label}`)
+      return
+    }
+    // O Cérebro precisa do vault criado no servidor; o init é idempotente.
+    if (module.key === 'brain' && enabled) {
+      try {
+        await initVault.mutateAsync()
+      } catch {
+        toast.error('Cérebro ativado, mas o vault não foi criado. Tente de novo em Configurações.')
+      }
     }
   }
 
@@ -27,7 +34,11 @@ export function ModulesStep() {
         title="Escolha seus módulos"
         description="Ative só o que fizer sentido agora. Dá pra mudar depois em Configurações."
       />
-      {isLoading ? (
+      {isError ? (
+        <div className="rounded-lg border p-6 text-center text-sm text-muted-foreground">
+          Não foi possível carregar os módulos.
+        </div>
+      ) : isLoading ? (
         <p className="text-sm text-muted-foreground">Carregando…</p>
       ) : (
         <div className="space-y-2">

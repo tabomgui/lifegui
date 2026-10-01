@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState, type ComponentType } from 'react'
+import { useEffect, useMemo, useRef, useState, type ComponentType } from 'react'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { useEnabledModules } from '@/hooks/use-modules'
+import { STEP_STORAGE_KEY } from '@/contexts/onboarding-context'
 import { cn } from '@/lib/utils'
 import { WelcomeStep } from '@/components/onboarding/steps/welcome-step'
 import { ModulesStep } from '@/components/onboarding/steps/modules-step'
@@ -23,9 +24,6 @@ const STEPS: Record<StepKey, { label: string; component: ComponentType }> = {
   done: { label: 'Pronto', component: DoneStep },
 }
 
-// O passo atual sobrevive a navegações de página inteira (ex.: OAuth do Google Calendar).
-const STORAGE_KEY = 'lifegui:onboarding-step'
-
 export function OnboardingWizard({ open, onFinish }: { open: boolean; onFinish: () => Promise<void> }) {
   const { isEnabled } = useEnabledModules()
   const tasksOn = isEnabled('tasks')
@@ -42,7 +40,7 @@ export function OnboardingWizard({ open, onFinish }: { open: boolean; onFinish: 
     [tasksOn, habitsOn],
   )
   const [current, setCurrent] = useState<StepKey>(
-    () => (sessionStorage.getItem(STORAGE_KEY) as StepKey | null) ?? 'welcome',
+    () => (sessionStorage.getItem(STEP_STORAGE_KEY) as StepKey | null) ?? 'welcome',
   )
   const [finishing, setFinishing] = useState(false)
 
@@ -52,8 +50,18 @@ export function OnboardingWizard({ open, onFinish }: { open: boolean; onFinish: 
   const last = index === steps.length - 1
   const Step = STEPS[key].component
 
+  // Reabertura (ex.: replay()): o fechado->aberto relê o storage, que o replay() já limpou,
+  // então o wizard sempre recomeça em 'welcome' nesse caso.
+  const wasOpen = useRef(open)
   useEffect(() => {
-    if (open) sessionStorage.setItem(STORAGE_KEY, key)
+    if (open && !wasOpen.current) {
+      setCurrent((sessionStorage.getItem(STEP_STORAGE_KEY) as StepKey | null) ?? 'welcome')
+    }
+    wasOpen.current = open
+  }, [open])
+
+  useEffect(() => {
+    if (open) sessionStorage.setItem(STEP_STORAGE_KEY, key)
   }, [open, key])
 
   function go(delta: number) {
@@ -64,7 +72,7 @@ export function OnboardingWizard({ open, onFinish }: { open: boolean; onFinish: 
     setFinishing(true)
     try {
       await onFinish()
-      sessionStorage.removeItem(STORAGE_KEY)
+      sessionStorage.removeItem(STEP_STORAGE_KEY)
       setCurrent('welcome')
     } catch {
       toast.error('Não foi possível concluir. Tente de novo.')
@@ -85,7 +93,7 @@ export function OnboardingWizard({ open, onFinish }: { open: boolean; onFinish: 
         <DialogDescription className="sr-only">
           Passo {index + 1} de {steps.length}: {STEPS[key].label}
         </DialogDescription>
-        <ol className="flex items-center gap-1.5" aria-label="Progresso">
+        <ol className="flex items-center gap-1.5" aria-hidden="true">
           {steps.map((s, i) => (
             <li
               key={s}

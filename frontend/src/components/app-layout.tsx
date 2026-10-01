@@ -74,9 +74,11 @@ function OnboardingGate() {
   const pending = !!user && user.onboarded_at === null
 
   async function finish() {
-    if (pending) await completeOnboarding()
+    if (pending) {
+      await completeOnboarding()
+      navigate(firstEnabledRoute(modules))
+    }
     endReplay()
-    navigate(firstEnabledRoute(modules))
   }
 
   return <OnboardingWizard open={pending || replaying} onFinish={finish} />

@@ -8,7 +8,7 @@ import { StepHeader } from '@/components/onboarding/step-header'
 import { HABIT_SUGGESTIONS, nameKey, type HabitSuggestion } from '@/components/onboarding/suggestions'
 
 export function HabitsStep() {
-  const { data: habits = [] } = useHabits()
+  const { data: habits = [], isSuccess } = useHabits()
   const create = useCreateHabit()
   const [targets, setTargets] = useState<Record<string, number>>(() =>
     Object.fromEntries(HABIT_SUGGESTIONS.map((s) => [s.name, s.target_per_week])),
@@ -67,7 +67,13 @@ export function HabitsStep() {
                   <Check className="h-3.5 w-3.5" /> Adicionado
                 </span>
               ) : (
-                <Button size="sm" variant="outline" className="h-8 w-24" disabled={create.isPending} onClick={() => add(s)}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 w-24"
+                  disabled={create.isPending || !isSuccess}
+                  onClick={() => add(s)}
+                >
                   Adicionar
                 </Button>
               )}
