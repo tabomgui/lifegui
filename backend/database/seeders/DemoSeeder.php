@@ -145,12 +145,12 @@ class DemoSeeder extends Seeder
 
     private function seedHabits(CarbonImmutable $today): void
     {
-        // [nome, ícone, cor, meta semanal, aderência à meta]
+        // [nome, ícone, cor, meta semanal (null = hábito diário), aderência à meta]
         $habits = [
-            ['Ler', 'book-open', '#3b82f6', 7, 0.85],
+            ['Ler', 'book-open', '#3b82f6', null, 0.85],
             ['Exercício', 'dumbbell', '#ef4444', 3, 0.7],
             ['Meditar', 'brain', '#8b5cf6', 5, 0.75],
-            ['Beber água', 'droplet', '#10b981', 7, 0.9],
+            ['Beber água', 'droplet', '#10b981', null, 0.9],
             ['Dormir cedo', 'moon', '#64748b', 5, 0.6],
         ];
 
@@ -159,7 +159,8 @@ class DemoSeeder extends Seeder
 
         foreach ($habits as [$name, $icon, $color, $target, $adherence]) {
             $habit = Habit::create(['name' => $name, 'icon' => $icon, 'color' => $color, 'target_per_week' => $target]);
-            $chance = $adherence * $target / 7;
+            // Hábito diário (meta nula) conta como alvo de 7/semana na fórmula de chance.
+            $chance = $adherence * ($target ?? 7) / 7;
 
             // Últimos 6 dias (de hoje para trás, hoje incluso) fecham 100%:
             // "Dias perfeitos", streaks e o gráfico de consistência diária
