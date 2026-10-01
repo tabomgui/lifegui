@@ -3,6 +3,9 @@ FROM node:22-slim AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
+# Muda a cada versão (o instalador passa o commit): invalida o cache do build abaixo,
+# evitando servir um bundle antigo quando a camada do COPY é reaproveitada.
+ARG APP_VERSION=dev
 COPY . .
 # vite build direto (sem tsc) pra deploy não travar em erro de tipagem.
 RUN npx vite build

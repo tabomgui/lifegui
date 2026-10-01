@@ -8,6 +8,7 @@ node_modules/
 !.env.example
 /backend/.env
 !/backend/.env.example
+!/backend/.env.production.example
 
 # Build
 /frontend/dist/
@@ -37,6 +38,9 @@ npm-debug.log*
 
 # Vaults Obsidian locais (fonte da verdade do modulo Cerebro; nunca versionar)
 vaults/
+
+# Chaves OAuth do Passport (servidor MCP), montadas no backend em produção
+/oauth-keys/
 
 # Mockups locais de UI (rascunho, fora do repo)
 mockup/
