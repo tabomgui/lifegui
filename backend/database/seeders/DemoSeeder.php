@@ -199,7 +199,7 @@ class DemoSeeder extends Seeder
             ['Artigos/Generics em TypeScript.md', 'novo', ['typescript'],
                 "Restrições com extends e inferência em funções genéricas.\n\nParte do curso [[TypeScript avançado]].\n"],
             ['Ideias/Sistema de revisão semanal.md', 'novo', ['produtividade'],
-                "Toda sexta: esvaziar inbox, revisar hábitos e escolher três prioridades.\n\nInspirado em [[Hábitos Atômicos]].\n"],
+                "Toda sexta: esvaziar inbox, revisar hábitos e escolher três prioridades.\n\nBaseado em [[Hábitos Atômicos]].\n"],
         ];
 
         foreach ($notes as [$path, $status, $tags, $body]) {
