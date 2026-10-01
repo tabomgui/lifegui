@@ -12,6 +12,7 @@ use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HabitController;
 use App\Http\Controllers\ModuleController;
+use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SubtaskController;
@@ -39,6 +40,8 @@ Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
 // sessão/cookies) — o callback vem do Google, fora do fluxo stateful do Sanctum.
 
 Route::middleware(['auth:sanctum', RestrictCaptureTokens::class])->group(function () {
+    Route::post('/onboarding/complete', [OnboardingController::class, 'complete']);
+
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::post('/categories', [CategoryController::class, 'store']);
     Route::patch('/categories/reorder', [CategoryController::class, 'reorder']);
