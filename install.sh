@@ -12,11 +12,14 @@ set -euo pipefail
 
 REPO_URL="https://github.com/tabomgui/lifegui.git"
 COMPOSE_FILE="docker-compose.prod.yml"
+# Guardado antes do default: só um LIFEGUI_DIR explícito impede usar o clone atual.
+LIFEGUI_DIR_SET="${LIFEGUI_DIR:+yes}"
 LIFEGUI_DIR="${LIFEGUI_DIR:-$HOME/lifegui}"
 LIFEGUI_REF="${LIFEGUI_REF:-main}"
 HEALTH_TIMEOUT=180
 DOCKER=(docker)
 MODE="install"
+if [ "$(id -u)" -eq 0 ]; then SUDO=""; else SUDO="sudo"; fi
 
 if [ -t 1 ]; then
   C_BLUE=$'\033[0;34m'; C_GREEN=$'\033[0;32m'; C_YELLOW=$'\033[1;33m'
@@ -50,6 +53,20 @@ confirm() {
 
 compose() { "${DOCKER[@]}" compose -f "$COMPOSE_FILE" "$@"; }
 
+# Prefixo exibido nas mensagens: "docker" ou "sudo docker".
+docker_cmd() { printf '%s' "${DOCKER[*]}"; }
+
+# Roda como root: direto quando já é root, senão via sudo (exigido só aqui).
+as_root() {
+  if [ -z "$SUDO" ]; then
+    "$@"
+    return
+  fi
+  command -v sudo >/dev/null 2>&1 \
+    || fail "This step needs root privileges and sudo is not installed. Run the installer as root or install sudo."
+  sudo "$@"
+}
+
 env_value() { sed -n "s/^$1=//p" "$2" 2>/dev/null | head -n 1; }
 
 detect_os() {
@@ -69,21 +86,44 @@ install_docker() {
   if [ "$OS" = "macos" ]; then
     fail "Docker not found. Install Docker Desktop (https://www.docker.com/products/docker-desktop/) or OrbStack (https://orbstack.dev), start it and run the installer again."
   fi
-  confirm "Docker not found. Install it now with get.docker.com (requires sudo)?" \
+  confirm "Docker not found. Install it now with get.docker.com${SUDO:+ (requires sudo)}?" \
     || fail "Docker is required. Install it (https://docs.docker.com/engine/install/) and run the installer again."
   info "Installing Docker..."
-  curl -fsSL https://get.docker.com | sudo sh
-  sudo systemctl enable --now docker >/dev/null 2>&1 || true
-  local me
-  me="$(id -un)"
-  if [ "$(id -u)" -ne 0 ] && ! id -nG "$me" | grep -qw docker; then
-    sudo usermod -aG docker "$me"
-    warn "Added $me to the docker group. This run uses sudo for docker; log out and back in to drop it."
-  fi
-  if [ "$(id -u)" -ne 0 ]; then
+  curl -fsSL https://get.docker.com | as_root sh
+  as_root systemctl enable --now docker >/dev/null 2>&1 || true
+  if [ -n "$SUDO" ]; then
+    local me
+    me="$(id -un)"
+    if ! id -nG "$me" | grep -qw docker; then
+      as_root usermod -aG docker "$me"
+      warn "Added $me to the docker group. This run uses sudo for docker; log out and back in to drop it."
+    fi
     DOCKER=(sudo docker)
   fi
   ok "Docker installed"
+}
+
+# Usuário fora do grupo docker: usa sudo nesta execução quando der.
+ensure_docker_access() {
+  local out
+  out="$("${DOCKER[@]}" info 2>&1)" && return 0
+  [ -z "$SUDO" ] && return 0
+  [ "${DOCKER[0]}" = "sudo" ] && return 0
+  local denied=""
+  case "$out" in *[Pp]ermission\ denied*) denied="yes" ;; esac
+  if command -v sudo >/dev/null 2>&1; then
+    # Sem "permission denied" o daemon só está parado: não pede senha à toa.
+    if sudo -n docker info >/dev/null 2>&1 \
+      || { [ -n "$denied" ] && has_tty && sudo docker info >/dev/null 2>&1; }; then
+      DOCKER=(sudo docker)
+      warn "$(id -un) is not in the docker group; using sudo for this run."
+      return 0
+    fi
+  fi
+  if [ -n "$denied" ]; then
+    fail "Permission denied on the Docker socket. Add your user to the docker group (sudo usermod -aG docker $(id -un)), log out and back in, then run the installer again."
+  fi
+  return 0
 }
 
 wait_for_docker() {
@@ -104,6 +144,7 @@ check_prereqs() {
   require_cmd curl
   require_cmd openssl
   command -v docker >/dev/null 2>&1 || install_docker
+  ensure_docker_access
   wait_for_docker
   "${DOCKER[@]}" compose version >/dev/null 2>&1 \
     || fail "Docker Compose v2 (docker compose) not found. Update Docker and run the installer again."
@@ -111,7 +152,10 @@ check_prereqs() {
 }
 
 setup_repo() {
-  if [ -d "$LIFEGUI_DIR/.git" ]; then
+  if [ -z "$LIFEGUI_DIR_SET" ] && [ -f "./$COMPOSE_FILE" ] && [ -f ./install.sh ] && [ -e ./.git ]; then
+    LIFEGUI_DIR="$(pwd)"
+    info "Using the repository in $LIFEGUI_DIR as-is (update it with git pull)"
+  elif [ -e "$LIFEGUI_DIR/.git" ]; then
     info "Updating $LIFEGUI_DIR to $LIFEGUI_REF..."
     git -C "$LIFEGUI_DIR" fetch --quiet --tags origin
     git -C "$LIFEGUI_DIR" checkout --quiet "$LIFEGUI_REF"
@@ -120,9 +164,6 @@ setup_repo() {
       git -C "$LIFEGUI_DIR" pull --quiet --ff-only origin "$LIFEGUI_REF" \
         || fail "Could not fast-forward $LIFEGUI_DIR. Commit or discard local changes and run the installer again."
     fi
-  elif [ -f "./$COMPOSE_FILE" ] && [ -f ./install.sh ]; then
-    LIFEGUI_DIR="$(pwd)"
-    info "Using the repository in $LIFEGUI_DIR"
   else
     [ -e "$LIFEGUI_DIR" ] && fail "$LIFEGUI_DIR exists and is not a lifegui clone. Set LIFEGUI_DIR to another path."
     info "Cloning lifegui into $LIFEGUI_DIR..."
@@ -138,7 +179,7 @@ configure() {
     return 0
   fi
 
-  local url port scheme host url_port stateful secure db_password app_key
+  local url port env_port scheme host url_port stateful secure db_password app_key
   url="${LIFEGUI_URL:-}"
   if [ -z "$url" ]; then
     url="$(ask "URL you will use to open lifegui" "http://localhost:8080")"
@@ -150,18 +191,25 @@ configure() {
   host="${BASH_REMATCH[2]}"
   url_port="${BASH_REMATCH[4]}"
 
-  port="${LIFEGUI_PORT:-}"
+  # .env existente com LIFEGUI_PORT manda: a porta já publicada não muda.
+  env_port=""
+  [ -f .env ] && env_port="$(env_value LIFEGUI_PORT .env)"
+  port="${env_port:-${LIFEGUI_PORT:-}}"
   if [ -z "$port" ]; then
     if [ "$host" = "localhost" ] || [ "$host" = "127.0.0.1" ]; then
       # Acesso direto: a porta publicada é a própria porta da URL.
       if [ -n "$url_port" ]; then port="$url_port"; elif [ "$scheme" = "https" ]; then port=443; else port=80; fi
     elif [ -n "${LIFEGUI_URL:-}" ]; then
-      port=8080
+      port="${url_port:-8080}"
     else
-      port="$(ask "Local port for the web container (point your proxy or tunnel here)" "8080")"
+      port="$(ask "Local port for the web container (point your proxy or tunnel here)" "${url_port:-8080}")"
     fi
   fi
   [[ "$port" =~ ^[0-9]+$ ]] || fail "Invalid port: $port"
+
+  if [ "$scheme" = "https" ] && { [ "$host" = "localhost" ] || [ "$host" = "127.0.0.1" ]; }; then
+    warn "The web container serves plain HTTP on port $port. Terminate TLS in an external proxy in front of it."
+  fi
 
   stateful="$host${url_port:+:$url_port}"
   secure="false"
@@ -169,23 +217,33 @@ configure() {
 
   if [ -f .env ]; then
     db_password="$(env_value DB_PASSWORD .env)"
+    if [ -z "$env_port" ]; then
+      # Garante quebra de linha antes de anexar.
+      [ -n "$(tail -c 1 .env)" ] && printf '\n' >> .env
+      printf 'LIFEGUI_PORT=%s\n' "$port" >> .env
+    fi
   else
-    db_password="$(openssl rand -hex 24)"
-    printf 'DB_PASSWORD=%s\nLIFEGUI_PORT=%s\n' "$db_password" "$port" > .env
-    chmod 600 .env
+    # backend/.env já existe: reaproveita a senha pra bater com o que ele espera.
+    [ -f backend/.env ] && db_password="$(env_value DB_PASSWORD backend/.env)"
+    [ -n "${db_password:-}" ] || db_password="$(openssl rand -hex 24)"
+    ( umask 077; printf 'DB_PASSWORD=%s\nLIFEGUI_PORT=%s\n' "$db_password" "$port" > .env )
   fi
 
-  if [ ! -f backend/.env ]; then
-    app_key="base64:$(openssl rand -base64 32)"
+  if [ -f backend/.env ]; then
+    warn "Keeping the existing backend/.env as-is. If it is a development file, review APP_URL, APP_ENV and the cookie settings."
+    ok "Configuration written (port $port)"
+    return 0
+  fi
+
+  app_key="base64:$(openssl rand -base64 32)"
+  ( umask 077
     sed -e "s|__APP_KEY__|$app_key|g" \
         -e "s|__APP_URL__|$url|g" \
         -e "s|__DB_PASSWORD__|$db_password|g" \
         -e "s|__SESSION_DOMAIN__|$host|g" \
         -e "s|__SECURE_COOKIE__|$secure|g" \
         -e "s|__STATEFUL_DOMAINS__|$stateful|g" \
-        backend/.env.production.example > backend/.env
-    chmod 600 backend/.env
-  fi
+        backend/.env.production.example > backend/.env )
 
   ok "Configuration written for $url (port $port)"
 }
@@ -198,7 +256,11 @@ start_services() {
   compose build backend
   compose build --build-arg APP_VERSION="$version" web
   info "Starting containers..."
-  compose up -d
+  compose up -d || {
+    warn "Could not start the containers. Check the logs with:"
+    warn "  cd $LIFEGUI_DIR && $(docker_cmd) compose -f $COMPOSE_FILE logs backend"
+    exit 1
+  }
   ok "Containers started"
 }
 
@@ -216,13 +278,14 @@ wait_for_health() {
     elapsed=$((elapsed + 3))
   done
   warn "No answer after ${HEALTH_TIMEOUT}s. It may still be starting. Check the logs with:"
-  warn "  cd $LIFEGUI_DIR && docker compose -f $COMPOSE_FILE logs -f backend"
+  warn "  cd $LIFEGUI_DIR && $(docker_cmd) compose -f $COMPOSE_FILE logs -f backend"
   return 1
 }
 
 print_summary() {
-  local url
+  local url dc
   url="$(env_value APP_URL backend/.env)"
+  dc="$(docker_cmd)"
   printf '\n%s' "$C_BOLD"
   if [ "$MODE" = "install" ]; then
     printf 'lifegui is installed.%s\n\n' "$C_RESET"
@@ -232,9 +295,9 @@ print_summary() {
     printf '  Open %s\n\n' "$url"
   fi
   printf '  Useful commands (run in %s):\n' "$LIFEGUI_DIR"
-  printf '    docker compose -f %s logs -f    # follow logs\n' "$COMPOSE_FILE"
-  printf '    docker compose -f %s ps         # container status\n' "$COMPOSE_FILE"
-  printf '    docker compose -f %s down       # stop lifegui\n\n' "$COMPOSE_FILE"
+  printf '    %s compose -f %s logs -f    # follow logs\n' "$dc" "$COMPOSE_FILE"
+  printf '    %s compose -f %s ps         # container status\n' "$dc" "$COMPOSE_FILE"
+  printf '    %s compose -f %s down       # stop lifegui\n\n' "$dc" "$COMPOSE_FILE"
 }
 
 main() {
