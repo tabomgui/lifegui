@@ -1,8 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from '@/contexts/auth-context'
+import { OnboardingProvider } from '@/contexts/onboarding-context'
 import { ProtectedRoute } from '@/components/protected-route'
 import { ModuleRoute, IndexRoute, ReportsRoute } from '@/components/module-route'
 import { Toaster } from '@/components/ui/sonner'
+import Setup from '@/pages/setup'
 import Login from '@/pages/login'
 import Register from '@/pages/register'
 import Dashboard from '@/pages/dashboard'
@@ -16,22 +18,25 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          {/* Backend (Google callback) redireciona para /dashboard; o dashboard vive em /. */}
-          <Route path="/dashboard" element={<Navigate to="/" replace />} />
-          <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<IndexRoute><Dashboard /></IndexRoute>} />
-            <Route path="/habits" element={<ModuleRoute module="habits"><Habits /></ModuleRoute>} />
-            <Route path="/cerebro" element={<ModuleRoute module="brain"><Cerebro /></ModuleRoute>} />
-            <Route path="/agenda" element={<Agenda />} />
-            <Route path="/dashboards" element={<ReportsRoute><Dashboards /></ReportsRoute>} />
-            {/* Rota antiga: favoritos/histórico continuam funcionando. */}
-            <Route path="/relatorios" element={<Navigate to="/dashboards" replace />} />
-            <Route path="/configuracoes" element={<Configuracoes />} />
-          </Route>
-        </Routes>
+        <OnboardingProvider>
+          <Routes>
+            <Route path="/setup" element={<Setup />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            {/* Backend (Google callback) redireciona para /dashboard; o dashboard vive em /. */}
+            <Route path="/dashboard" element={<Navigate to="/" replace />} />
+            <Route element={<ProtectedRoute />}>
+              <Route path="/" element={<IndexRoute><Dashboard /></IndexRoute>} />
+              <Route path="/habits" element={<ModuleRoute module="habits"><Habits /></ModuleRoute>} />
+              <Route path="/cerebro" element={<ModuleRoute module="brain"><Cerebro /></ModuleRoute>} />
+              <Route path="/agenda" element={<Agenda />} />
+              <Route path="/dashboards" element={<ReportsRoute><Dashboards /></ReportsRoute>} />
+              {/* Rota antiga: favoritos/histórico continuam funcionando. */}
+              <Route path="/relatorios" element={<Navigate to="/dashboards" replace />} />
+              <Route path="/configuracoes" element={<Configuracoes />} />
+            </Route>
+          </Routes>
+        </OnboardingProvider>
         <Toaster />
       </AuthProvider>
     </BrowserRouter>

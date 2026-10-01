@@ -54,6 +54,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'google_calendar_refresh_token' => 'encrypted',
             'google_calendar_connected_at' => 'datetime',
+            'onboarded_at' => 'datetime',
         ];
     }
 }

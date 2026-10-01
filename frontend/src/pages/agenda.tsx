@@ -27,6 +27,7 @@ import {
 import { NotePanel } from '@/components/brain/note-panel'
 import { AgendaCreateDialog, type CreateSlot } from '@/components/calendar/agenda-create-dialog'
 import { AgendaEditDialog } from '@/components/calendar/agenda-edit-dialog'
+import { CalendarCredentialsHint } from '@/components/calendar/calendar-credentials-hint'
 import {
   browserTimezone,
   useCalendarEvents,
@@ -206,9 +207,13 @@ export default function Agenda() {
                 A agenda mostra seu calendário Google ao vivo e deixa você agendar notas,
                 hábitos e tarefas nele. Nada fica copiado no lifegui.
               </p>
-              <Button size="sm" onClick={() => { window.location.href = '/api/auth/google-calendar/redirect' }}>
-                Conectar Google Calendar
-              </Button>
+              {status?.configured ? (
+                <Button size="sm" onClick={() => { window.location.href = '/api/auth/google-calendar/redirect' }}>
+                  Conectar Google Calendar
+                </Button>
+              ) : (
+                <CalendarCredentialsHint />
+              )}
             </div>
           </div>
         ) : (

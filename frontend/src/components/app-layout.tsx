@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { Kanban, Repeat, Brain, CalendarDays, BarChart3, Settings, Menu, X } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
-import { useEnabledModules } from '@/hooks/use-modules'
+import { useEnabledModules, useModules } from '@/hooks/use-modules'
 import { Button } from '@/components/ui/button'
 import { ModeToggle } from '@/components/mode-toggle'
+import { OnboardingWizard } from '@/components/onboarding/onboarding-wizard'
+import { useOnboarding } from '@/contexts/onboarding-context'
+import { firstEnabledRoute } from '@/components/module-route'
 
 const navClass = ({ isActive }: { isActive: boolean }) =>
   `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium ${
@@ -61,6 +64,26 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   )
 }
 
+// Abre o wizard enquanto a conta não concluiu o primeiro uso, ou quando reaberto
+// em Configurações. Concluir/pular grava onboarded_at só no primeiro caso.
+function OnboardingGate() {
+  const { user, completeOnboarding } = useAuth()
+  const { replaying, endReplay } = useOnboarding()
+  const { data: modules } = useModules()
+  const navigate = useNavigate()
+  const pending = !!user && user.onboarded_at === null
+
+  async function finish() {
+    if (pending) {
+      await completeOnboarding()
+      navigate(firstEnabledRoute(modules))
+    }
+    endReplay()
+  }
+
+  return <OnboardingWizard open={pending || replaying} onFinish={finish} />
+}
+
 export function AppLayout({ children, title }: { children: ReactNode; title: string }) {
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -107,6 +130,7 @@ export function AppLayout({ children, title }: { children: ReactNode; title: str
         </header>
         {children}
       </div>
+      <OnboardingGate />
     </div>
   )
 }

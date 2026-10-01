@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Support\GoogleCredentials;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
@@ -21,6 +22,13 @@ class GoogleCalendarController extends Controller
     {
         if (! Auth::check()) {
             return redirect(config('app.frontend_url').'/login');
+        }
+
+        // Rede de segurança: o frontend já esconde o botão de conectar quando a
+        // instância não tem credenciais, mas um link direto cairia na tela de
+        // erro "Missing required parameter: client_id" do próprio Google.
+        if (! GoogleCredentials::configured()) {
+            return redirect(config('app.frontend_url').'/configuracoes?calendar=error');
         }
 
         return Socialite::driver('google')

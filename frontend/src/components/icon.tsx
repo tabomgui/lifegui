@@ -27,6 +27,8 @@ import {
   Brain,
   Sparkles,
   CircleCheck,
+  Kanban,
+  Repeat,
 } from 'lucide-react'
 
 // Curated set of lucide icon names available to categories and habits.
@@ -97,6 +99,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
   brain: Brain,
   sparkles: Sparkles,
   'circle-check': CircleCheck,
+  kanban: Kanban,
+  repeat: Repeat,
 }
 
 const DEFAULT_ICON = Folder

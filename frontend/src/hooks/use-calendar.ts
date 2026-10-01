@@ -9,7 +9,7 @@ export function useCalendarStatus() {
   return useQuery({
     queryKey: ['calendar', 'status'],
     queryFn: async () =>
-      (await api.get('/calendar/status')).data.data as { connected: boolean; connected_at: string | null },
+      (await api.get('/calendar/status')).data.data as { configured: boolean; connected: boolean; connected_at: string | null },
   })
 }
 

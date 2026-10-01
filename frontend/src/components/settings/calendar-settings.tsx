@@ -5,13 +5,14 @@ import { toast } from 'sonner'
 import { CalendarCog, CircleCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCalendarStatus, useDisconnectCalendar } from '@/hooks/use-calendar'
+import { CalendarCredentialsHint } from '@/components/calendar/calendar-credentials-hint'
 
 /**
  * Conexão da conta Google Calendar (OAuth incremental por cima do login).
  * O callback do backend volta pra cá com ?calendar=connected|mismatch|error.
  */
 export function CalendarSettings() {
-  const { data } = useCalendarStatus()
+  const { data, isLoading } = useCalendarStatus()
   const disconnect = useDisconnectCalendar()
   const qc = useQueryClient()
   const [params, setParams] = useSearchParams()
@@ -45,7 +46,9 @@ export function CalendarSettings() {
               da verdade — o lifegui lê e escreve na sua agenda, sem cópia local.
             </div>
           </div>
-          {data?.connected ? (
+          {isLoading ? (
+            <p className="text-xs text-muted-foreground">Carregando…</p>
+          ) : data?.connected ? (
             <div className="flex flex-wrap items-center gap-3">
               <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
                 <CircleCheck className="h-3.5 w-3.5 text-emerald-500" />
@@ -69,7 +72,7 @@ export function CalendarSettings() {
                 Desconectar
               </Button>
             </div>
-          ) : (
+          ) : data?.configured ? (
             <Button
               size="sm"
               className="h-8"
@@ -77,6 +80,8 @@ export function CalendarSettings() {
             >
               Conectar Google Calendar
             </Button>
+          ) : (
+            <CalendarCredentialsHint />
           )}
         </div>
       </div>

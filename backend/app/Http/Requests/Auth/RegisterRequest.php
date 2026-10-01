@@ -2,13 +2,19 @@
 
 namespace App\Http\Requests\Auth;
 
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Http\FormRequest;
 
 class RegisterRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return (bool) config('lifegui.registration_enabled');
+    }
+
+    protected function failedAuthorization(): void
+    {
+        throw new AuthorizationException('Cadastro desativado nesta instância.');
     }
 
     public function rules(): array

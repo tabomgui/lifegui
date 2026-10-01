@@ -3,6 +3,7 @@ import { ModulesSettings } from '@/components/settings/modules-settings'
 import { VaultSettings } from '@/components/settings/vault-settings'
 import { CaptureSettings } from '@/components/settings/capture-settings'
 import { CalendarSettings } from '@/components/settings/calendar-settings'
+import { OnboardingSettings } from '@/components/settings/onboarding-settings'
 
 export default function Configuracoes() {
   return (
@@ -13,6 +14,7 @@ export default function Configuracoes() {
           <CalendarSettings />
           <VaultSettings />
           <CaptureSettings />
+          <OnboardingSettings />
         </div>
       </main>
     </AppLayout>

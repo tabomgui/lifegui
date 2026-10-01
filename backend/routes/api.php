@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\SetupController;
 use App\Http\Controllers\Brain\CategoryController as BrainCategoryController;
 use App\Http\Controllers\Brain\GraphController as BrainGraphController;
 use App\Http\Controllers\Brain\InboxController as BrainInboxController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HabitController;
 use App\Http\Controllers\ModuleController;
+use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SubtaskController;
@@ -20,6 +22,10 @@ use App\Http\Middleware\RestrictCaptureTokens;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+// Primeira conta da instância (só funciona com a tabela users vazia).
+Route::get('/setup/status', [SetupController::class, 'status']);
+Route::post('/setup', [SetupController::class, 'store'])->middleware('throttle:10,1');
 
 Route::post('/register', RegisterController::class);
 
@@ -34,6 +40,8 @@ Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
 // sessão/cookies) — o callback vem do Google, fora do fluxo stateful do Sanctum.
 
 Route::middleware(['auth:sanctum', RestrictCaptureTokens::class])->group(function () {
+    Route::post('/onboarding/complete', [OnboardingController::class, 'complete']);
+
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::post('/categories', [CategoryController::class, 'store']);
     Route::patch('/categories/reorder', [CategoryController::class, 'reorder']);
