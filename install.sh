@@ -151,8 +151,16 @@ check_prereqs() {
   ok "Prerequisites found"
 }
 
+# Clone no diretório atual que não é o LIFEGUI_DIR padrão (ex.: checkout de dev).
+# Rodar de dentro do próprio ~/lifegui cai no fluxo de atualização normal.
+in_other_clone() {
+  [ -z "$LIFEGUI_DIR_SET" ] || return 1
+  [ -f "./$COMPOSE_FILE" ] && [ -f ./install.sh ] && [ -e ./.git ] || return 1
+  [ "$(pwd -P)" != "$(cd "$LIFEGUI_DIR" 2>/dev/null && pwd -P)" ]
+}
+
 setup_repo() {
-  if [ -z "$LIFEGUI_DIR_SET" ] && [ -f "./$COMPOSE_FILE" ] && [ -f ./install.sh ] && [ -e ./.git ]; then
+  if in_other_clone; then
     LIFEGUI_DIR="$(pwd)"
     info "Using the repository in $LIFEGUI_DIR as-is (update it with git pull)"
   elif [ -e "$LIFEGUI_DIR/.git" ]; then
@@ -179,26 +187,34 @@ configure() {
     return 0
   fi
 
-  local url port env_port scheme host url_port stateful secure db_password app_key
-  url="${LIFEGUI_URL:-}"
-  if [ -z "$url" ]; then
-    url="$(ask "URL you will use to open lifegui" "http://localhost:8080")"
-  fi
-  url="${url%/}"
-  [[ "$url" =~ ^(https?)://([A-Za-z0-9.-]+)(:([0-9]+))?$ ]] \
-    || fail "Invalid URL: $url (expected http(s)://host[:port], without path)"
-  scheme="${BASH_REMATCH[1]}"
-  host="${BASH_REMATCH[2]}"
-  url_port="${BASH_REMATCH[4]}"
-
+  local url port env_port scheme host url_port effective_port stateful secure db_password app_key
   # .env existente com LIFEGUI_PORT manda: a porta já publicada não muda.
   env_port=""
   [ -f .env ] && env_port="$(env_value LIFEGUI_PORT .env)"
+
+  url="${LIFEGUI_URL:-}"
+  if [ -z "$url" ] && [ -f backend/.env ]; then
+    # backend/.env é mantido: a URL dele define porta e mensagens.
+    url="$(env_value APP_URL backend/.env)"
+  fi
+  if [ -z "$url" ]; then
+    url="$(ask "URL you will use to open lifegui" "http://localhost:${env_port:-8080}")"
+  fi
+  url="${url%/}"
+  [[ "$url" =~ ^(https?)://([A-Za-z0-9.-]+)(:([0-9]+))?$ ]] \
+    || fail "Invalid URL: $url (expected http(s)://host[:port], without path; set LIFEGUI_URL to override)"
+  scheme="${BASH_REMATCH[1]}"
+  host="${BASH_REMATCH[2]}"
+  url_port="${BASH_REMATCH[4]}"
+  if [ -n "$url_port" ]; then effective_port="$url_port"
+  elif [ "$scheme" = "https" ]; then effective_port=443
+  else effective_port=80; fi
+
   port="${env_port:-${LIFEGUI_PORT:-}}"
   if [ -z "$port" ]; then
     if [ "$host" = "localhost" ] || [ "$host" = "127.0.0.1" ]; then
       # Acesso direto: a porta publicada é a própria porta da URL.
-      if [ -n "$url_port" ]; then port="$url_port"; elif [ "$scheme" = "https" ]; then port=443; else port=80; fi
+      port="$effective_port"
     elif [ -n "${LIFEGUI_URL:-}" ]; then
       port="${url_port:-8080}"
     else
@@ -207,8 +223,13 @@ configure() {
   fi
   [[ "$port" =~ ^[0-9]+$ ]] || fail "Invalid port: $port"
 
-  if [ "$scheme" = "https" ] && { [ "$host" = "localhost" ] || [ "$host" = "127.0.0.1" ]; }; then
-    warn "The web container serves plain HTTP on port $port. Terminate TLS in an external proxy in front of it."
+  if [ "$host" = "localhost" ] || [ "$host" = "127.0.0.1" ]; then
+    if [ "$scheme" = "https" ]; then
+      warn "The web container serves plain HTTP on port $port. Terminate TLS in an external proxy in front of it."
+    fi
+    if [ -n "$env_port" ] && [ "$env_port" != "$effective_port" ]; then
+      warn "The URL uses port $effective_port but .env publishes lifegui on LIFEGUI_PORT=$env_port. Fix one of them so they match."
+    fi
   fi
 
   stateful="$host${url_port:+:$url_port}"
@@ -234,6 +255,12 @@ configure() {
     ok "Configuration written (port $port)"
     return 0
   fi
+
+  # Esses caracteres quebram o sed abaixo (delimitador, referência, escape).
+  case "$db_password" in
+    *'|'* | *'&'* | *"\\"*)
+      fail "DB_PASSWORD in .env contains |, & or \\. Change it to a value without those characters and run the installer again." ;;
+  esac
 
   app_key="base64:$(openssl rand -base64 32)"
   ( umask 077
