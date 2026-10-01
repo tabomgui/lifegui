@@ -12,7 +12,7 @@ import { CalendarCredentialsHint } from '@/components/calendar/calendar-credenti
  * O callback do backend volta pra cá com ?calendar=connected|mismatch|error.
  */
 export function CalendarSettings() {
-  const { data } = useCalendarStatus()
+  const { data, isLoading } = useCalendarStatus()
   const disconnect = useDisconnectCalendar()
   const qc = useQueryClient()
   const [params, setParams] = useSearchParams()
@@ -46,7 +46,9 @@ export function CalendarSettings() {
               da verdade — o lifegui lê e escreve na sua agenda, sem cópia local.
             </div>
           </div>
-          {data?.connected ? (
+          {isLoading ? (
+            <p className="text-xs text-muted-foreground">Carregando…</p>
+          ) : data?.connected ? (
             <div className="flex flex-wrap items-center gap-3">
               <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
                 <CircleCheck className="h-3.5 w-3.5 text-emerald-500" />

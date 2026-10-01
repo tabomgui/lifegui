@@ -6,7 +6,7 @@ import { StepHeader } from '@/components/onboarding/step-header'
 import { CalendarCredentialsHint } from '@/components/calendar/calendar-credentials-hint'
 
 export function IntegrationsStep() {
-  const { data: calendar } = useCalendarStatus()
+  const { data: calendar, isLoading: calendarLoading } = useCalendarStatus()
   const mcpUrl = `${window.location.origin}/mcp`
 
   async function copy() {
@@ -27,7 +27,9 @@ export function IntegrationsStep() {
           <CalendarCog className="h-4 w-4" /> Google Calendar
         </div>
         <p className="text-sm text-muted-foreground">Agende tarefas, hábitos e estudos direto na sua agenda.</p>
-        {calendar?.connected ? (
+        {calendarLoading ? (
+          <p className="text-xs text-muted-foreground">Carregando…</p>
+        ) : calendar?.connected ? (
           <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
             <CircleCheck className="h-3.5 w-3.5 text-emerald-500" /> Conectado
           </span>
