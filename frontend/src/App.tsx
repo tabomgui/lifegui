@@ -3,6 +3,7 @@ import { AuthProvider } from '@/contexts/auth-context'
 import { ProtectedRoute } from '@/components/protected-route'
 import { ModuleRoute, IndexRoute, ReportsRoute } from '@/components/module-route'
 import { Toaster } from '@/components/ui/sonner'
+import Setup from '@/pages/setup'
 import Login from '@/pages/login'
 import Register from '@/pages/register'
 import Dashboard from '@/pages/dashboard'
@@ -17,6 +18,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
+          <Route path="/setup" element={<Setup />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           {/* Backend (Google callback) redireciona para /dashboard; o dashboard vive em /. */}

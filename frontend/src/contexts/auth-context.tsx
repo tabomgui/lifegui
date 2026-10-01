@@ -1,12 +1,14 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { api, csrf } from '@/lib/api'
 
-type User = { id: number; name: string; email: string; avatar: string | null }
+type User = { id: number; name: string; email: string; avatar: string | null; onboarded_at: string | null }
 type AuthCtx = {
   user: User | null
   loading: boolean
   login: (email: string, password: string) => Promise<void>
   register: (name: string, email: string, password: string, passwordConfirmation: string) => Promise<void>
+  setup: (name: string, email: string, password: string, passwordConfirmation: string) => Promise<void>
+  completeOnboarding: () => Promise<void>
   logout: () => Promise<void>
 }
 
@@ -32,12 +34,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(r.data.data)
   }
 
+  // Primeira conta da instância (POST /setup só funciona sem usuários).
+  async function setup(name: string, email: string, password: string, passwordConfirmation: string) {
+    await csrf()
+    const r = await api.post('/setup', { name, email, password, password_confirmation: passwordConfirmation })
+    setUser(r.data.data)
+  }
+
+  async function completeOnboarding() {
+    await csrf()
+    const r = await api.post('/onboarding/complete')
+    setUser(r.data.data)
+  }
+
   async function logout() {
     await api.post('/logout')
     setUser(null)
   }
 
-  return <Ctx.Provider value={{ user, loading, login, register, logout }}>{children}</Ctx.Provider>
+  return (
+    <Ctx.Provider value={{ user, loading, login, register, setup, completeOnboarding, logout }}>
+      {children}
+    </Ctx.Provider>
+  )
 }
 
 export function useAuthContext() {
