@@ -2,6 +2,8 @@
 
 use function Pest\Laravel\postJson;
 
+beforeEach(fn () => config(['lifegui.registration_enabled' => true]));
+
 test('usuário consegue se registrar', function () {
     $response = postJson('/api/register', [
         'name' => 'Gui',
@@ -25,4 +27,18 @@ test('registro exige email único', function () {
         'password' => 'password123',
         'password_confirmation' => 'password123',
     ])->assertStatus(422);
+});
+
+test('registro responde 403 com cadastro fechado', function () {
+    config(['lifegui.registration_enabled' => false]);
+
+    postJson('/api/register', [
+        'name' => 'Gui',
+        'email' => 'gui@example.com',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+    ])->assertForbidden()
+        ->assertJsonPath('message', 'Cadastro desativado nesta instância.');
+
+    $this->assertDatabaseMissing('users', ['email' => 'gui@example.com']);
 });
