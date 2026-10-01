@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\SetupController;
 use App\Http\Controllers\Brain\CategoryController as BrainCategoryController;
 use App\Http\Controllers\Brain\GraphController as BrainGraphController;
 use App\Http\Controllers\Brain\InboxController as BrainInboxController;
@@ -20,6 +21,9 @@ use App\Http\Middleware\RestrictCaptureTokens;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+// Primeira conta da instância (só funciona com a tabela users vazia).
+Route::get('/setup/status', [SetupController::class, 'status']);
 
 Route::post('/register', RegisterController::class);
 
