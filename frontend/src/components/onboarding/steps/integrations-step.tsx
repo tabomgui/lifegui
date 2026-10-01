@@ -3,8 +3,7 @@ import { toast } from 'sonner'
 import { useCalendarStatus } from '@/hooks/use-calendar'
 import { Button } from '@/components/ui/button'
 import { StepHeader } from '@/components/onboarding/step-header'
-
-const CALENDAR_DOCS = 'https://github.com/tabomgui/lifegui#google-calendar'
+import { CalendarCredentialsHint } from '@/components/calendar/calendar-credentials-hint'
 
 export function IntegrationsStep() {
   const { data: calendar } = useCalendarStatus()
@@ -41,10 +40,7 @@ export function IntegrationsStep() {
             Conectar Google Calendar
           </Button>
         ) : (
-          <p className="text-xs text-muted-foreground">
-            Requer credenciais do Google nesta instância.{' '}
-            <a href={CALENDAR_DOCS} target="_blank" rel="noreferrer" className="underline">Como configurar</a>
-          </p>
+          <CalendarCredentialsHint />
         )}
       </div>
 

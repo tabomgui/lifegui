@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { CalendarCog, CircleCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCalendarStatus, useDisconnectCalendar } from '@/hooks/use-calendar'
+import { CalendarCredentialsHint } from '@/components/calendar/calendar-credentials-hint'
 
 /**
  * Conexão da conta Google Calendar (OAuth incremental por cima do login).
@@ -69,7 +70,7 @@ export function CalendarSettings() {
                 Desconectar
               </Button>
             </div>
-          ) : (
+          ) : data?.configured ? (
             <Button
               size="sm"
               className="h-8"
@@ -77,6 +78,8 @@ export function CalendarSettings() {
             >
               Conectar Google Calendar
             </Button>
+          ) : (
+            <CalendarCredentialsHint />
           )}
         </div>
       </div>
