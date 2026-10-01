@@ -11,13 +11,15 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 export default function Setup() {
-  const { setup } = useAuth()
+  const { setup, user, loading } = useAuth()
   const { data: status, isLoading } = useSetupStatus()
   const qc = useQueryClient()
   const navigate = useNavigate()
   const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' })
   const [submitting, setSubmitting] = useState(false)
 
+  // Já autenticado: não faz sentido ficar na tela de setup.
+  if (!loading && user) return <Navigate to="/" replace />
   if (isLoading) {
     return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Carregando…</div>
   }

@@ -10,9 +10,9 @@ import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 
 export default function Login() {
-  const { login } = useAuth()
+  const { login, user, loading } = useAuth()
   const navigate = useNavigate()
-  const { data: status } = useSetupStatus()
+  const { data: status, isLoading: statusLoading } = useSetupStatus()
   const [params, setParams] = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -26,6 +26,12 @@ export default function Login() {
     setParams(params, { replace: true })
   }, [params, setParams])
 
+  // Já autenticado: não faz sentido ficar na tela de login.
+  if (!loading && user) return <Navigate to="/" replace />
+  // Evita flash do formulário (Google/cadastro aparecendo e sumindo) antes de saber o status da instância.
+  if (statusLoading) {
+    return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Carregando…</div>
+  }
   if (status?.needs_setup) return <Navigate to="/setup" replace />
 
   async function onSubmit(e: React.FormEvent) {

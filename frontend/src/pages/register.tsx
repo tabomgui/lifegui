@@ -11,12 +11,14 @@ import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 
 export default function Register() {
-  const { register } = useAuth()
+  const { register, user, loading } = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' })
   const [submitting, setSubmitting] = useState(false)
   const { data: status, isLoading } = useSetupStatus()
 
+  // Já autenticado: não faz sentido ficar na tela de cadastro.
+  if (!loading && user) return <Navigate to="/" replace />
   if (isLoading) {
     return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Carregando…</div>
   }
@@ -64,11 +66,11 @@ export default function Register() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="password">Senha</Label>
-          <Input id="password" type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required />
+          <Input id="password" type="password" minLength={8} value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required />
         </div>
         <div className="space-y-2">
           <Label htmlFor="confirm">Confirmar senha</Label>
-          <Input id="confirm" type="password" value={form.confirm} onChange={e => setForm({ ...form, confirm: e.target.value })} required />
+          <Input id="confirm" type="password" minLength={8} value={form.confirm} onChange={e => setForm({ ...form, confirm: e.target.value })} required />
         </div>
         <Button type="submit" className="w-full" disabled={submitting}>Cadastrar</Button>
         <p className="text-center text-sm text-muted-foreground">
