@@ -29,6 +29,14 @@ test('status reflete a conexão', function () {
         ->assertJsonPath('data.connected', true);
 });
 
+test('status informa se as credenciais Google estão configuradas', function () {
+    config(['services.google.client_id' => null, 'services.google.client_secret' => null]);
+    $this->getJson('/api/calendar/status')->assertJsonPath('data.configured', false);
+
+    config(['services.google.client_id' => 'client-id', 'services.google.client_secret' => 'client-secret']);
+    $this->getJson('/api/calendar/status')->assertJsonPath('data.configured', true);
+});
+
 test('sem conexão, listar eventos responde 409', function () {
     $this->actingAs(User::factory()->create());
 

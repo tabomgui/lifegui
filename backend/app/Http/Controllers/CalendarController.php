@@ -6,6 +6,7 @@ use App\Models\Habit;
 use App\Models\Task;
 use App\Support\Calendar\CalendarService;
 use App\Support\Calendar\GoogleTokenService;
+use App\Support\GoogleCredentials;
 use App\Support\Vault\VaultService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
@@ -29,6 +30,7 @@ class CalendarController extends Controller
     public function status(Request $request): JsonResponse
     {
         return response()->json(['data' => [
+            'configured' => GoogleCredentials::configured(),
             'connected' => (bool) $request->user()->google_calendar_refresh_token,
             'connected_at' => $request->user()->google_calendar_connected_at,
         ]]);
