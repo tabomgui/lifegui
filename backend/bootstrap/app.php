@@ -20,6 +20,11 @@ return Application::configure(basePath: dirname(__DIR__))
             | Request::HEADER_X_FORWARDED_PORT
             | Request::HEADER_X_FORWARDED_PROTO);
 
+        // Host/X-Forwarded-Host vêm do cliente: só aceita o host do APP_URL (e subdomínios),
+        // senão URLs absolutas (discovery OAuth, redirects) poderiam apontar pra host forjado.
+        // O Laravel desliga a checagem em ambiente local e nos testes.
+        $middleware->trustHosts();
+
         $middleware->statefulApi();
 
         // Corpo markdown das notas do vault vai byte a byte pro arquivo;
