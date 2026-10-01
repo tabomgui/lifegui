@@ -146,20 +146,20 @@ curl -fsSL https://raw.githubusercontent.com/tabomgui/lifegui/main/install.sh | 
 
 ## Backup and restore
 
-Back up the database, the vaults, the MCP OAuth keys and the configuration:
+Back up the database, the vaults, the MCP OAuth keys and the configuration. Use `sudo` for the `tar` step because `oauth-keys/` is owned by root (created inside the container by `php artisan passport:keys`):
 
 ```bash
 cd ~/lifegui
 docker compose -f docker-compose.prod.yml exec -T mysql \
   sh -c 'mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" lifegui' > lifegui.sql
-tar czf lifegui-backup.tgz lifegui.sql vaults oauth-keys .env backend/.env
+sudo tar czf lifegui-backup.tgz lifegui.sql vaults oauth-keys .env backend/.env
 ```
 
-To restore on a new machine, extract the backup in a fresh clone before you start anything:
+To restore on a new machine, extract the backup in a fresh clone before you start anything (again with `sudo`, so the restored files keep their original ownership):
 
 ```bash
 git clone https://github.com/tabomgui/lifegui.git ~/lifegui && cd ~/lifegui
-tar xzf /path/to/lifegui-backup.tgz
+sudo tar xzf /path/to/lifegui-backup.tgz
 docker compose -f docker-compose.prod.yml up -d --wait mysql
 docker compose -f docker-compose.prod.yml exec -T mysql \
   sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" lifegui' < lifegui.sql
