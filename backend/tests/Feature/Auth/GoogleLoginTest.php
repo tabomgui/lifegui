@@ -20,6 +20,13 @@ function fakeGoogleUser(string $email): void
     Socialite::shouldReceive('driver')->with('google')->andReturn($provider);
 }
 
+test('redirect do Google sem credenciais configuradas volta para o login', function () {
+    config(['services.google.client_id' => null, 'services.google.client_secret' => null]);
+
+    $this->get('/api/auth/google/redirect')
+        ->assertRedirect(config('app.frontend_url').'/login');
+});
+
 test('callback do Google cria usuário e loga', function () {
     $abstractUser = Mockery::mock(SocialiteUser::class);
     $abstractUser->shouldReceive('getId')->andReturn('google-123');
