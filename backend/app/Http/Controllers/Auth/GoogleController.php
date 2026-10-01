@@ -20,6 +20,12 @@ class GoogleController extends Controller
     {
         $googleUser = Socialite::driver('google')->stateless()->user();
 
+        // Cadastro fechado: Google só entra em conta que já existe.
+        $exists = User::where('email', $googleUser->getEmail())->exists();
+        if (! $exists && ! config('lifegui.registration_enabled')) {
+            return redirect(config('app.frontend_url').'/login?error=registration_closed');
+        }
+
         $user = User::updateOrCreate(
             ['email' => $googleUser->getEmail()],
             [
