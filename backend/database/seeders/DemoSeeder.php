@@ -35,6 +35,7 @@ class DemoSeeder extends Seeder
             'name' => 'Alex Demo',
             'email' => self::EMAIL,
             'password' => Hash::make(self::PASSWORD),
+            'locale' => 'pt-BR',
         ]);
         $user->forceFill(['onboarded_at' => now()])->save();
 
