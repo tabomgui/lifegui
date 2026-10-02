@@ -18,7 +18,11 @@ i18n
     detection: {
       order: ['navigator'],
       caches: [],
-      convertDetectedLanguage: (lng: string) => (lng.toLowerCase().startsWith('pt') ? 'pt-BR' : 'en'),
+      // Só normaliza variantes de pt (pt-PT etc.) pra pt-BR; outros códigos ficam
+      // intactos e a resolução do i18next (supportedLngs/fallbackLng) decide o resto,
+      // senão um 'fr-FR' force-convertido pra 'en' furaria a frente de um 'pt-BR'
+      // legítimo mais adiante na lista de idiomas do navegador.
+      convertDetectedLanguage: (lng: string) => (lng.toLowerCase().startsWith('pt') ? 'pt-BR' : lng),
     },
   })
 
