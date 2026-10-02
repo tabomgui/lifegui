@@ -14,7 +14,7 @@ class CalendarNotConnectedException extends RuntimeException
 {
     public function __construct()
     {
-        parent::__construct('Google Calendar não conectado.');
+        parent::__construct(__('messages.calendar.not_connected'));
     }
 
     public function render(): JsonResponse

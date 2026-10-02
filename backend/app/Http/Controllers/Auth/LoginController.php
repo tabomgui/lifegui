@@ -16,7 +16,7 @@ class LoginController extends Controller
     {
         if (! Auth::attempt($request->only('email', 'password'))) {
             throw ValidationException::withMessages([
-                'email' => ['Credenciais inválidas.'],
+                'email' => [__('messages.auth.invalid_credentials')],
             ]);
         }
 

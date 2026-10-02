@@ -126,7 +126,7 @@ class CalendarController extends Controller
 
         $user = $request->user();
         $event = $this->calendar->get($user, $eventId);
-        abort_if($event['external'], 403, 'Evento não gerenciado pelo lifegui.');
+        abort_if($event['external'], 403, __('messages.calendar.external_event'));
 
         $tz = $data['timezone'] ?? config('app.timezone');
         $targetId = $eventId;
@@ -184,7 +184,7 @@ class CalendarController extends Controller
     {
         $event = $this->calendar->get($request->user(), $eventId);
 
-        abort_if($event['external'], 403, 'Evento não gerenciado pelo lifegui.');
+        abort_if($event['external'], 403, __('messages.calendar.external_event'));
     }
 
     /** ref precisa existir e ser do usuário (tarefa/hábito no banco, nota no vault). */
@@ -197,7 +197,7 @@ class CalendarController extends Controller
         };
 
         if (! $owned) {
-            throw ValidationException::withMessages(['ref' => 'Item não encontrado.']);
+            throw ValidationException::withMessages(['ref' => __('messages.calendar.item_not_found')]);
         }
     }
 

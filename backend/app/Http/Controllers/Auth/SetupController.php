@@ -45,10 +45,10 @@ class SetupController extends Controller
                 ]);
             });
         } catch (LockTimeoutException) {
-            abort(409, 'Configuração em andamento. Tente de novo em instantes.');
+            abort(409, __('messages.setup.in_progress'));
         }
 
-        abort_if($user === null, 409, 'Esta instância já foi configurada.');
+        abort_if($user === null, 409, __('messages.setup.already_done'));
 
         Auth::login($user);
 

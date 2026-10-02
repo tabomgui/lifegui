@@ -36,7 +36,7 @@ class InboxController extends Controller
         // Lógica compartilhada com a tool MCP `capturar`.
         $created = $capture->capture($request->validated('content'), $request->validated('title'));
 
-        abort_if($created === null, 422, 'Inbox não encontrado no vault.');
+        abort_if($created === null, 422, __('messages.brain.inbox_missing'));
 
         return response()->json(['data' => $created], 201);
     }
@@ -60,7 +60,7 @@ class InboxController extends Controller
         // Nunca apaga: move o original pra processados com a data no nome.
         $target = self::INBOX.'/processados/'.now()->format('Y-m-d').'-'.basename($path);
         $absoluteTarget = $this->vault->resolve($target, mustExist: false);
-        abort_if($absoluteTarget === null, 422, 'Pasta processados não encontrada no vault.');
+        abort_if($absoluteTarget === null, 422, __('messages.brain.processed_missing'));
         rename((string) $this->vault->resolve($path), $absoluteTarget);
 
         return response()->json(['data' => array_merge($created, ['body' => $body])], 201);
@@ -87,7 +87,7 @@ class InboxController extends Controller
 
         $target = self::INBOX.'/descartados/'.now()->format('Y-m-d').'-'.basename($path);
         $absoluteTarget = $this->vault->resolve($target, mustExist: false);
-        abort_if($absoluteTarget === null, 422, 'Pasta descartados não encontrada no vault.');
+        abort_if($absoluteTarget === null, 422, __('messages.brain.discarded_missing'));
         rename($absolute, $absoluteTarget);
 
         return response()->json(['data' => ['path' => $target]]);
