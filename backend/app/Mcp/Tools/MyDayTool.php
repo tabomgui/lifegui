@@ -34,7 +34,7 @@ class MyDayTool extends Tool
             ? CarbonImmutable::parse($request->get('date'), self::TZ)
             : CarbonImmutable::now(self::TZ);
 
-        $out = ['# '.$dia->locale('pt_BR')->isoFormat('dddd, D [de] MMMM'), ''];
+        $out = ['# '.$dia->locale(app()->getLocale())->isoFormat(__('mcp.my_day.heading_format')), ''];
 
         // Tarefas
         $atrasadas = Task::where('status', '!=', 'done')
@@ -46,24 +46,24 @@ class MyDayTool extends Tool
             ->whereDate('due_date', $dia->toDateString())
             ->get();
 
-        $out[] = '## Tarefas';
+        $out[] = __('mcp.my_day.tasks_heading');
         if ($atrasadas->isEmpty() && $doDia->isEmpty()) {
-            $out[] = 'Nenhuma tarefa com prazo pra hoje. Nada atrasado.';
+            $out[] = __('mcp.my_day.no_tasks');
         }
         foreach ($atrasadas as $t) {
-            $out[] = "- [ATRASADA desde {$t->due_date->format('d/m')}] {$t->title}";
+            $out[] = __('mcp.my_day.overdue_item', ['date' => $t->due_date->format('d/m'), 'title' => $t->title]);
         }
         foreach ($doDia as $t) {
-            $out[] = '- '.($t->is_priority ? '[prioridade] ' : '').$t->title;
+            $out[] = '- '.($t->is_priority ? __('mcp.my_day.priority_marker') : '').$t->title;
         }
         $out[] = '';
 
         // Agenda
-        $out[] = '## Agenda';
+        $out[] = __('mcp.my_day.agenda_heading');
         try {
             $events = $this->calendar->events(Auth::user(), $dia->startOfDay(), $dia->endOfDay());
             if ($events === []) {
-                $out[] = 'Nenhum evento no dia.';
+                $out[] = __('mcp.my_day.no_events');
             }
             foreach ($events as $e) {
                 $start = $e['start'] ? CarbonImmutable::parse($e['start'])->setTimezone(self::TZ)->format('H:i') : '';
@@ -71,7 +71,7 @@ class MyDayTool extends Tool
                 $out[] = "- {$start} {$e['title']}{$tag}";
             }
         } catch (CalendarNotConnectedException) {
-            $out[] = 'Google Calendar não conectado (Configurações do lifegui).';
+            $out[] = __('mcp.my_day.calendar_not_connected');
         }
         $out[] = '';
 
@@ -79,16 +79,16 @@ class MyDayTool extends Tool
         $pendentes = Habit::whereNull('archived_at')
             ->whereDoesntHave('logs', fn ($q) => $q->where('date', $dia->toDateString()))
             ->get();
-        $out[] = '## Hábitos pendentes';
+        $out[] = __('mcp.my_day.habits_heading');
         $out[] = $pendentes->isEmpty()
-            ? 'Todos os hábitos do dia já registrados.'
+            ? __('mcp.my_day.all_habits_done')
             : $pendentes->map(fn ($h) => "- {$h->name}")->implode("\n");
         $out[] = '';
 
         // Inbox
         $inbox = count($this->vault->listMarkdown('00-Inbox'));
-        $out[] = '## Inbox do cérebro';
-        $out[] = $inbox === 0 ? 'Inbox zerado.' : "{$inbox} captura(s) esperando processamento.";
+        $out[] = __('mcp.my_day.inbox_heading');
+        $out[] = $inbox === 0 ? __('mcp.my_day.inbox_empty') : __('mcp.my_day.inbox_count', ['n' => $inbox]);
 
         return Response::text(implode("\n", $out));
     }

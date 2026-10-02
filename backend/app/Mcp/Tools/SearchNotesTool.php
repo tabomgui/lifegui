@@ -26,7 +26,7 @@ class SearchNotesTool extends Tool
         if ($caminho !== '') {
             $note = $this->vault->read($caminho);
             if ($note === null) {
-                return Response::error("Nota não encontrada: {$caminho}");
+                return Response::error(__('mcp.search_notes.note_not_found', ['path' => $caminho]));
             }
             $fm = $note['frontmatter'] !== [] ? Yaml::dump($note['frontmatter'])."\n---\n" : '';
 
@@ -34,7 +34,7 @@ class SearchNotesTool extends Tool
         }
 
         if ($busca === '') {
-            return Response::error('Informe "query" (texto) ou "path" (nota específica).');
+            return Response::error(__('mcp.search_notes.missing_args'));
         }
 
         $hits = [];
@@ -58,9 +58,9 @@ class SearchNotesTool extends Tool
         }
 
         return $hits === []
-            ? Response::text("Nenhuma nota encontrada pra \"{$busca}\".")
-            : Response::text("Notas encontradas pra \"{$busca}\":\n\n".implode("\n", $hits)
-                ."\n\nUse search_notes com o path pra ler uma nota inteira.");
+            ? Response::text(__('mcp.search_notes.no_hits', ['query' => $busca]))
+            : Response::text(__('mcp.search_notes.hits_header', ['query' => $busca])."\n\n".implode("\n", $hits)
+                ."\n\n".__('mcp.search_notes.hits_footer'));
     }
 
     /** @return array<string, Type> */

@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     Cache::flush();
+    app()->setLocale('pt_BR');
     $this->user = User::factory()->create(['google_calendar_refresh_token' => 'rt-abc']);
     $this->actingAs($this->user);
 

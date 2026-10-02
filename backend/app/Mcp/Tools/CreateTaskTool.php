@@ -31,7 +31,7 @@ class CreateTaskTool extends Tool
             if ($category === null) {
                 $nomes = Category::pluck('name')->implode(', ');
 
-                return Response::error("Categoria \"{$request->get('category')}\" não existe. Disponíveis: {$nomes}.");
+                return Response::error(__('mcp.create_task.category_not_found', ['category' => $request->get('category'), 'available' => $nomes]));
             }
             $categoryId = $category->id;
         }
@@ -48,10 +48,10 @@ class CreateTaskTool extends Tool
         $extras = array_filter([
             $task->due_date?->format('d/m/Y'),
             $categoryId ? $request->get('category') : null,
-            $task->is_priority ? 'prioridade' : null,
+            $task->is_priority ? __('mcp.create_task.priority_tag') : null,
         ]);
 
-        return Response::text("Tarefa criada: \"{$task->title}\""
+        return Response::text(__('mcp.create_task.created', ['title' => $task->title])
             .($extras !== [] ? ' ('.implode(', ', $extras).')' : '').'.');
     }
 

@@ -45,7 +45,7 @@ class ScheduleTool extends Tool
 
         if ($tipo !== 'event') {
             if ($ref === '') {
-                return Response::error("Tipo {$tipo} exige \"ref\" (id da tarefa/hábito ou caminho da nota).");
+                return Response::error(__('mcp.schedule.ref_required', ['type' => $tipo]));
             }
             $owned = match ($tipo) {
                 'task' => Task::whereKey($ref)->exists(),
@@ -53,7 +53,7 @@ class ScheduleTool extends Tool
                 'note' => $this->vault->read($ref) !== null,
             };
             if (! $owned) {
-                return Response::error("Item não encontrado: {$tipo} {$ref}.");
+                return Response::error(__('mcp.schedule.item_not_found', ['type' => $tipo, 'ref' => $ref]));
             }
         }
 
@@ -73,13 +73,13 @@ class ScheduleTool extends Tool
                 'ref' => $ref,
             ]);
         } catch (CalendarNotConnectedException) {
-            return Response::error('Google Calendar não conectado. Conecte em Configurações no lifegui.');
+            return Response::error(__('mcp.schedule.calendar_not_connected'));
         }
 
-        $quando = $inicio->locale('pt_BR')->isoFormat('ddd D/MM HH:mm');
-        $rec = $dias !== [] ? ' (semanal: '.implode(', ', $dias).')' : '';
+        $quando = $inicio->locale(app()->getLocale())->isoFormat('ddd D/MM HH:mm');
+        $rec = $dias !== [] ? __('mcp.schedule.weekly_suffix', ['days' => implode(', ', $dias)]) : '';
 
-        return Response::text("Evento criado: \"{$event['title']}\" em {$quando}{$rec}.");
+        return Response::text(__('mcp.schedule.created', ['title' => $event['title'], 'when' => $quando, 'recurrence' => $rec]));
     }
 
     /** @return array<string, Type> */

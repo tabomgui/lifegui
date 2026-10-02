@@ -27,14 +27,14 @@ class CompleteHabitTool extends Tool
         if ($habit === null) {
             $nomes = Habit::whereNull('archived_at')->pluck('name')->implode(', ');
 
-            return Response::error("Hábito \"{$request->get('name')}\" não encontrado. Ativos: {$nomes}.");
+            return Response::error(__('mcp.complete_habit.not_found', ['name' => $request->get('name'), 'active' => $nomes]));
         }
 
         $hoje = CarbonImmutable::now('America/Sao_Paulo')->toDateString();
         $log = $habit->logs()->where('date', $hoje)->first();
 
         if ($log !== null && $log->done) {
-            return Response::text("\"{$habit->name}\" já estava marcado como feito hoje.");
+            return Response::text(__('mcp.complete_habit.already_done', ['name' => $habit->name]));
         }
 
         if ($log !== null) {
@@ -52,7 +52,7 @@ class CompleteHabitTool extends Tool
             $cursor = $cursor->subDay();
         }
 
-        return Response::text("\"{$habit->name}\" marcado como feito hoje. Sequência atual: {$streak} dia(s).");
+        return Response::text(__('mcp.complete_habit.done', ['name' => $habit->name, 'streak' => $streak]));
     }
 
     /** @return array<string, Type> */

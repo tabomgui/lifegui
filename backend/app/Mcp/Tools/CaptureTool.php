@@ -27,10 +27,10 @@ class CaptureTool extends Tool
         $created = $this->capture->capture($request->get('content'), $request->get('title'));
 
         if ($created === null) {
-            return Response::error('Inbox não encontrado no vault do usuário.');
+            return Response::error(__('mcp.capture.inbox_missing'));
         }
 
-        return Response::text("Capturado no inbox: {$created['title']} ({$created['path']}).");
+        return Response::text(__('mcp.capture.captured', ['title' => $created['title'], 'path' => $created['path']]));
     }
 
     /** @return array<string, Type> */
