@@ -38,7 +38,7 @@ resumo:
 
 # {{title}}
 
-## Minhas anotações
+## {{annotations}}
 
 
 MD;
@@ -116,6 +116,7 @@ MD;
         $raw = strtr($this->template($category), [
             '{{title}}' => $title,
             '{{date}}' => now()->format('Y-m-d'),
+            '{{annotations}}' => __('notes.annotations_heading'),
         ]);
 
         $parsed = $this->vault->parse($raw);

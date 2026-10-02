@@ -228,3 +228,19 @@ test('excluir rejeita inbox, .trash e nota inexistente', function () {
     $this->deleteJson('/api/brain/notes/.trash/x.md')->assertNotFound();
     $this->deleteJson('/api/brain/notes/Receitas/nao-existe.md')->assertNotFound();
 });
+
+test('nota nova em inglês usa o heading My notes', function () {
+    $this->user->update(['locale' => 'en']);
+
+    $this->postJson('/api/brain/notes', ['category' => 'IA', 'title' => 'Embeddings'])->assertCreated();
+
+    expect(file_get_contents(vaultPath().'/IA/Embeddings.md'))
+        ->toContain('## My notes')
+        ->not->toContain('## Minhas anotações');
+});
+
+test('nota nova em português mantém Minhas anotações', function () {
+    $this->postJson('/api/brain/notes', ['category' => 'IA', 'title' => 'Vetores'])->assertCreated();
+
+    expect(file_get_contents(vaultPath().'/IA/Vetores.md'))->toContain('## Minhas anotações');
+});

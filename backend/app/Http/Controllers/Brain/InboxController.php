@@ -49,7 +49,7 @@ class InboxController extends Controller
         abort_if($capture === null, 404);
 
         // Cria a nota na categoria (template aplicado) com o conteúdo capturado
-        // anexado em "Minhas anotações" (ou ao final do corpo).
+        // anexado em "Minhas anotações"/"My notes" (ou ao final do corpo).
         $response = $notes->store($request);
         $created = $response->getData(true)['data'];
 
@@ -99,7 +99,15 @@ class InboxController extends Controller
             return $body;
         }
 
-        if (preg_match('/^## Minhas anotações\s*$/m', $body, $m, PREG_OFFSET_CAPTURE) === 1) {
+        // Aceita o heading nos dois idiomas: notas antigas e templates do usuário
+        // podem ter qualquer um.
+        $headings = array_unique([
+            trans('notes.annotations_heading', [], 'pt_BR'),
+            trans('notes.annotations_heading', [], 'en'),
+        ]);
+        $pattern = '/^## (?:'.implode('|', array_map(fn ($h) => preg_quote($h, '/'), $headings)).')\s*$/mu';
+
+        if (preg_match($pattern, $body, $m, PREG_OFFSET_CAPTURE) === 1) {
             $offset = $m[0][1] + strlen($m[0][0]);
 
             return substr($body, 0, $offset)."\n\n".$content."\n".substr($body, $offset);
