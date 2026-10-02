@@ -15,13 +15,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - API errors, validation messages and the MCP authorization page follow the user's
   language.
 - Link to the documentation site in the sidebar.
+- `PATCH /api/me` to change the signed-in user's language; `GET /api/me` now also
+  returns the user's `locale`.
 
 ### Changed
 
-- **Breaking:** MCP tools were renamed to English: `my_day`, `my_studies`,
-  `search_notes`, `capture`, `create_task`, `complete_habit` and `schedule`. Their
-  parameters are in English too. MCP answers follow the user's language. Update any
-  prompt or skill that mentions the old names.
+- **Breaking:** MCP tools were renamed to English, and because of this breaking change
+  the next release is a major version (`2.0.0`):
+
+  | Old name          | New name       |
+  | ----------------- | -------------- |
+  | `meu_dia`         | `my_day`       |
+  | `meus_estudos`    | `my_studies`   |
+  | `buscar_notas`    | `search_notes` |
+  | `capturar`        | `capture`      |
+  | `criar_tarefa`    | `create_task`  |
+  | `concluir_habito` | `complete_habit` |
+  | `agendar`         | `schedule`     |
+
+  Their parameters are in English too. MCP answers follow the user's language. Update
+  any prompt or skill that mentions the old names.
 - New notes created from the default template use the heading "My notes" for English
   users. Existing notes are unchanged.
 - Events that lifegui creates in Google Calendar get their description in the user's
