@@ -15,8 +15,8 @@ export default {
     process: 'Processar',
     emptyError: 'Escreva ao menos uma tarefa',
     processError: 'Não foi possível processar',
-    processed_one: '{{count}} tarefa(s) processada(s)',
-    processed_other: '{{count}} tarefa(s) processada(s)',
+    processed_one: '{{count}} tarefa processada',
+    processed_other: '{{count}} tarefas processadas',
   },
   tabs: {
     today: 'Hoje',
@@ -94,10 +94,10 @@ export default {
     remove: 'Remover subtarefa "{{title}}"',
   },
   heatmap: {
-    period_one: '{{count}} tarefas concluídas no período',
+    period_one: '{{count}} tarefa concluída no período',
     period_other: '{{count}} tarefas concluídas no período',
-    cell_one: '{{count}} tarefa(s) concluída(s) em {{day}}',
-    cell_other: '{{count}} tarefa(s) concluída(s) em {{day}}',
+    cell_one: '{{count}} tarefa concluída em {{day}}',
+    cell_other: '{{count}} tarefas concluídas em {{day}}',
     empty: 'Nenhuma tarefa em {{day}}',
   },
   toast: {
