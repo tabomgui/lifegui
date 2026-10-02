@@ -1,5 +1,6 @@
 import { Sparkles } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
+import { LanguageSelect } from '@/components/language-select'
 
 export function WelcomeStep() {
   const { user } = useAuth()
@@ -15,6 +16,9 @@ export function WelcomeStep() {
           O lifegui reúne tarefas, hábitos, notas e agenda num lugar só. Em poucos passos você escolhe
           o que usar e já começa com tudo pronto.
         </p>
+      </div>
+      <div className="flex justify-center">
+        <LanguageSelect />
       </div>
     </div>
   )
