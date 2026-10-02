@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { api, csrf } from '@/lib/api'
 import i18n from '@/i18n'
 import { isLocale, type Locale } from '@/i18n/types'
@@ -27,6 +28,7 @@ const Ctx = createContext<AuthCtx | null>(null)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const queryClient = useQueryClient()
 
   // Idioma da conta vence o do navegador assim que o usuário é conhecido.
   function applyUser(next: User | null) {
@@ -81,6 +83,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await csrf()
     const r = await api.patch('/me', { locale })
     applyUser(r.data.data)
+    // Dados do servidor localizados (ex.: labels de módulos) precisam ser refeitos no novo idioma.
+    await queryClient.invalidateQueries()
   }
 
   async function logout() {

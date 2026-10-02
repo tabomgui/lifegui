@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { Kanban, Repeat, Brain, CalendarDays, BarChart3, Settings, BookOpen, Menu, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/use-auth'
 import { useEnabledModules, useModules } from '@/hooks/use-modules'
 import { Button } from '@/components/ui/button'
@@ -17,6 +18,7 @@ const navClass = ({ isActive }: { isActive: boolean }) =>
   }`
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
+  const { t } = useTranslation('common')
   const { user, logout } = useAuth()
   const { isEnabled } = useEnabledModules()
   const showReports = isEnabled('tasks') || isEnabled('habits') || isEnabled('brain')
@@ -29,39 +31,39 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       <nav className="flex flex-1 flex-col gap-1 p-2">
         {isEnabled('tasks') && (
           <NavLink to="/" end className={navClass} onClick={onNavigate}>
-            <Kanban className="h-4 w-4" /> Tarefas
+            <Kanban className="h-4 w-4" /> {t('nav.tasks')}
           </NavLink>
         )}
         {isEnabled('habits') && (
           <NavLink to="/habits" className={navClass} onClick={onNavigate}>
-            <Repeat className="h-4 w-4" /> Hábitos
+            <Repeat className="h-4 w-4" /> {t('nav.habits')}
           </NavLink>
         )}
         {isEnabled('brain') && (
           <NavLink to="/cerebro" className={navClass} onClick={onNavigate}>
-            <Brain className="h-4 w-4" /> Cérebro
+            <Brain className="h-4 w-4" /> {t('nav.brain')}
           </NavLink>
         )}
         <NavLink to="/agenda" className={navClass} onClick={onNavigate}>
-          <CalendarDays className="h-4 w-4" /> Agenda
+          <CalendarDays className="h-4 w-4" /> {t('nav.calendar')}
         </NavLink>
         {showReports && (
           <NavLink to="/dashboards" className={navClass} onClick={onNavigate}>
-            <BarChart3 className="h-4 w-4" /> Dashboards
+            <BarChart3 className="h-4 w-4" /> {t('nav.dashboards')}
           </NavLink>
         )}
         <div className="mt-auto" />
         <a href={docsUrl()} target="_blank" rel="noreferrer" className={navClass({ isActive: false })}>
-          <BookOpen className="h-4 w-4" /> Documentação
+          <BookOpen className="h-4 w-4" /> {t('nav.docs')}
         </a>
         <NavLink to="/configuracoes" className={navClass} onClick={onNavigate}>
-          <Settings className="h-4 w-4" /> Configurações
+          <Settings className="h-4 w-4" /> {t('nav.settings')}
         </NavLink>
       </nav>
       <div className="border-t p-2">
         <div className="flex items-center justify-between gap-2 px-1">
           <span className="truncate text-sm">{user?.name}</span>
-          <Button variant="ghost" size="sm" onClick={logout}>Sair</Button>
+          <Button variant="ghost" size="sm" onClick={logout}>{t('nav.logout')}</Button>
         </div>
       </div>
     </>
@@ -89,6 +91,7 @@ function OnboardingGate() {
 }
 
 export function AppLayout({ children, title }: { children: ReactNode; title: string }) {
+  const { t } = useTranslation('common')
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
@@ -111,7 +114,7 @@ export function AppLayout({ children, title }: { children: ReactNode; title: str
         >
           <button
             onClick={() => setMenuOpen(false)}
-            aria-label="Fechar menu"
+            aria-label={t('nav.closeMenu')}
             className="absolute right-2 top-3 z-10 rounded-md p-1.5 text-muted-foreground hover:bg-accent"
           >
             <X className="h-5 w-5" />
@@ -124,7 +127,7 @@ export function AppLayout({ children, title }: { children: ReactNode; title: str
         <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 md:px-6">
           <button
             onClick={() => setMenuOpen(true)}
-            aria-label="Abrir menu"
+            aria-label={t('nav.openMenu')}
             className="-ml-1 rounded-md p-1.5 hover:bg-accent md:hidden"
           >
             <Menu className="h-5 w-5" />
