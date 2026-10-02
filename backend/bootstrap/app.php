@@ -32,6 +32,15 @@ return Application::configure(basePath: dirname(__DIR__))
         // Corpo markdown das notas do vault vai byte a byte pro arquivo;
         // trim aqui corromperia whitespace significativo (fences, quebras finais).
         $middleware->trimStrings(except: ['body', 'content']);
+
+        // Idioma por request (usuário logado > Accept-Language > en). Precisa rodar
+        // depois do auth pra enxergar o usuário do guard certo (sanctum/api).
+        $middleware->appendToGroup('web', \App\Http\Middleware\SetLocale::class);
+        $middleware->appendToGroup('api', \App\Http\Middleware\SetLocale::class);
+        $middleware->appendToPriorityList(
+            \Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class,
+            \App\Http\Middleware\SetLocale::class,
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
