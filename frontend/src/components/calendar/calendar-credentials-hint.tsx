@@ -1,7 +1,8 @@
 import { cn } from '@/lib/utils'
+import { docsUrl } from '@/lib/docs'
 
 /** URL única da doc de setup — usada em todo lugar que exibe esta dica. */
-export const CALENDAR_DOCS = 'https://github.com/tabomgui/lifegui#google-calendar'
+export const CALENDAR_DOCS = docsUrl('/self-hosting/google-calendar')
 
 /**
  * Mensagem exibida no lugar do botão "Conectar Google Calendar" quando a

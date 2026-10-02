@@ -6,6 +6,8 @@
 
 > The interface is in Brazilian Portuguese.
 
+**Documentation:** [docs-lifegui.hengen.com.br](https://docs-lifegui.hengen.com.br) (English and Brazilian Portuguese). Source in [tabomgui/lifegui-docs](https://github.com/tabomgui/lifegui-docs).
+
 ## Quick start
 
 On Linux or macOS with Docker:

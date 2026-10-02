@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Kanban, Repeat, Brain, CalendarDays, BarChart3, Settings, Menu, X } from 'lucide-react'
+import { Kanban, Repeat, Brain, CalendarDays, BarChart3, Settings, BookOpen, Menu, X } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useEnabledModules, useModules } from '@/hooks/use-modules'
 import { Button } from '@/components/ui/button'
@@ -9,6 +9,7 @@ import { ModeToggle } from '@/components/mode-toggle'
 import { OnboardingWizard } from '@/components/onboarding/onboarding-wizard'
 import { useOnboarding } from '@/contexts/onboarding-context'
 import { firstEnabledRoute } from '@/components/module-route'
+import { DOCS_URL } from '@/lib/docs'
 
 const navClass = ({ isActive }: { isActive: boolean }) =>
   `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium ${
@@ -50,6 +51,9 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           </NavLink>
         )}
         <div className="mt-auto" />
+        <a href={DOCS_URL} target="_blank" rel="noreferrer" className={navClass({ isActive: false })}>
+          <BookOpen className="h-4 w-4" /> Documentação
+        </a>
         <NavLink to="/configuracoes" className={navClass} onClick={onNavigate}>
           <Settings className="h-4 w-4" /> Configurações
         </NavLink>
