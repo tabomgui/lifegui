@@ -45,19 +45,19 @@ export default {
   scheduleButton: 'Schedule',
   connectShort: 'Connect calendar',
   createDialog: {
-    title: 'New in the calendar',
+    title: 'Add to calendar',
   },
   editDialog: {
     title: 'Edit event',
   },
   scheduleDialog: {
-    title: 'Schedule in the calendar',
+    title: 'Add to calendar',
   },
   scheduleSection: {
-    label: 'Schedule',
+    label: 'Calendar',
     recurring: 'Every {{days}} · {{time}}',
     recurringFallback: 'Every week · {{time}}',
-    removeAria: 'Remove from the calendar',
+    removeAria: 'Remove from calendar',
   },
   toast: {
     moveError: 'Could not move the event',

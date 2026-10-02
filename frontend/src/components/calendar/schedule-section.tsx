@@ -13,7 +13,9 @@ const DAY_DOW: Record<string, number> = {
   SU: 0, MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6,
 }
 
-/** "Toda seg, qua · 07:00" (recorrente) ou "qua, 23 de set · 19:00" (único). */
+// Recorrente: pt-BR "Toda seg, qua · 07:00" (dias em minúscula, no meio da frase) /
+// en "Every Mon, Wed · 07:00" (abreviação do dia mantém a inicial maiúscula). Único:
+// "qua, 23 de set · 19:00", já formatado no idioma ativo por `useFormat().date`.
 function describe(
   event: CalendarEvent,
   format: ReturnType<typeof useFormat>,
@@ -25,7 +27,13 @@ function describe(
   if (rrule) {
     const byday = /BYDAY=([^;]+)/.exec(rrule)?.[1]
     if (!byday) return t('scheduleSection.recurringFallback', { time })
-    const days = byday.split(',').map((d) => (d in DAY_DOW ? format.weekdayShort(DAY_DOW[d]) : d.toLowerCase())).join(', ')
+    const days = byday.split(',').map((d) => {
+      if (!(d in DAY_DOW)) return d.toLowerCase()
+      const label = format.weekdayShort(DAY_DOW[d])
+      // Dias da semana em português não são capitalizados no meio da frase; em
+      // inglês a abreviação (Mon, Wed...) mantém a inicial maiúscula.
+      return format.locale === 'pt-BR' ? label.toLowerCase() : label
+    }).join(', ')
     return t('scheduleSection.recurring', { days, time })
   }
   return start

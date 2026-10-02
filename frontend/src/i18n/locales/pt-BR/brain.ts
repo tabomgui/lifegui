@@ -125,7 +125,6 @@ export default {
     selectTextError: 'Selecione um trecho pra extrair',
     extractSuccess: 'Trecho extraído — salve a nota pra gravar o link',
     wikilinkMissingTitle: 'Nota ainda não existe — clique pra criar',
-    studyTitle: 'Estudar: {{title}}',
     mentionedIn: 'Mencionada em',
     linkedTo: 'Vinculado a',
     noLinks: 'Nenhuma tarefa ou hábito vinculado ainda.',

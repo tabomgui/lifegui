@@ -92,13 +92,6 @@ function formatRange(event: CalendarEvent, format: ReturnType<typeof useFormat>)
 export default function Agenda() {
   const { t, i18n } = useTranslation(['calendar', 'common'])
   const format = useFormat()
-  const TYPE_LABEL: Record<FilterKey, string> = {
-    task: t('calendar:types.task'),
-    habit: t('calendar:types.habit'),
-    note: t('calendar:types.note'),
-    event: t('calendar:types.event'),
-    external: t('calendar:types.external'),
-  }
   const { data: status, isLoading: statusLoading } = useCalendarStatus()
   const connected = status?.connected ?? false
   const navigate = useNavigate()
@@ -291,7 +284,7 @@ export default function Agenda() {
                       className="h-1.5 w-1.5 rounded-full"
                       style={{ background: detail.external ? '#94a3b8' : TYPE_COLOR[detail.lifegui?.type ?? 'event'] }}
                     />
-                    {TYPE_LABEL[filterKeyOf(detail)]}
+                    {t(`calendar:types.${filterKeyOf(detail)}`)}
                   </span>
                   {detail.recurring_event_id && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
@@ -317,7 +310,7 @@ export default function Agenda() {
                       <Button size="sm" variant="ghost" className="mr-auto" onClick={() => openItem(detail)}>
                         <ArrowUpRight className="mr-1 h-3.5 w-3.5" />
                         {' '}
-                        {t('calendar:openItem', { type: TYPE_LABEL[detail.lifegui?.type ?? 'event'].toLowerCase() })}
+                        {t('calendar:openItem', { type: t(`calendar:types.${detail.lifegui?.type ?? 'event'}`).toLowerCase() })}
                       </Button>
                     )}
                     <Button size="sm" variant="outline" onClick={() => { setEditing(detail); setDetail(null) }}>

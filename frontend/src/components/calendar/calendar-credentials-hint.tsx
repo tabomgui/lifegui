@@ -8,8 +8,9 @@ import { docsUrl } from '@/lib/docs'
  * "Missing required parameter: client_id" do Google).
  */
 export function CalendarCredentialsHint({ className }: { className?: string }) {
-  // useTranslation (mesmo sem usar `t` pra ambos os textos) garante o re-render
-  // quando o idioma muda, senão docsUrl() ficaria preso no idioma da 1ª renderização.
+  // useTranslation traduz os dois textos abaixo e, de quebra, inscreve o componente
+  // em mudanças de idioma — sem isso docsUrl() (que lê i18n.language direto, sem
+  // reatividade própria) ficaria preso no idioma da 1ª renderização.
   const { t } = useTranslation('calendar')
   return (
     <p className={cn('text-xs text-muted-foreground', className)}>

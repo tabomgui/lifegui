@@ -3,7 +3,7 @@ export default {
     heading: 'Your second brain does not exist yet',
     description:
       'Brain stores your notes in an Obsidian vault on the server: capture links and ideas in the inbox, turn them into notes by category and connect everything with wikilinks.',
-    button: 'Turn on Brain',
+    button: 'Enable Brain',
     success: 'Brain turned on',
     error: 'Could not turn on Brain',
   },
@@ -49,7 +49,7 @@ export default {
     graphView: 'Graph view',
   },
   graph: {
-    empty: 'No notes yet — the graph is born when your notes start connecting with [[links]].',
+    empty: 'The graph appears once your notes start connecting with [[links]].',
     tagsToggle: '# Tags',
   },
   inbox: {
@@ -122,7 +122,6 @@ export default {
     selectTextError: 'Select some text to extract',
     extractSuccess: 'Text extracted — save the note to record the link',
     wikilinkMissingTitle: 'Note does not exist yet — click to create',
-    studyTitle: 'Study: {{title}}',
     mentionedIn: 'Mentioned in',
     linkedTo: 'Linked to',
     noLinks: 'No task or habit linked yet.',

@@ -35,7 +35,7 @@ export function NotePanel({ path, onNavigate, onClose }: {
   onNavigate: (path: string) => void
   onClose: () => void
 }) {
-  const { t } = useTranslation(['brain', 'common'])
+  const { t } = useTranslation(['brain', 'common', 'calendar'])
   const { data: note } = useBrainNote(path)
   const { data: allNotes = [] } = useBrainNotes()
   const update = useUpdateNote()
@@ -279,7 +279,7 @@ export function NotePanel({ path, onNavigate, onClose }: {
 
             {!editing && (
               <div className="space-y-2 border-t p-3">
-                <ScheduleSection type="note" refId={note.path} title={t('brain:panel.studyTitle', { title: note.title })} />
+                <ScheduleSection type="note" refId={note.path} title={t('calendar:studyNote', { title: note.title })} />
                 {note.backlinks.length > 0 && (
                   <div>
                     <p className="mb-1.5 text-xs font-medium text-muted-foreground">{t('brain:panel.mentionedIn')}</p>
