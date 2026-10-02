@@ -57,6 +57,6 @@ return [
         'max_period' => 'Período máximo de :days dias.',
         'future_date' => 'Não dá para marcar um dia futuro.',
         'empty_task_list' => 'Escreva ao menos uma tarefa.',
-        'too_many_tasks' => 'Muitas tarefas de uma vez (máx. 500).',
+        'too_many_tasks' => 'Muitas tarefas de uma vez (máx. :max).',
     ],
 ];

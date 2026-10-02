@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Brain;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Brain\StoreInboxRequest;
 use App\Http\Requests\Brain\StoreNoteRequest;
+use App\Support\Locale;
 use App\Support\Vault\VaultService;
 use Illuminate\Http\JsonResponse;
 
@@ -99,13 +100,15 @@ class InboxController extends Controller
             return $body;
         }
 
-        // Aceita o heading nos dois idiomas: notas antigas e templates do usuário
-        // podem ter qualquer um.
-        $headings = array_unique([
-            trans('notes.annotations_heading', [], 'pt_BR'),
-            trans('notes.annotations_heading', [], 'en'),
-        ]);
-        $pattern = '/^## (?:'.implode('|', array_map(fn ($h) => preg_quote($h, '/'), $headings)).')\s*$/mu';
+        // Aceita o heading em qualquer idioma suportado: notas antigas e
+        // templates do usuário podem ter qualquer um. Sem o flag /u: o
+        // heading é comparado byte a byte, e corpo com UTF-8 inválido não
+        // deve derrubar o preg_match (o /u falha em string malformada).
+        $headings = array_unique(array_map(
+            fn (string $locale) => trans('notes.annotations_heading', [], Locale::toLaravel($locale)),
+            Locale::SUPPORTED,
+        ));
+        $pattern = '/^## (?:'.implode('|', array_map(fn ($h) => preg_quote($h, '/'), $headings)).')\s*$/m';
 
         if (preg_match($pattern, $body, $m, PREG_OFFSET_CAPTURE) === 1) {
             $offset = $m[0][1] + strlen($m[0][0]);

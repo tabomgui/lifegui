@@ -6,6 +6,8 @@ use Illuminate\Validation\Rule;
 
 class ProcessTasksRequest extends FormRequest
 {
+    private const MAX_TASKS = 500;
+
     public function authorize(): bool { return true; }
 
     public function rules(): array
@@ -35,8 +37,8 @@ class ProcessTasksRequest extends FormRequest
                 $validator->errors()->add('text', __('messages.validation.empty_task_list'));
             }
 
-            if (count($lines) > 500) {
-                $validator->errors()->add('text', __('messages.validation.too_many_tasks'));
+            if (count($lines) > self::MAX_TASKS) {
+                $validator->errors()->add('text', __('messages.validation.too_many_tasks', ['max' => self::MAX_TASKS]));
             }
         });
     }

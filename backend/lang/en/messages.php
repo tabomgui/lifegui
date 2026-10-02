@@ -38,8 +38,8 @@ return [
         'invalid_category' => 'Invalid category.',
         'trash_missing' => 'Trash folder not found in the vault.',
         'inbox_missing' => 'Inbox not found in the vault.',
-        'processed_missing' => 'Processed folder not found in the vault.',
-        'discarded_missing' => 'Discarded folder not found in the vault.',
+        'processed_missing' => 'The 00-Inbox/processados folder was not found in the vault.',
+        'discarded_missing' => 'The 00-Inbox/descartados folder was not found in the vault.',
         'category_exists' => 'A category with this name already exists.',
         'vault_not_initialized' => 'Vault not initialized.',
         'category_not_empty' => 'This category has notes. Move or finish them before deleting it.',
@@ -57,6 +57,6 @@ return [
         'max_period' => 'Maximum period of :days days.',
         'future_date' => "You can't mark a future day.",
         'empty_task_list' => 'Write at least one task.',
-        'too_many_tasks' => 'Too many tasks at once (max 500).',
+        'too_many_tasks' => 'Too many tasks at once (max :max).',
     ],
 ];
