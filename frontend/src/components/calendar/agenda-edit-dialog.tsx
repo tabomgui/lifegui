@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,12 +12,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { browserTimezone, useCalendarEvent, useUpdateEvent } from '@/hooks/use-calendar'
+import { useFormat } from '@/i18n/format'
 import type { CalendarEvent } from '@/types/api'
 
-// Ordem visual seg→dom; códigos do RRULE (BYDAY).
+// Ordem visual seg→dom; códigos do RRULE (BYDAY) e seus dias da semana (0=dom..6=sáb).
 const WEEK_DAYS = [
-  ['MO', 'seg'], ['TU', 'ter'], ['WE', 'qua'], ['TH', 'qui'],
-  ['FR', 'sex'], ['SA', 'sáb'], ['SU', 'dom'],
+  ['MO', 1], ['TU', 2], ['WE', 3], ['TH', 4],
+  ['FR', 5], ['SA', 6], ['SU', 0],
 ] as const
 
 function bydayOf(recurrence: string[] | null | undefined): Set<string> {
@@ -38,6 +40,8 @@ export function AgendaEditDialog({ event, onClose }: {
   event: CalendarEvent | null
   onClose: () => void
 }) {
+  const { t } = useTranslation(['calendar', 'common'])
+  const format = useFormat()
   const update = useUpdateEvent()
   const isRecurring = !!event?.recurring_event_id || (event?.recurrence?.length ?? 0) > 0
   // Pai da série: fonte dos dias da semana atuais (ocorrência não carrega RRULE).
@@ -93,11 +97,11 @@ export function AgendaEditDialog({ event, onClose }: {
             }
           : {}),
       })
-      toast.success(editSeries ? 'Série atualizada' : 'Evento atualizado')
+      toast.success(editSeries ? t('toast.seriesUpdated') : t('toast.eventUpdated'))
       onClose()
     } catch (e) {
       const res = (e as { response?: { data?: { message?: string } } }).response
-      toast.error(res?.data?.message ?? 'Não foi possível salvar')
+      toast.error(res?.data?.message ?? t('toast.saveError'))
     }
   }
 
@@ -105,12 +109,12 @@ export function AgendaEditDialog({ event, onClose }: {
     <Dialog open={event !== null} onOpenChange={(o) => { if (!o) onClose() }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Editar evento</DialogTitle>
+          <DialogTitle>{t('editDialog.title')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           {isRecurring && (
             <div className="flex gap-1.5">
-              {([['series', 'Toda a série'], ['occurrence', 'Só esta ocorrência']] as const).map(([value, label]) => (
+              {(['series', 'occurrence'] as const).map((value) => (
                 <button
                   key={value}
                   type="button"
@@ -120,30 +124,30 @@ export function AgendaEditDialog({ event, onClose }: {
                     scope === value ? 'border-transparent bg-secondary' : 'border-border text-muted-foreground hover:bg-accent'
                   }`}
                 >
-                  {label}
+                  {t(`scope.${value}`)}
                 </button>
               ))}
             </div>
           )}
 
           <div className="space-y-1.5">
-            <Label htmlFor="edit-title">Título</Label>
+            <Label htmlFor="edit-title">{t('titleLabel')}</Label>
             <Input id="edit-title" value={title} onChange={(e) => setTitle(e.target.value)} />
           </div>
 
           <div className="grid grid-cols-3 gap-2">
             {(!isRecurring || scope === 'occurrence') && (
               <div className="space-y-1.5">
-                <Label htmlFor="edit-date">Data</Label>
+                <Label htmlFor="edit-date">{t('dateLabel')}</Label>
                 <Input id="edit-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
               </div>
             )}
             <div className="space-y-1.5">
-              <Label htmlFor="edit-time">Hora</Label>
+              <Label htmlFor="edit-time">{t('timeLabel')}</Label>
               <Input id="edit-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="edit-duration">Duração (min)</Label>
+              <Label htmlFor="edit-duration">{t('durationLabel')}</Label>
               <Input id="edit-duration" type="number" min={5} max={1440} step={5} value={duration}
                 onChange={(e) => setDuration(e.target.value)} />
             </div>
@@ -151,9 +155,9 @@ export function AgendaEditDialog({ event, onClose }: {
 
           {isRecurring && scope === 'series' && (
             <div className="space-y-1.5">
-              <Label>Dias da semana</Label>
+              <Label>{t('weekdaysLabel')}</Label>
               <div className="flex gap-1">
-                {WEEK_DAYS.map(([code, label]) => (
+                {WEEK_DAYS.map(([code, dow]) => (
                   <button
                     key={code}
                     type="button"
@@ -173,7 +177,7 @@ export function AgendaEditDialog({ event, onClose }: {
                         : 'border-border text-muted-foreground hover:bg-accent'
                     }`}
                   >
-                    {label}
+                    {format.weekdayShort(dow)}
                   </button>
                 ))}
               </div>
@@ -185,7 +189,7 @@ export function AgendaEditDialog({ event, onClose }: {
             onClick={submit}
             disabled={update.isPending || !title.trim() || (isRecurring && scope === 'series' && days.size === 0)}
           >
-            Salvar
+            {t('common:actions.save')}
           </Button>
         </DialogFooter>
       </DialogContent>

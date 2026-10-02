@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { CalendarPlus, Kanban, NotebookPen, Repeat } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,19 +16,20 @@ import { browserTimezone, useScheduleEvent } from '@/hooks/use-calendar'
 import { useTasks } from '@/hooks/use-tasks'
 import { useHabits } from '@/hooks/use-habits'
 import { useBrainNotes } from '@/hooks/use-brain'
+import { useFormat } from '@/i18n/format'
 import type { CalendarLinkType } from '@/types/api'
 
-const KINDS: { key: CalendarLinkType; label: string; icon: typeof CalendarPlus }[] = [
-  { key: 'event', label: 'Evento', icon: CalendarPlus },
-  { key: 'task', label: 'Tarefa', icon: Kanban },
-  { key: 'habit', label: 'Hábito', icon: Repeat },
-  { key: 'note', label: 'Nota', icon: NotebookPen },
+const KINDS: { key: CalendarLinkType; icon: typeof CalendarPlus }[] = [
+  { key: 'event', icon: CalendarPlus },
+  { key: 'task', icon: Kanban },
+  { key: 'habit', icon: Repeat },
+  { key: 'note', icon: NotebookPen },
 ]
 
-// Ordem visual seg→dom; códigos do RRULE (BYDAY).
+// Ordem visual seg→dom; códigos do RRULE (BYDAY) e seus dias da semana (0=dom..6=sáb).
 const WEEK_DAYS = [
-  ['MO', 'seg'], ['TU', 'ter'], ['WE', 'qua'], ['TH', 'qui'],
-  ['FR', 'sex'], ['SA', 'sáb'], ['SU', 'dom'],
+  ['MO', 1], ['TU', 2], ['WE', 3], ['TH', 4],
+  ['FR', 5], ['SA', 6], ['SU', 0],
 ] as const
 
 export interface CreateSlot {
@@ -48,6 +50,8 @@ export function AgendaCreateDialog({ open, slot, onClose }: {
   slot: CreateSlot | null
   onClose: () => void
 }) {
+  const { t } = useTranslation(['calendar', 'common'])
+  const format = useFormat()
   const schedule = useScheduleEvent()
   const { data: tasks = [] } = useTasks()
   const { data: habits = [] } = useHabits(false, open)
@@ -87,7 +91,7 @@ export function AgendaCreateDialog({ open, slot, onClose }: {
     else if (kind === 'habit') setTitle(habits.find((h) => String(h.id) === value)?.name ?? '')
     else if (kind === 'note') {
       const note = notes.find((n) => n.path === value)
-      setTitle(note ? `Estudar: ${note.title}` : '')
+      setTitle(note ? t('studyNote', { title: note.title }) : '')
     }
   }
 
@@ -107,12 +111,12 @@ export function AgendaCreateDialog({ open, slot, onClose }: {
         ...(rrule ? { rrule } : {}),
         timezone: browserTimezone(),
       })
-      toast.success('Criado no Google Calendar')
+      toast.success(t('toast.created'))
       onClose()
     } catch (e) {
       const res = (e as { response?: { status?: number; data?: { message?: string } } }).response
-      if (res?.status === 409) toast.error('Conecte o Google Calendar em Configurações')
-      else toast.error(res?.data?.message ?? 'Não foi possível criar')
+      if (res?.status === 409) toast.error(t('toast.connectRequired'))
+      else toast.error(res?.data?.message ?? t('toast.createError'))
     }
   }
 
@@ -120,11 +124,11 @@ export function AgendaCreateDialog({ open, slot, onClose }: {
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose() }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Novo na agenda</DialogTitle>
+          <DialogTitle>{t('createDialog.title')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div className="flex gap-1.5">
-            {KINDS.map(({ key, label, icon: Icon }) => (
+            {KINDS.map(({ key, icon: Icon }) => (
               <button
                 key={key}
                 type="button"
@@ -134,7 +138,7 @@ export function AgendaCreateDialog({ open, slot, onClose }: {
                   kind === key ? 'border-transparent bg-secondary' : 'border-border text-muted-foreground hover:bg-accent'
                 }`}
               >
-                <Icon className="h-3 w-3" /> {label}
+                <Icon className="h-3 w-3" /> {t(`types.${key}`)}
               </button>
             ))}
           </div>
@@ -142,12 +146,12 @@ export function AgendaCreateDialog({ open, slot, onClose }: {
           {kind !== 'event' && (
             <div className="space-y-1.5">
               <Label htmlFor="create-ref">
-                {kind === 'task' ? 'Tarefa' : kind === 'habit' ? 'Hábito' : 'Nota'}
+                {t(`types.${kind}`)}
               </Label>
               <select id="create-ref" value={refId} onChange={(e) => pickRef(e.target.value)} className={selectClass}>
-                <option value="">Escolher…</option>
-                {kind === 'task' && openTasks.map((t) => (
-                  <option key={t.id} value={t.id}>{t.title}</option>
+                <option value="">{t('choosePlaceholder')}</option>
+                {kind === 'task' && openTasks.map((task) => (
+                  <option key={task.id} value={task.id}>{task.title}</option>
                 ))}
                 {kind === 'habit' && habits.map((h) => (
                   <option key={h.id} value={h.id}>{h.name}</option>
@@ -160,22 +164,22 @@ export function AgendaCreateDialog({ open, slot, onClose }: {
           )}
 
           <div className="space-y-1.5">
-            <Label htmlFor="create-title">Título do evento</Label>
+            <Label htmlFor="create-title">{t('eventTitleLabel')}</Label>
             <Input id="create-title" value={title}
               onChange={(e) => { setTitle(e.target.value); setTouchedTitle(true) }} />
           </div>
 
           <div className="grid grid-cols-3 gap-2">
             <div className="space-y-1.5">
-              <Label htmlFor="create-date">{recurring ? 'A partir de' : 'Data'}</Label>
+              <Label htmlFor="create-date">{recurring ? t('startingLabel') : t('dateLabel')}</Label>
               <Input id="create-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="create-time">Hora</Label>
+              <Label htmlFor="create-time">{t('timeLabel')}</Label>
               <Input id="create-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="create-duration">Duração (min)</Label>
+              <Label htmlFor="create-duration">{t('durationLabel')}</Label>
               <Input id="create-duration" type="number" min={5} max={1440} step={5} value={duration}
                 onChange={(e) => setDuration(e.target.value)} />
             </div>
@@ -190,11 +194,11 @@ export function AgendaCreateDialog({ open, slot, onClose }: {
                 recurring ? 'border-transparent bg-secondary' : 'border-border text-muted-foreground hover:bg-accent'
               }`}
             >
-              Repetir semanalmente
+              {t('repeatWeekly')}
             </button>
             {recurring && (
               <div className="flex gap-1">
-                {WEEK_DAYS.map(([code, label]) => (
+                {WEEK_DAYS.map(([code, dow]) => (
                   <button
                     key={code}
                     type="button"
@@ -211,7 +215,7 @@ export function AgendaCreateDialog({ open, slot, onClose }: {
                         : 'border-border text-muted-foreground hover:bg-accent'
                     }`}
                   >
-                    {label}
+                    {format.weekdayShort(dow)}
                   </button>
                 ))}
               </div>
@@ -228,7 +232,7 @@ export function AgendaCreateDialog({ open, slot, onClose }: {
               || (recurring && days.size === 0)
             }
           >
-            Criar
+            {t('common:actions.create')}
           </Button>
         </DialogFooter>
       </DialogContent>

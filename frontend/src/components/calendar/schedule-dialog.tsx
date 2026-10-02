@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,12 +12,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { browserTimezone, useScheduleEvent } from '@/hooks/use-calendar'
+import { useFormat } from '@/i18n/format'
 import type { CalendarLinkType } from '@/types/api'
 
-// Ordem visual seg→dom; códigos são os do RRULE (BYDAY).
+// Ordem visual seg→dom; códigos são os do RRULE (BYDAY) e seus dias da semana (0=dom..6=sáb).
 const WEEK_DAYS = [
-  ['MO', 'seg'], ['TU', 'ter'], ['WE', 'qua'], ['TH', 'qui'],
-  ['FR', 'sex'], ['SA', 'sáb'], ['SU', 'dom'],
+  ['MO', 1], ['TU', 2], ['WE', 3], ['TH', 4],
+  ['FR', 5], ['SA', 6], ['SU', 0],
 ] as const
 
 function today(): string {
@@ -36,6 +38,8 @@ export function ScheduleDialog({ open, type, refId, defaultTitle, defaultRecurri
   defaultRecurring?: boolean
   onClose: () => void
 }) {
+  const { t } = useTranslation('calendar')
+  const format = useFormat()
   const schedule = useScheduleEvent()
   const [title, setTitle] = useState('')
   const [date, setDate] = useState(today())
@@ -71,12 +75,12 @@ export function ScheduleDialog({ open, type, refId, defaultTitle, defaultRecurri
         ...(rrule ? { rrule } : {}),
         timezone: browserTimezone(),
       })
-      toast.success('Agendado no Google Calendar')
+      toast.success(t('toast.scheduled'))
       onClose()
     } catch (e) {
       const res = (e as { response?: { status?: number; data?: { message?: string } } }).response
-      if (res?.status === 409) toast.error('Conecte o Google Calendar em Configurações')
-      else toast.error(res?.data?.message ?? 'Não foi possível agendar')
+      if (res?.status === 409) toast.error(t('toast.connectRequired'))
+      else toast.error(res?.data?.message ?? t('toast.scheduleError'))
     }
   }
 
@@ -84,24 +88,24 @@ export function ScheduleDialog({ open, type, refId, defaultTitle, defaultRecurri
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose() }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Agendar no calendário</DialogTitle>
+          <DialogTitle>{t('scheduleDialog.title')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label htmlFor="sched-title">Título do evento</Label>
+            <Label htmlFor="sched-title">{t('eventTitleLabel')}</Label>
             <Input id="sched-title" value={title} onChange={(e) => setTitle(e.target.value)} />
           </div>
           <div className="grid grid-cols-3 gap-2">
             <div className="space-y-1.5">
-              <Label htmlFor="sched-date">{recurring ? 'A partir de' : 'Data'}</Label>
+              <Label htmlFor="sched-date">{recurring ? t('startingLabel') : t('dateLabel')}</Label>
               <Input id="sched-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="sched-time">Hora</Label>
+              <Label htmlFor="sched-time">{t('timeLabel')}</Label>
               <Input id="sched-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="sched-duration">Duração (min)</Label>
+              <Label htmlFor="sched-duration">{t('durationLabel')}</Label>
               <Input id="sched-duration" type="number" min={5} max={1440} step={5} value={duration}
                 onChange={(e) => setDuration(e.target.value)} />
             </div>
@@ -115,11 +119,11 @@ export function ScheduleDialog({ open, type, refId, defaultTitle, defaultRecurri
                 recurring ? 'border-transparent bg-secondary' : 'border-border text-muted-foreground hover:bg-accent'
               }`}
             >
-              Repetir semanalmente
+              {t('repeatWeekly')}
             </button>
             {recurring && (
               <div className="flex gap-1">
-                {WEEK_DAYS.map(([code, label]) => (
+                {WEEK_DAYS.map(([code, dow]) => (
                   <button
                     key={code}
                     type="button"
@@ -136,7 +140,7 @@ export function ScheduleDialog({ open, type, refId, defaultTitle, defaultRecurri
                         : 'border-border text-muted-foreground hover:bg-accent'
                     }`}
                   >
-                    {label}
+                    {format.weekdayShort(dow)}
                   </button>
                 ))}
               </div>
@@ -148,7 +152,7 @@ export function ScheduleDialog({ open, type, refId, defaultTitle, defaultRecurri
             onClick={submit}
             disabled={schedule.isPending || !title.trim() || (recurring && days.size === 0)}
           >
-            Agendar
+            {t('scheduleButton')}
           </Button>
         </DialogFooter>
       </DialogContent>

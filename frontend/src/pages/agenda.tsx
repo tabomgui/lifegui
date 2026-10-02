@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
@@ -11,6 +12,7 @@ import { toast } from 'sonner'
 import { ArrowUpRight, CalendarDays, ChevronDown, ExternalLink, Pencil, Plus, Repeat, Trash2 } from 'lucide-react'
 import { AppLayout } from '@/components/app-layout'
 import { Button } from '@/components/ui/button'
+import { useFormat } from '@/i18n/format'
 import {
   Dialog,
   DialogContent,
@@ -47,17 +49,13 @@ const TYPE_COLOR: Record<string, string> = {
 
 type FilterKey = 'task' | 'habit' | 'note' | 'event' | 'external'
 
-const FILTERS: { key: FilterKey; label: string; color: string }[] = [
-  { key: 'task', label: 'Tarefas', color: TYPE_COLOR.task },
-  { key: 'habit', label: 'Hábitos', color: TYPE_COLOR.habit },
-  { key: 'note', label: 'Notas', color: TYPE_COLOR.note },
-  { key: 'event', label: 'Eventos', color: TYPE_COLOR.event },
-  { key: 'external', label: 'Pessoais', color: '#94a3b8' },
+const FILTERS: { key: FilterKey; color: string }[] = [
+  { key: 'task', color: TYPE_COLOR.task },
+  { key: 'habit', color: TYPE_COLOR.habit },
+  { key: 'note', color: TYPE_COLOR.note },
+  { key: 'event', color: TYPE_COLOR.event },
+  { key: 'external', color: '#94a3b8' },
 ]
-
-const TYPE_LABEL: Record<string, string> = {
-  task: 'Tarefa', habit: 'Hábito', note: 'Nota', event: 'Evento', external: 'Evento pessoal',
-}
 
 function filterKeyOf(event: CalendarEvent): FilterKey {
   if (event.external) return 'external'
@@ -81,19 +79,26 @@ function toEventInput(event: CalendarEvent): EventInput {
   }
 }
 
-function formatRange(event: CalendarEvent): string {
+function formatRange(event: CalendarEvent, format: ReturnType<typeof useFormat>): string {
   if (!event.start) return ''
   const start = new Date(event.start)
-  const day = start.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
+  const day = format.date(start, { weekday: 'long', day: 'numeric', month: 'long' })
   if (event.all_day) return day
-  const startTime = start.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-  const endTime = event.end
-    ? new Date(event.end).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-    : null
+  const startTime = format.time(start)
+  const endTime = event.end ? format.time(new Date(event.end)) : null
   return `${day} · ${startTime}${endTime ? `–${endTime}` : ''}`
 }
 
 export default function Agenda() {
+  const { t, i18n } = useTranslation(['calendar', 'common'])
+  const format = useFormat()
+  const TYPE_LABEL: Record<FilterKey, string> = {
+    task: t('calendar:types.task'),
+    habit: t('calendar:types.habit'),
+    note: t('calendar:types.note'),
+    event: t('calendar:types.event'),
+    external: t('calendar:types.external'),
+  }
   const { data: status, isLoading: statusLoading } = useCalendarStatus()
   const connected = status?.connected ?? false
   const navigate = useNavigate()
@@ -171,7 +176,7 @@ export default function Agenda() {
         timezone: browserTimezone(),
       })
     } catch {
-      toast.error('Não foi possível mover o evento')
+      toast.error(t('calendar:toast.moveError'))
       revert()
     }
   }
@@ -182,19 +187,19 @@ export default function Agenda() {
     const id = seriesToo ? (detail.recurring_event_id ?? detail.id) : detail.id
     try {
       await remove.mutateAsync(id)
-      toast.success(seriesToo && detail.recurring_event_id ? 'Série removida' : 'Removido do calendário')
+      toast.success(seriesToo && detail.recurring_event_id ? t('calendar:toast.seriesDeleted') : t('calendar:toast.removed'))
       setDetail(null)
     } catch {
-      toast.error('Não foi possível remover')
+      toast.error(t('calendar:toast.removeError'))
     }
   }
 
   return (
-    <AppLayout title="Agenda">
+    <AppLayout title={t('common:nav.calendar')}>
       <main className="flex min-h-0 flex-1 flex-col">
         {statusLoading ? (
           <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-            Carregando…
+            {t('common:states.loading')}
           </div>
         ) : !connected ? (
           <div className="flex flex-1 items-center justify-center p-6">
@@ -202,14 +207,13 @@ export default function Agenda() {
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
                 <CalendarDays className="h-6 w-6 text-muted-foreground" />
               </div>
-              <p className="text-sm font-medium">Conecte seu Google Calendar</p>
+              <p className="text-sm font-medium">{t('calendar:connect.heading')}</p>
               <p className="text-sm text-muted-foreground">
-                A agenda mostra seu calendário Google ao vivo e deixa você agendar notas,
-                hábitos e tarefas nele. Nada fica copiado no lifegui.
+                {t('calendar:connect.description')}
               </p>
               {status?.configured ? (
                 <Button size="sm" onClick={() => { window.location.href = '/api/auth/google-calendar/redirect' }}>
-                  Conectar Google Calendar
+                  {t('calendar:connect.button')}
                 </Button>
               ) : (
                 <CalendarCredentialsHint />
@@ -219,7 +223,7 @@ export default function Agenda() {
         ) : (
           <div className="flex min-h-0 flex-1 flex-col gap-3 p-4 md:p-6">
             <div className="flex flex-wrap items-center gap-1.5">
-              {FILTERS.map(({ key, label, color }) => (
+              {FILTERS.map(({ key, color }) => (
                 <button
                   key={key}
                   type="button"
@@ -235,11 +239,11 @@ export default function Agenda() {
                     className={`h-1.5 w-1.5 rounded-full ${visible.has(key) ? '' : 'opacity-40'}`}
                     style={{ background: color }}
                   />
-                  {label}
+                  {t(`calendar:filters.${key}`)}
                 </button>
               ))}
               <Button size="sm" className="ml-auto h-8" onClick={() => openCreate()}>
-                <Plus className="mr-1 h-3.5 w-3.5" /> Novo
+                <Plus className="mr-1 h-3.5 w-3.5" /> {t('calendar:newButton')}
               </Button>
             </div>
 
@@ -247,7 +251,7 @@ export default function Agenda() {
               <FullCalendar
                 plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
                 initialView="timeGridWeek"
-                locale={ptBrLocale}
+                locale={i18n.language === 'pt-BR' ? ptBrLocale : 'en'}
                 headerToolbar={{
                   left: 'prev,next today',
                   center: 'title',
@@ -280,7 +284,7 @@ export default function Agenda() {
                 <DialogTitle className="pr-6 text-left">{detail.title}</DialogTitle>
               </DialogHeader>
               <div className="space-y-2 text-sm">
-                <p className="text-muted-foreground">{formatRange(detail)}</p>
+                <p className="text-muted-foreground">{formatRange(detail, format)}</p>
                 <div className="flex items-center gap-2">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
                     <span
@@ -291,7 +295,7 @@ export default function Agenda() {
                   </span>
                   {detail.recurring_event_id && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
-                      <Repeat className="h-3 w-3" /> Recorrente
+                      <Repeat className="h-3 w-3" /> {t('calendar:recurring')}
                     </span>
                   )}
                   {detail.html_link && (
@@ -301,7 +305,7 @@ export default function Agenda() {
                       rel="noreferrer"
                       className="ml-auto inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
                     >
-                      <ExternalLink className="h-3 w-3" /> Google
+                      <ExternalLink className="h-3 w-3" /> {t('calendar:googleLink')}
                     </a>
                   )}
                 </div>
@@ -311,34 +315,36 @@ export default function Agenda() {
                   <>
                     {detail.lifegui?.type !== 'event' && (
                       <Button size="sm" variant="ghost" className="mr-auto" onClick={() => openItem(detail)}>
-                        <ArrowUpRight className="mr-1 h-3.5 w-3.5" /> Abrir {TYPE_LABEL[detail.lifegui?.type ?? 'event'].toLowerCase()}
+                        <ArrowUpRight className="mr-1 h-3.5 w-3.5" />
+                        {' '}
+                        {t('calendar:openItem', { type: TYPE_LABEL[detail.lifegui?.type ?? 'event'].toLowerCase() })}
                       </Button>
                     )}
                     <Button size="sm" variant="outline" onClick={() => { setEditing(detail); setDetail(null) }}>
-                      <Pencil className="mr-1 h-3.5 w-3.5" /> Editar
+                      <Pencil className="mr-1 h-3.5 w-3.5" /> {t('common:actions.edit')}
                     </Button>
                     {detail.recurring_event_id ? (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button size="sm" variant="outline" disabled={remove.isPending}
                             className="text-destructive hover:text-destructive">
-                            <Trash2 className="mr-1 h-3.5 w-3.5" /> Remover
+                            <Trash2 className="mr-1 h-3.5 w-3.5" /> {t('calendar:remove')}
                             <ChevronDown className="ml-1 h-3 w-3" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => removeDetail(false)}>
-                            Só esta ocorrência
+                            {t('calendar:scope.occurrence')}
                           </DropdownMenuItem>
                           <DropdownMenuItem variant="destructive" onClick={() => removeDetail(true)}>
-                            Toda a série
+                            {t('calendar:scope.series')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     ) : (
                       <Button size="sm" variant="outline" disabled={remove.isPending}
                         className="text-destructive hover:text-destructive" onClick={() => removeDetail(true)}>
-                        <Trash2 className="mr-1 h-3.5 w-3.5" /> Remover
+                        <Trash2 className="mr-1 h-3.5 w-3.5" /> {t('calendar:remove')}
                       </Button>
                     )}
                   </>

@@ -1,1 +1,76 @@
-export default {} as const
+export default {
+  connect: {
+    heading: 'Connect your Google Calendar',
+    description:
+      'The calendar shows your live Google calendar and lets you schedule notes, habits and tasks on it. Nothing is copied into lifegui.',
+    button: 'Connect Google Calendar',
+  },
+  credentialsHint: {
+    text: 'Requires Google credentials on this instance.',
+    link: 'How to set up',
+  },
+  filters: {
+    task: 'Tasks',
+    habit: 'Habits',
+    note: 'Notes',
+    event: 'Events',
+    external: 'Personal',
+  },
+  types: {
+    task: 'Task',
+    habit: 'Habit',
+    note: 'Note',
+    event: 'Event',
+    external: 'Personal event',
+  },
+  newButton: 'New',
+  recurring: 'Recurring',
+  googleLink: 'Google',
+  openItem: 'Open {{type}}',
+  remove: 'Remove',
+  scope: {
+    series: 'Whole series',
+    occurrence: 'Only this occurrence',
+  },
+  dateLabel: 'Date',
+  timeLabel: 'Time',
+  durationLabel: 'Duration (min)',
+  startingLabel: 'Starting',
+  weekdaysLabel: 'Days of the week',
+  titleLabel: 'Title',
+  eventTitleLabel: 'Event title',
+  choosePlaceholder: 'Choose…',
+  repeatWeekly: 'Repeat weekly',
+  studyNote: 'Study: {{title}}',
+  scheduleButton: 'Schedule',
+  connectShort: 'Connect calendar',
+  createDialog: {
+    title: 'New in the calendar',
+  },
+  editDialog: {
+    title: 'Edit event',
+  },
+  scheduleDialog: {
+    title: 'Schedule in the calendar',
+  },
+  scheduleSection: {
+    label: 'Schedule',
+    recurring: 'Every {{days}} · {{time}}',
+    recurringFallback: 'Every week · {{time}}',
+    removeAria: 'Remove from the calendar',
+  },
+  toast: {
+    moveError: 'Could not move the event',
+    seriesDeleted: 'Series removed',
+    removed: 'Removed from the calendar',
+    removeError: 'Could not remove',
+    created: 'Created in Google Calendar',
+    createError: 'Could not create',
+    connectRequired: 'Connect Google Calendar in Settings',
+    saveError: 'Could not save',
+    seriesUpdated: 'Series updated',
+    eventUpdated: 'Event updated',
+    scheduled: 'Scheduled in Google Calendar',
+    scheduleError: 'Could not schedule',
+  },
+} as const
