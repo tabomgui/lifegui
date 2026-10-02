@@ -3,10 +3,9 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\UpdateMeRequest;
 use App\Http\Resources\UserResource;
-use App\Support\Locale;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class MeController extends Controller
 {
@@ -16,13 +15,9 @@ class MeController extends Controller
     }
 
     /** Só preferências do próprio usuário; hoje, o idioma. */
-    public function update(Request $request): UserResource
+    public function update(UpdateMeRequest $request): UserResource
     {
-        $data = $request->validate([
-            'locale' => ['required', 'string', Rule::in(Locale::SUPPORTED)],
-        ]);
-
-        $request->user()->update(['locale' => $data['locale']]);
+        $request->user()->update(['locale' => $request->validated('locale')]);
 
         return new UserResource($request->user());
     }
