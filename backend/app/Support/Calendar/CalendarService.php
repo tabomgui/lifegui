@@ -164,7 +164,7 @@ class CalendarService
 
         return [
             'id' => $event['id'],
-            'title' => $event['summary'] ?? '(sem título)',
+            'title' => $event['summary'] ?? __('messages.calendar.untitled'),
             'start' => $event['start']['dateTime'] ?? $event['start']['date'] ?? null,
             'end' => $event['end']['dateTime'] ?? $event['end']['date'] ?? null,
             'all_day' => isset($event['start']['date']),

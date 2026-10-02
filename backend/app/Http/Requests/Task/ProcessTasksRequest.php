@@ -32,11 +32,11 @@ class ProcessTasksRequest extends FormRequest
             $lines = $this->lines();
 
             if (empty($lines)) {
-                $validator->errors()->add('text', 'Escreva ao menos uma tarefa.');
+                $validator->errors()->add('text', __('messages.validation.empty_task_list'));
             }
 
             if (count($lines) > 500) {
-                $validator->errors()->add('text', 'Muitas tarefas de uma vez (máx. 500).');
+                $validator->errors()->add('text', __('messages.validation.too_many_tasks'));
             }
         });
     }

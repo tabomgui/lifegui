@@ -38,7 +38,7 @@ class HeatmapRequest extends FormRequest
             // Período INCLUSIVO (from e to contam): diff + 1 é o nº de dias da janela.
             $periodDays = $fromDate->diffInDays($toDate, true) + 1;
             if ($periodDays > 400) {
-                $validator->errors()->add('to', 'Período máximo de 400 dias.');
+                $validator->errors()->add('to', __('messages.validation.max_period', ['days' => 400]));
             }
         });
     }

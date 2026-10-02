@@ -29,6 +29,7 @@ return [
         'event_not_found' => 'Event not found in Google Calendar.',
         'api_error' => 'Google Calendar refused the operation: :reason',
         'unknown_error' => 'unknown error',
+        'untitled' => '(untitled)',
     ],
     'brain' => [
         'note_not_found' => 'Note not found in the vault.',
@@ -49,5 +50,13 @@ return [
         'connecting_as' => 'Connecting as :name (:email)',
         'deny' => 'Deny',
         'approve' => 'Authorize',
+    ],
+    // Custom FormRequest messages (withValidator/messages()), outside Laravel's
+    // standard validation rules — these don't come from lang:update.
+    'validation' => [
+        'max_period' => 'Maximum period of :days days.',
+        'future_date' => "You can't mark a future day.",
+        'empty_task_list' => 'Write at least one task.',
+        'too_many_tasks' => 'Too many tasks at once (max 500).',
     ],
 ];

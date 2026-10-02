@@ -18,7 +18,20 @@ test('processar cria uma tarefa por linha não-vazia em status todo', function (
 });
 
 test('texto vazio é rejeitado', function () {
-    $this->postJson('/api/tasks/process', ['text' => "\n  \n"])->assertStatus(422);
+    // Factory default é pt-BR (ver UserFactory). O campo "text" acumula duas
+    // mensagens: a regra padrão "required" (string trimada fica vazia) e a
+    // customizada do withValidator — checamos a segunda, que é a nossa.
+    $response = $this->postJson('/api/tasks/process', ['text' => "\n  \n"])->assertStatus(422);
+
+    expect($response->json('errors.text'))->toContain('Escreva ao menos uma tarefa.');
+});
+
+test('texto vazio é rejeitado em inglês pelo idioma do usuário', function () {
+    $this->user->update(['locale' => 'en']);
+
+    $response = $this->postJson('/api/tasks/process', ['text' => "\n  \n"])->assertStatus(422);
+
+    expect($response->json('errors.text'))->toContain('Write at least one task.');
 });
 
 test('chamadas sucessivas de process não colidem em position (continua do fim da coluna todo)', function () {
