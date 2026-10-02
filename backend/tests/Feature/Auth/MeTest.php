@@ -14,3 +14,11 @@ test('/me retorna o usuário autenticado', function () {
 test('/me exige autenticação', function () {
     getJson('/api/me')->assertUnauthorized();
 });
+
+test('me expõe o locale do usuário', function () {
+    $user = User::factory()->create(['locale' => 'en']);
+
+    $this->actingAs($user)->getJson('/api/me')
+        ->assertOk()
+        ->assertJsonPath('data.locale', 'en');
+});
