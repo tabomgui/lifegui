@@ -84,6 +84,33 @@ test('agenda uma tarefa própria', function () {
         ->assertJsonPath('data.lifegui.type', 'task');
 });
 
+test('descrição do evento criado segue o idioma do usuário', function () {
+    $this->actingAs($user = User::factory()->create([
+        'locale' => 'en',
+        'google_calendar_refresh_token' => 'rt-abc',
+        'google_calendar_connected_at' => now(),
+    ]));
+
+    fakeCalendar(function ($request) {
+        expect($request->data()['description'])
+            ->toBe('Created by lifegui · '.config('app.frontend_url').'/agenda');
+
+        return Http::response([
+            'id' => 'novo',
+            'summary' => 'Reunião',
+            'start' => ['dateTime' => '2026-09-23T09:00:00-03:00'],
+            'end' => ['dateTime' => '2026-09-23T10:00:00-03:00'],
+        ]);
+    });
+
+    $this->postJson('/api/calendar/events', [
+        'type' => 'event',
+        'title' => 'Reunião',
+        'start' => '2026-09-23T09:00:00-03:00',
+        'timezone' => 'America/Sao_Paulo',
+    ])->assertCreated();
+});
+
 test('recusa agendar tarefa de outro usuário', function () {
     $other = User::factory()->create();
     $task = Task::factory()->for($other)->create();

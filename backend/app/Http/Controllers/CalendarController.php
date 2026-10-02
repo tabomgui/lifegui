@@ -94,7 +94,7 @@ class CalendarController extends Controller
 
         $event = $this->calendar->create($request->user(), [
             'title' => $data['title'],
-            'description' => 'Criado pelo lifegui · '.$this->backlink($data['type']),
+            'description' => $this->calendar->createdByDescription($data['type']),
             'start' => $start->toRfc3339String(),
             'end' => $end->toRfc3339String(),
             'timezone' => $data['timezone'] ?? config('app.timezone'),
@@ -199,17 +199,5 @@ class CalendarController extends Controller
         if (! $owned) {
             throw ValidationException::withMessages(['ref' => __('messages.calendar.item_not_found')]);
         }
-    }
-
-    private function backlink(string $type): string
-    {
-        $path = match ($type) {
-            'task' => '/',
-            'habit' => '/habits',
-            'note' => '/cerebro',
-            'event' => '/agenda',
-        };
-
-        return config('app.frontend_url').$path;
     }
 }

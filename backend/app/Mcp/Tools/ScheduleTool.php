@@ -64,7 +64,7 @@ class ScheduleTool extends Tool
         try {
             $event = $this->calendar->create(Auth::user(), [
                 'title' => $request->get('title'),
-                'description' => 'Criado pelo lifegui (assistente) · '.config('app.frontend_url').'/agenda',
+                'description' => $this->calendar->createdByDescription($tipo),
                 'start' => $inicio->toRfc3339String(),
                 'end' => $fim->toRfc3339String(),
                 'timezone' => self::TZ,

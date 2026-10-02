@@ -30,6 +30,7 @@ return [
         'api_error' => 'Google Calendar refused the operation: :reason',
         'unknown_error' => 'unknown error',
         'untitled' => '(untitled)',
+        'created_by' => 'Created by lifegui · :link',
     ],
     'brain' => [
         'note_not_found' => 'Note not found in the vault.',
