@@ -16,7 +16,7 @@ class RegisterRequest extends FormRequest
 
     protected function failedAuthorization(): void
     {
-        throw new AuthorizationException('Cadastro desativado nesta instância.');
+        throw new AuthorizationException(__('messages.auth.registration_disabled'));
     }
 
     public function rules(): array

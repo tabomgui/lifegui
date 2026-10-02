@@ -5,6 +5,7 @@
 return [
     'auth' => [
         'invalid_credentials' => 'Credenciais inválidas.',
+        'registration_disabled' => 'Cadastro desativado nesta instância.',
     ],
     'setup' => [
         'in_progress' => 'Configuração em andamento. Tente de novo em instantes.',

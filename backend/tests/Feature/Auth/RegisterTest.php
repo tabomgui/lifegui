@@ -39,8 +39,22 @@ test('registro responde 403 com cadastro fechado', function () {
         'email' => 'gui@example.com',
         'password' => 'password123',
         'password_confirmation' => 'password123',
-    ])->assertForbidden()
+    ], ['Accept-Language' => 'pt-BR'])->assertForbidden()
         ->assertJsonPath('message', 'Cadastro desativado nesta instância.');
+
+    $this->assertDatabaseMissing('users', ['email' => 'gui@example.com']);
+});
+
+test('registro fechado responde em inglês pelo Accept-Language', function () {
+    config(['lifegui.registration_enabled' => false]);
+
+    postJson('/api/register', [
+        'name' => 'Gui',
+        'email' => 'gui@example.com',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+    ], ['Accept-Language' => 'en'])->assertForbidden()
+        ->assertJsonPath('message', 'Sign-up is disabled on this instance.');
 
     $this->assertDatabaseMissing('users', ['email' => 'gui@example.com']);
 });

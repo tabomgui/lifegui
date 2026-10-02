@@ -5,6 +5,7 @@
 return [
     'auth' => [
         'invalid_credentials' => 'Invalid credentials.',
+        'registration_disabled' => 'Sign-up is disabled on this instance.',
     ],
     'setup' => [
         'in_progress' => 'Setup in progress. Try again in a moment.',
