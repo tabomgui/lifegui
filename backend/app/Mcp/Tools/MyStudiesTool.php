@@ -7,6 +7,7 @@ use App\Support\Calendar\CalendarNotConnectedException;
 use App\Support\Calendar\CalendarService;
 use App\Support\Vault\VaultService;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
 use Illuminate\Support\Facades\Auth;
@@ -75,7 +76,7 @@ class MyStudiesTool extends Tool
         } else {
             $hoje = CarbonImmutable::now(self::TZ);
             $semana = $habit->logs()
-                ->whereBetween('date', [$hoje->startOfWeek()->toDateString(), $hoje->endOfWeek()->toDateString()])
+                ->whereBetween('date', [$hoje->startOfWeek(CarbonInterface::MONDAY)->toDateString(), $hoje->endOfWeek(CarbonInterface::SUNDAY)->toDateString()])
                 ->where('done', true)
                 ->count();
             $out[] = $habit->target_per_week

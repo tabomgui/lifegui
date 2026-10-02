@@ -12,6 +12,7 @@ use App\Models\Category;
 use App\Models\Habit;
 use App\Models\Task;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
@@ -45,6 +46,7 @@ beforeEach(function () {
 
 afterEach(function () {
     File::deleteDirectory($this->vaultRoot);
+    Carbon::setTestNow();
 });
 
 test('servidor expõe as tools com nomes em inglês', function () {
@@ -86,6 +88,22 @@ test('my_studies mostra notas por status e hábito Estudar', function () {
         ->assertSee('estudando: 1')
         ->assertSee('Feito 1x nesta semana de 4')
         ->assertSee('Sequência atual: 1');
+});
+
+test('my_studies conta a semana de segunda a domingo mesmo com locale pt-BR', function () {
+    // app()->setLocale('pt_BR') (beforeEach) propaga pra Carbon::setLocale() via o
+    // listener de LocaleUpdated do nesbot/carbon — e pro locale pt_BR, a semana do
+    // Carbon começa no domingo. Sem fixar MONDAY/SUNDAY explicitamente, a consulta
+    // semanal do hábito ficaria errada sempre que "hoje" for domingo.
+    Carbon::setTestNow(Carbon::parse('2026-10-04 12:00:00', 'America/Sao_Paulo')); // domingo
+
+    $habit = Habit::factory()->for($this->user)->create(['name' => 'Estudar', 'target_per_week' => 4]);
+    // Segunda-feira da mesma semana ISO (segunda a domingo) que contém o domingo acima.
+    $habit->logs()->create(['date' => '2026-09-28', 'done' => true, 'skipped' => false]);
+
+    LifeguiServer::actingAs($this->user)->tool(MyStudiesTool::class)
+        ->assertOk()
+        ->assertSee('Feito 1x nesta semana de 4');
 });
 
 test('search_notes acha por conteúdo e lê nota inteira por caminho', function () {
