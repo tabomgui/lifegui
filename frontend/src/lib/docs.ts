@@ -1,4 +1,7 @@
-/** Documentação pública do lifegui (repo tabomgui/lifegui-docs), em pt-BR como a interface. */
-export const DOCS_URL = 'https://docs-lifegui.hengen.com.br/pt-BR/docs'
+import i18n from '@/i18n'
 
-export const docsUrl = (path = '') => `${DOCS_URL}${path}`
+/** Documentação pública do lifegui (repo tabomgui/lifegui-docs), no idioma ativo. */
+const DOCS_ORIGIN = 'https://docs-lifegui.hengen.com.br'
+
+export const docsUrl = (path = '') =>
+  `${DOCS_ORIGIN}${i18n.language === 'pt-BR' ? '/pt-BR' : ''}/docs${path}`

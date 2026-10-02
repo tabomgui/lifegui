@@ -9,7 +9,7 @@ import { ModeToggle } from '@/components/mode-toggle'
 import { OnboardingWizard } from '@/components/onboarding/onboarding-wizard'
 import { useOnboarding } from '@/contexts/onboarding-context'
 import { firstEnabledRoute } from '@/components/module-route'
-import { DOCS_URL } from '@/lib/docs'
+import { docsUrl } from '@/lib/docs'
 
 const navClass = ({ isActive }: { isActive: boolean }) =>
   `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium ${
@@ -51,7 +51,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           </NavLink>
         )}
         <div className="mt-auto" />
-        <a href={DOCS_URL} target="_blank" rel="noreferrer" className={navClass({ isActive: false })}>
+        <a href={docsUrl()} target="_blank" rel="noreferrer" className={navClass({ isActive: false })}>
           <BookOpen className="h-4 w-4" /> Documentação
         </a>
         <NavLink to="/configuracoes" className={navClass} onClick={onNavigate}>
