@@ -67,7 +67,7 @@ test('my_day resume tarefas, agenda, hábitos e inbox', function () {
         ->assertSee('ATRASADA')
         ->assertSee('Pagar boleto')
         ->assertSee('Leitura')
-        ->assertSee('1 captura(s)');
+        ->assertSee('1 captura esperando');
 });
 
 test('my_day avisa quando Google Calendar não está conectado', function () {

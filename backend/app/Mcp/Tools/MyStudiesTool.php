@@ -23,6 +23,10 @@ class MyStudiesTool extends Tool
 {
     private const TZ = 'America/Sao_Paulo';
 
+    // Nomes aceitos pro hábito de estudo (já em minúsculas pra comparação
+    // case-insensitive), independente do idioma do usuário.
+    private const STUDY_HABIT_NAMES = ['estudar', 'study'];
+
     public function __construct(
         private VaultService $vault,
         private CalendarService $calendar,
@@ -65,11 +69,12 @@ class MyStudiesTool extends Tool
         }
         $out[] = '';
 
-        // Hábito de estudo: qualquer nome em mcp.study_habit_names (pt-BR: "Estudar", en: "Study").
-        $nomesEstudo = array_map('mb_strtolower', __('mcp.study_habit_names'));
+        // Hábito de estudo: qualquer nome em self::STUDY_HABIT_NAMES (ex.: "Estudar", "Study").
+        $placeholders = implode(',', array_fill(0, count(self::STUDY_HABIT_NAMES), '?'));
         $habit = Habit::whereNull('archived_at')
-            ->get()
-            ->first(fn ($h) => in_array(mb_strtolower($h->name), $nomesEstudo, true));
+            ->whereRaw("LOWER(name) IN ({$placeholders})", self::STUDY_HABIT_NAMES)
+            ->orderBy('id')
+            ->first();
         $out[] = __('mcp.my_studies.habit_heading');
         if ($habit === null) {
             $out[] = __('mcp.my_studies.habit_not_found');
@@ -91,7 +96,7 @@ class MyStudiesTool extends Tool
                 $streak++;
                 $cursor = $cursor->subDay();
             }
-            $out[] = __('mcp.my_studies.streak', ['n' => $streak]);
+            $out[] = trans_choice('mcp.my_studies.streak', $streak);
         }
         $out[] = '';
 

@@ -67,8 +67,8 @@ class SearchNotesTool extends Tool
     public function schema(JsonSchema $schema): array
     {
         return [
-            'query' => $schema->string()->description('Text to search for in titles and content.'),
-            'path' => $schema->string()->description('Relative path of the note (e.g. IA/RAG.md) to read in full.'),
+            'query' => $schema->string()->description('Text to search for in titles and content. Ignored when path is given.'),
+            'path' => $schema->string()->description('Relative path of the note (e.g. IA/RAG.md) to read in full. Takes precedence over query.'),
         ];
     }
 }

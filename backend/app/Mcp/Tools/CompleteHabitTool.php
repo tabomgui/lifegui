@@ -52,7 +52,7 @@ class CompleteHabitTool extends Tool
             $cursor = $cursor->subDay();
         }
 
-        return Response::text(__('mcp.complete_habit.done', ['name' => $habit->name, 'streak' => $streak]));
+        return Response::text(trans_choice('mcp.complete_habit.done', $streak, ['name' => $habit->name]));
     }
 
     /** @return array<string, Type> */

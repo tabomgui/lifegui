@@ -9,10 +9,10 @@ return [
     (schedule tool), confirm date, time and title with the user.
     TXT,
 
-    // Accepted names for the study habit, used by the my_studies tool.
-    // Same list in both languages: recognizes the habit regardless of how
-    // the user named it.
-    'study_habit_names' => ['Estudar', 'Study'],
+    // Date/time formats used in the dates the tools show (my_day, create_task,
+    // schedule) — always unambiguous for the user's language.
+    'date_format' => 'Y-m-d',
+    'datetime_format' => 'ddd YYYY-MM-DD HH:mm',
 
     'my_day' => [
         'heading_format' => 'dddd, MMMM D',
@@ -27,20 +27,22 @@ return [
         'all_habits_done' => "All of today's habits are already logged.",
         'inbox_heading' => '## Brain inbox',
         'inbox_empty' => 'Inbox is empty.',
-        'inbox_count' => ':n capture(s) waiting to be processed.',
+        'inbox_count' => '{1} :count capture waiting to be processed.|[2,*] :count captures waiting to be processed.',
     ],
 
     'my_studies' => [
         'heading' => '# Your studies',
         'notes_heading' => '## Notes',
-        'no_status_label' => 'no-status',
+        // Kept identical to pt_BR by design: "status" is a vault domain code
+        // (frontmatter), not UI text — it must not be translated.
+        'no_status_label' => 'sem-status',
         'studying_label' => '**Currently studying:** ',
         'to_review_label' => '**To review:** ',
         'habit_heading' => '## Study habit',
         'habit_not_found' => 'No study habit active.',
         'progress' => 'Done :nx this week.',
         'progress_with_target' => 'Done :nx this week out of :target (goal).',
-        'streak' => 'Current streak: :n day(s).',
+        'streak' => '{1} Current streak: :count day.|[2,*] Current streak: :count days.',
         'upcoming_heading' => '## Upcoming calendar blocks',
         'no_upcoming' => 'No study block scheduled.',
         'calendar_not_connected' => 'Google Calendar not connected.',
@@ -63,14 +65,15 @@ return [
 
     'create_task' => [
         'category_not_found' => 'Category ":category" does not exist. Available: :available.',
-        'created' => 'Task created: ":title"',
+        'created' => 'Task created: ":title".',
+        'created_with_extras' => 'Task created: ":title" (:extras).',
         'priority_tag' => 'priority',
     ],
 
     'complete_habit' => [
         'not_found' => 'Habit ":name" not found. Active: :active.',
         'already_done' => '":name" was already marked as done today.',
-        'done' => '":name" marked as done today. Current streak: :streak day(s).',
+        'done' => '{1} ":name" marked as done today. Current streak: :count day.|[2,*] ":name" marked as done today. Current streak: :count days.',
     ],
 
     'schedule' => [

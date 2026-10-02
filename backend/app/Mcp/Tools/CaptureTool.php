@@ -12,7 +12,7 @@ use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Tool;
 
 #[Name('capture')]
-#[Description('Stores a link or text in the second-brain inbox to process later. Same flow as the iPhone Shortcut. Use when the user says "save this", "keep this link", "note this for later".')]
+#[Description('Stores a link or text in the second-brain inbox to process later. Use when the user says "save this", "keep this link", "note this for later".')]
 class CaptureTool extends Tool
 {
     public function __construct(private InboxCaptureService $capture) {}

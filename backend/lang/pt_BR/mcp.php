@@ -9,10 +9,10 @@ return [
     calendário (tool schedule), confirme data, hora e título com o usuário.
     TXT,
 
-    // Nomes aceitos para o hábito de estudo, usados pela tool my_studies.
-    // Mesma lista nos dois idiomas: reconhece o hábito independente de como
-    // o usuário o nomeou.
-    'study_habit_names' => ['Estudar', 'Study'],
+    // Formatos de data/hora usados nas datas exibidas pelas tools (my_day,
+    // create_task, schedule) — sempre sem ambiguidade pro idioma do usuário.
+    'date_format' => 'd/m/Y',
+    'datetime_format' => 'ddd D/MM HH:mm',
 
     'my_day' => [
         'heading_format' => 'dddd, D [de] MMMM',
@@ -27,7 +27,7 @@ return [
         'all_habits_done' => 'Todos os hábitos do dia já registrados.',
         'inbox_heading' => '## Inbox do cérebro',
         'inbox_empty' => 'Inbox zerado.',
-        'inbox_count' => ':n captura(s) esperando processamento.',
+        'inbox_count' => '{1} :count captura esperando processamento.|[2,*] :count capturas esperando processamento.',
     ],
 
     'my_studies' => [
@@ -40,7 +40,7 @@ return [
         'habit_not_found' => 'Nenhum hábito de estudos ativo.',
         'progress' => 'Feito :nx nesta semana.',
         'progress_with_target' => 'Feito :nx nesta semana de :target (meta).',
-        'streak' => 'Sequência atual: :n dia(s).',
+        'streak' => '{1} Sequência atual: :count dia.|[2,*] Sequência atual: :count dias.',
         'upcoming_heading' => '## Próximos blocos na agenda',
         'no_upcoming' => 'Nenhum bloco de estudo agendado.',
         'calendar_not_connected' => 'Google Calendar não conectado.',
@@ -63,14 +63,15 @@ return [
 
     'create_task' => [
         'category_not_found' => 'Categoria ":category" não existe. Disponíveis: :available.',
-        'created' => 'Tarefa criada: ":title"',
+        'created' => 'Tarefa criada: ":title".',
+        'created_with_extras' => 'Tarefa criada: ":title" (:extras).',
         'priority_tag' => 'prioridade',
     ],
 
     'complete_habit' => [
         'not_found' => 'Hábito ":name" não encontrado. Ativos: :active.',
         'already_done' => '":name" já estava marcado como feito hoje.',
-        'done' => '":name" marcado como feito hoje. Sequência atual: :streak dia(s).',
+        'done' => '{1} ":name" marcado como feito hoje. Sequência atual: :count dia.|[2,*] ":name" marcado como feito hoje. Sequência atual: :count dias.',
     ],
 
     'schedule' => [

@@ -51,7 +51,7 @@ class MyDayTool extends Tool
             $out[] = __('mcp.my_day.no_tasks');
         }
         foreach ($atrasadas as $t) {
-            $out[] = __('mcp.my_day.overdue_item', ['date' => $t->due_date->format('d/m'), 'title' => $t->title]);
+            $out[] = __('mcp.my_day.overdue_item', ['date' => $t->due_date->format(__('mcp.date_format')), 'title' => $t->title]);
         }
         foreach ($doDia as $t) {
             $out[] = '- '.($t->is_priority ? __('mcp.my_day.priority_marker') : '').$t->title;
@@ -88,7 +88,7 @@ class MyDayTool extends Tool
         // Inbox
         $inbox = count($this->vault->listMarkdown('00-Inbox'));
         $out[] = __('mcp.my_day.inbox_heading');
-        $out[] = $inbox === 0 ? __('mcp.my_day.inbox_empty') : __('mcp.my_day.inbox_count', ['n' => $inbox]);
+        $out[] = $inbox === 0 ? __('mcp.my_day.inbox_empty') : trans_choice('mcp.my_day.inbox_count', $inbox);
 
         return Response::text(implode("\n", $out));
     }
@@ -98,7 +98,7 @@ class MyDayTool extends Tool
     {
         return [
             'date' => $schema->string()
-                ->description('Desired day in Y-m-d format. Omit for today.'),
+                ->description('Desired day, YYYY-MM-DD (e.g. 2026-10-01). Omit for today.'),
         ];
     }
 }

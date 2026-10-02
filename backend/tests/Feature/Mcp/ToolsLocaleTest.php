@@ -48,7 +48,7 @@ test('complete_habit responde em inglês', function () {
     LifeguiServer::actingAs($this->user)->tool(CompleteHabitTool::class, ['name' => 'reading'])
         ->assertOk()
         ->assertSee('marked as done today')
-        ->assertSee('Current streak: 1 day(s)');
+        ->assertSee('Current streak: 1 day.');
 });
 
 test('my_day responde em inglês', function () {

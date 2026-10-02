@@ -76,7 +76,7 @@ class ScheduleTool extends Tool
             return Response::error(__('mcp.schedule.calendar_not_connected'));
         }
 
-        $quando = $inicio->locale(app()->getLocale())->isoFormat('ddd D/MM HH:mm');
+        $quando = $inicio->locale(app()->getLocale())->isoFormat(__('mcp.datetime_format'));
         $rec = $dias !== [] ? __('mcp.schedule.weekly_suffix', ['days' => implode(', ', $dias)]) : '';
 
         return Response::text(__('mcp.schedule.created', ['title' => $event['title'], 'when' => $quando, 'recurrence' => $rec]));
@@ -91,7 +91,9 @@ class ScheduleTool extends Tool
             'duration_minutes' => $schema->integer()->description('Duration in minutes (default 60).'),
             'type' => $schema->string()->enum(['event', 'task', 'habit', 'note'])->description('event = standalone (default); task/habit/note links to an item.'),
             'ref' => $schema->string()->description('Id of the task/habit or path of the note, when type is not event.'),
-            'repeat_days' => $schema->array()->description('Days of the week to repeat every week: MO,TU,WE,TH,FR,SA,SU.'),
+            'repeat_days' => $schema->array()
+                ->items($schema->string()->enum(['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU']))
+                ->description('Days of the week to repeat every week.'),
         ];
     }
 }

@@ -26,6 +26,7 @@ class CreateTaskTool extends Tool
         ]);
 
         $categoryId = null;
+        $categoryName = null;
         if ($request->get('category')) {
             $category = Category::whereRaw('LOWER(name) = ?', [mb_strtolower($request->get('category'))])->first();
             if ($category === null) {
@@ -34,6 +35,7 @@ class CreateTaskTool extends Tool
                 return Response::error(__('mcp.create_task.category_not_found', ['category' => $request->get('category'), 'available' => $nomes]));
             }
             $categoryId = $category->id;
+            $categoryName = $category->name;
         }
 
         $task = Task::create([
@@ -45,14 +47,17 @@ class CreateTaskTool extends Tool
             'position' => (Task::where('status', 'todo')->max('position') ?? 0) + 1,
         ]);
 
+        // Ecoa o nome canônico da categoria (como está salva), não o texto que o
+        // usuário/modelo mandou (podem diferir em caixa/acentuação).
         $extras = array_filter([
-            $task->due_date?->format('d/m/Y'),
-            $categoryId ? $request->get('category') : null,
+            $task->due_date?->format(__('mcp.date_format')),
+            $categoryName,
             $task->is_priority ? __('mcp.create_task.priority_tag') : null,
         ]);
 
-        return Response::text(__('mcp.create_task.created', ['title' => $task->title])
-            .($extras !== [] ? ' ('.implode(', ', $extras).')' : '').'.');
+        return Response::text($extras !== []
+            ? __('mcp.create_task.created_with_extras', ['title' => $task->title, 'extras' => implode(', ', $extras)])
+            : __('mcp.create_task.created', ['title' => $task->title]));
     }
 
     /** @return array<string, Type> */
@@ -60,8 +65,8 @@ class CreateTaskTool extends Tool
     {
         return [
             'title' => $schema->string()->description('Task title.')->required(),
-            'due' => $schema->string()->description('Due date Y-m-d, optional.'),
-            'category' => $schema->string()->description("Name of an existing category of the user's, optional."),
+            'due' => $schema->string()->description('Due date, YYYY-MM-DD (e.g. 2026-10-01), optional.'),
+            'category' => $schema->string()->description("Name of one of the user's existing categories (optional, case-insensitive)."),
             'priority' => $schema->boolean()->description('Mark as priority.'),
         ];
     }
