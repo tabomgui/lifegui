@@ -1,4 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import {
   ArrowDown,
   ArrowUp,
@@ -33,6 +35,7 @@ import { DynamicIcon } from '@/components/icon'
 import { useTaskHeatmap, useHabitHeatmap } from '@/hooks/use-heatmap'
 import { useHabitStats } from '@/hooks/use-habit-stats'
 import { useEnabledModules } from '@/hooks/use-modules'
+import { useFormat } from '@/i18n/format'
 import type { BrainReport, HabitReport, TaskReport } from '@/types/api'
 
 // ---- shared chart tokens ----
@@ -53,16 +56,9 @@ function parseLocalDate(value: string): Date {
   return new Date(y, m - 1, d)
 }
 
-function fmtDayMonth(value: string): string {
-  const d = parseLocalDate(value)
-  return `${d.getDate()}/${d.getMonth() + 1}`
-}
-
-const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
-
-function fmtCycle(n: number | null): string {
-  if (n === null) return '—'
-  return `${n.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}d`
+// `n` dias com o sufixo "d" ("{{value}}d" em ambos os idiomas), número no formato do idioma ativo.
+function fmtDays(n: number, t: TFunction<'dashboards'>, format: ReturnType<typeof useFormat>, opts?: Intl.NumberFormatOptions): string {
+  return t('units.days', { value: format.number(n, opts) })
 }
 
 function Swatch({ color, label }: { color: string; label: string }) {
@@ -76,8 +72,10 @@ function Swatch({ color, label }: { color: string; label: string }) {
 
 // ============ Criadas vs concluídas por semana (grouped bars, 2 hues) ============
 function WeeklyFlowChart({ weekly }: { weekly: TaskReport['weekly'] }) {
+  const { t } = useTranslation('dashboards')
+  const { dayMonth } = useFormat()
   if (weekly.length === 0) {
-    return <p className="py-8 text-center text-sm text-muted-foreground">Sem dados no período.</p>
+    return <p className="py-8 text-center text-sm text-muted-foreground">{t('charts.noData')}</p>
   }
   const W = 560
   const H = 210
@@ -116,9 +114,12 @@ function WeeklyFlowChart({ weekly }: { weekly: TaskReport['weekly'] }) {
         const x1 = gx + groupW / 2 - barW - gap / 2
         const x2 = gx + groupW / 2 + gap / 2
         const showLabel = i % labelEvery === 0
+        const weekLabel = dayMonth(parseLocalDate(w.weekStart))
         return (
           <g key={w.weekStart}>
-            <title>{`Semana de ${fmtDayMonth(w.weekStart)} · criadas ${w.created} · concluídas ${w.completed}`}</title>
+            <title>
+              {t('tasks.flowSection.weeklyChart.tooltip', { date: weekLabel, created: w.created, completed: w.completed })}
+            </title>
             {w.completed < w.created && (
               <rect x={gx} y={padT} width={groupW} height={plotH} fill={AMBER} opacity={0.06} />
             )}
@@ -126,7 +127,7 @@ function WeeklyFlowChart({ weekly }: { weekly: TaskReport['weekly'] }) {
             <rect x={x2} y={Y(w.completed)} width={barW} height={padT + plotH - Y(w.completed)} rx={2} fill={BLUE} />
             {showLabel && (
               <text x={gx + groupW / 2} y={H - 8} textAnchor="middle" fill={MUTED} fontSize={9}>
-                {fmtDayMonth(w.weekStart)}
+                {weekLabel}
               </text>
             )}
           </g>
@@ -138,14 +139,15 @@ function WeeklyFlowChart({ weekly }: { weekly: TaskReport['weekly'] }) {
 
 // ============ Trabalho aberto por categoria (donut + list) ============
 function CategoryDonut({ data }: { data: TaskReport['openByCategory'] }) {
+  const { t } = useTranslation(['dashboards', 'tasks'])
   const items = data.map((d) => ({
-    name: d.name ?? 'Sem categoria',
+    name: d.name ?? t('tasks:card.noCategory'),
     color: d.color ?? SLATE,
     value: d.open,
   }))
   const total = items.reduce((s, d) => s + d.value, 0)
   if (total === 0) {
-    return <p className="py-8 text-center text-sm text-muted-foreground">Nada aberto no momento.</p>
+    return <p className="py-8 text-center text-sm text-muted-foreground">{t('tasks.flowSection.categoryDonut.empty')}</p>
   }
   const size = 150
   const thick = 24
@@ -180,7 +182,7 @@ function CategoryDonut({ data }: { data: TaskReport['openByCategory'] }) {
           {total}
         </text>
         <text x={cx} y={cy + 14} textAnchor="middle" fill={MUTED} fontSize={9}>
-          abertas
+          {t('tasks.flowSection.categoryDonut.openLabel')}
         </text>
       </svg>
       <div className="w-full flex-1 space-y-2">
@@ -197,8 +199,10 @@ function CategoryDonut({ data }: { data: TaskReport['openByCategory'] }) {
 
 // ============ Aging WIP ============
 function AgingWipList({ items }: { items: TaskReport['agingWip'] }) {
+  const { t } = useTranslation('dashboards')
+  const format = useFormat()
   if (items.length === 0) {
-    return <p className="py-8 text-center text-sm text-muted-foreground">Nenhuma tarefa em aberto.</p>
+    return <p className="py-8 text-center text-sm text-muted-foreground">{t('tasks.flowSection.agingWip.empty')}</p>
   }
   const max = Math.max(1, ...items.map((i) => i.days))
   return (
@@ -220,7 +224,7 @@ function AgingWipList({ items }: { items: TaskReport['agingWip'] }) {
                 className="ml-2 shrink-0 font-medium tabular-nums"
                 style={{ color: it.days > 7 ? tier : undefined }}
               >
-                {it.days}d
+                {fmtDays(it.days, t, format)}
               </span>
             </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
@@ -231,10 +235,10 @@ function AgingWipList({ items }: { items: TaskReport['agingWip'] }) {
       })}
       <div className="mt-3 flex items-center gap-4 text-[11px] text-muted-foreground">
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-sm" style={{ background: AMBER }} /> &gt; 7 dias
+          <span className="h-2.5 w-2.5 rounded-sm" style={{ background: AMBER }} /> {t('tasks.flowSection.agingWip.legendOver7')}
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-sm" style={{ background: RED }} /> &gt; 30 dias
+          <span className="h-2.5 w-2.5 rounded-sm" style={{ background: RED }} /> {t('tasks.flowSection.agingWip.legendOver30')}
         </span>
       </div>
     </div>
@@ -243,6 +247,8 @@ function AgingWipList({ items }: { items: TaskReport['agingWip'] }) {
 
 // ============ Vencendo em breve — Atrasadas leader + 7 day bars ============
 function DueSoonChart({ dueSoon, overdue }: { dueSoon: TaskReport['dueSoon']; overdue: number }) {
+  const { t } = useTranslation('dashboards')
+  const { weekdayShort } = useFormat()
   const W = 560
   const H = 200
   const padL = 24
@@ -259,9 +265,9 @@ function DueSoonChart({ dueSoon, overdue }: { dueSoon: TaskReport['dueSoon']; ov
   const ticks = [0, Math.round(max / 2), max].filter((v, i, a) => a.indexOf(v) === i)
 
   const bars: { label: string; value: number; color: string; emphasize: boolean }[] = [
-    { label: 'Atras.', value: overdue, color: RED, emphasize: true },
+    { label: t('tasks.dueSection.dueSoon.overdueShort'), value: overdue, color: RED, emphasize: true },
     ...dueSoon.map((d, i) => ({
-      label: i === 0 ? 'Hoje' : WEEKDAYS[parseLocalDate(d.date).getDay()],
+      label: i === 0 ? t('tasks.dueSection.dueSoon.today') : weekdayShort(parseLocalDate(d.date).getDay()),
       value: d.count,
       color: BLUE,
       emphasize: false,
@@ -323,6 +329,7 @@ function DueSoonChart({ dueSoon, overdue }: { dueSoon: TaskReport['dueSoon']; ov
 
 // ============ Taxa de conclusão no prazo (stacked bar) ============
 function OnTimeRate({ data }: { data: TaskReport['onTimeRate'] }) {
+  const { t } = useTranslation('dashboards')
   const rate = data.rate
   const rest = Math.max(0, 100 - rate)
   const delta = data.rate - data.previousRate
@@ -331,7 +338,7 @@ function OnTimeRate({ data }: { data: TaskReport['onTimeRate'] }) {
       <div className="flex items-end justify-between">
         <div>
           <div className="text-3xl font-semibold tabular-nums text-foreground">{rate}%</div>
-          <p className="text-xs text-muted-foreground">no prazo · n={data.total}</p>
+          <p className="text-xs text-muted-foreground">{t('tasks.dueSection.onTimeRate.caption', { total: data.total })}</p>
         </div>
         {data.total > 0 && (
           <span
@@ -347,15 +354,15 @@ function OnTimeRate({ data }: { data: TaskReport['onTimeRate'] }) {
         <div
           className="flex items-center justify-center"
           style={{ width: `${rate}%`, background: BLUE }}
-          title={`No prazo ${rate}%`}
+          title={t('tasks.dueSection.onTimeRate.onTimeTitle', { rate })}
         >
           {rate >= 12 && <span className="text-[10px] font-medium text-white">{rate}%</span>}
         </div>
-        <div style={{ width: `${rest}%`, background: AMBER }} title={`Fora do prazo ${rest}%`} />
+        <div style={{ width: `${rest}%`, background: AMBER }} title={t('tasks.dueSection.onTimeRate.lateTitle', { rate: rest })} />
       </div>
       <div className="mt-3 flex flex-wrap gap-4">
-        <Swatch color={BLUE} label={`No prazo (${data.onTime})`} />
-        <Swatch color={AMBER} label={`Fora do prazo (${data.total - data.onTime})`} />
+        <Swatch color={BLUE} label={t('tasks.dueSection.onTimeRate.onTimeSwatch', { count: data.onTime })} />
+        <Swatch color={AMBER} label={t('tasks.dueSection.onTimeRate.lateSwatch', { count: data.total - data.onTime })} />
       </div>
     </div>
   )
@@ -363,11 +370,12 @@ function OnTimeRate({ data }: { data: TaskReport['onTimeRate'] }) {
 
 // ============ Atrasadas por tempo de atraso (histogram) ============
 function OverdueHistogram({ data }: { data: TaskReport['overdueByAgeBucket'] }) {
+  const { t } = useTranslation('dashboards')
   const buckets: { label: string; value: number; color: string }[] = [
-    { label: '1–3d', value: data['1-3'], color: '#fca5a5' },
-    { label: '4–7d', value: data['4-7'], color: '#f87171' },
-    { label: '8–30d', value: data['8-30'], color: '#ef4444' },
-    { label: '30d+', value: data['30+'], color: '#b91c1c' },
+    { label: t('tasks.dueSection.overdueHistogram.buckets.1-3'), value: data['1-3'], color: '#fca5a5' },
+    { label: t('tasks.dueSection.overdueHistogram.buckets.4-7'), value: data['4-7'], color: '#f87171' },
+    { label: t('tasks.dueSection.overdueHistogram.buckets.8-30'), value: data['8-30'], color: '#ef4444' },
+    { label: t('tasks.dueSection.overdueHistogram.buckets.30+'), value: data['30+'], color: '#b91c1c' },
   ]
   const W = 360
   const H = 170
@@ -418,6 +426,7 @@ function OverdueHistogram({ data }: { data: TaskReport['overdueByAgeBucket'] }) 
 
 // ============ Trabalho aberto sem data (ring) ============
 function NoDueDateRing({ data }: { data: TaskReport['noDueDate'] }) {
+  const { t } = useTranslation('dashboards')
   const pct = data.pct
   const size = 90
   const r = 36
@@ -446,11 +455,9 @@ function NoDueDateRing({ data }: { data: TaskReport['noDueDate'] }) {
       <div>
         <div className="text-3xl font-semibold tabular-nums text-foreground">{pct}%</div>
         <p className="text-xs text-muted-foreground">
-          {data.count} de {data.total} abertas sem data
+          {t('tasks.dueSection.noDueDate.caption', { count: data.count, total: data.total })}
         </p>
-        <p className="mt-2 text-[11px] text-muted-foreground/80">
-          invisível a toda visão de prazo — explica o denominador do &quot;no prazo&quot;.
-        </p>
+        <p className="mt-2 text-[11px] text-muted-foreground/80">{t('tasks.dueSection.noDueDate.hint')}</p>
       </div>
     </div>
   )
@@ -488,11 +495,13 @@ function Panel({
 
 // ============ Tarefas tab ============
 function TarefasTab({ from, to }: { from: string; to: string }) {
+  const { t } = useTranslation(['dashboards', 'common'])
+  const format = useFormat()
   const { data, isPending } = useTaskReport(from, to)
   const { data: heatmap, isPending: heatmapPending } = useTaskHeatmap(from, to)
 
   if (isPending || !data) {
-    return <div className="p-8 text-center text-sm text-muted-foreground">Carregando…</div>
+    return <div className="p-8 text-center text-sm text-muted-foreground">{t('common:states.loading')}</div>
   }
 
   const weeklyCompletedSpark = data.weekly.map((w) => w.completed)
@@ -503,62 +512,60 @@ function TarefasTab({ from, to }: { from: string; to: string }) {
       {/* Stat-tile row */}
       <section>
         <div className="mb-3 flex items-baseline justify-between">
-          <h2 className="text-sm font-semibold tracking-tight">Destaques de tarefas</h2>
-          <p className="hidden text-xs text-muted-foreground sm:block">delta vs período anterior</p>
+          <h2 className="text-sm font-semibold tracking-tight">{t('tasks.highlights.heading')}</h2>
+          <p className="hidden text-xs text-muted-foreground sm:block">{t('tasks.highlights.deltaCaption')}</p>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatTile
-            label="Tarefas concluídas"
+            label={t('tasks.stats.completed')}
             icon={CheckCircle2}
             value={data.completedCount}
             delta={data.completedDelta}
             deltaGood="up"
-            caption="throughput bruto do período"
+            caption={t('tasks.stats.completedCaption')}
             sparkline={weeklyCompletedSpark}
           />
           <StatTile
-            label="Fluxo líquido"
+            label={t('tasks.stats.netFlow')}
             icon={ArrowLeftRight}
             value={data.netFlow > 0 ? `+${data.netFlow}` : data.netFlow}
             delta={data.netFlowDelta}
             deltaGood="up"
-            caption="concluídas − criadas"
+            caption={t('tasks.stats.netFlowCaption')}
             sparkline={weeklyNetSpark}
           />
           <StatTile
-            label="Tarefas atrasadas"
+            label={t('tasks.stats.overdue')}
             icon={AlarmClockOff}
             value={data.overdueOpenCount}
             delta={data.overdueDelta}
             deltaGood="down"
-            caption={`ao vivo · mais antiga ${data.overdueOldestDays}d`}
+            caption={t('tasks.stats.overdueCaption', { value: fmtDays(data.overdueOldestDays, t, format) })}
           />
           <StatTile
-            label="Tempo de ciclo mediano"
+            label={t('tasks.stats.cycleTime')}
             icon={Timer}
-            value={fmtCycle(data.cycleTimeMedianDays)}
+            value={data.cycleTimeMedianDays === null ? t('tasks.stats.cycleTimeEmpty') : fmtDays(data.cycleTimeMedianDays, t, format, { maximumFractionDigits: 1 })}
             delta={data.cycleTimeDelta}
             deltaGood="down"
-            caption="criado → concluído · mediana"
+            caption={t('tasks.stats.cycleTimeCaption')}
           />
         </div>
       </section>
 
       {/* Fluxo de tarefas */}
       <section>
-        <SectionHeading icon={GitBranch}>Fluxo de tarefas</SectionHeading>
+        <SectionHeading icon={GitBranch}>{t('tasks.flowSection.heading')}</SectionHeading>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
           <div className="rounded-xl border bg-card p-4 shadow-sm xl:col-span-2">
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div>
-                <h3 className="text-sm font-medium">Criadas vs concluídas por semana</h3>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  throughput vs intake · semanas sombreadas = concluídas &lt; criadas
-                </p>
+                <h3 className="text-sm font-medium">{t('tasks.flowSection.weeklyChart.title')}</h3>
+                <p className="mt-0.5 text-xs text-muted-foreground">{t('tasks.flowSection.weeklyChart.subtitle')}</p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <Swatch color={AMBER} label="Criadas" />
-                <Swatch color={BLUE} label="Concluídas" />
+                <Swatch color={AMBER} label={t('tasks.flowSection.weeklyChart.createdLabel')} />
+                <Swatch color={BLUE} label={t('tasks.flowSection.weeklyChart.completedLabel')} />
               </div>
             </div>
             <div className="mt-4">
@@ -566,11 +573,11 @@ function TarefasTab({ from, to }: { from: string; to: string }) {
             </div>
           </div>
 
-          <Panel title="Trabalho aberto por categoria" subtitle="onde o pendente está concentrado">
+          <Panel title={t('tasks.flowSection.categoryDonut.title')} subtitle={t('tasks.flowSection.categoryDonut.subtitle')}>
             <CategoryDonut data={data.openByCategory} />
           </Panel>
 
-          <Panel title="Tarefas mais antigas em aberto" subtitle="aging WIP · o que fazer ou matar">
+          <Panel title={t('tasks.flowSection.agingWip.title')} subtitle={t('tasks.flowSection.agingWip.subtitle')}>
             <AgingWipList items={data.agingWip} />
           </Panel>
         </div>
@@ -578,19 +585,17 @@ function TarefasTab({ from, to }: { from: string; to: string }) {
 
       {/* Prazos */}
       <section>
-        <SectionHeading icon={CalendarClock}>Prazos</SectionHeading>
+        <SectionHeading icon={CalendarClock}>{t('tasks.dueSection.heading')}</SectionHeading>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
           <div className="rounded-xl border bg-card p-4 shadow-sm xl:col-span-2">
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div>
-                <h3 className="text-sm font-medium">Vencendo em breve — próximos 7 dias</h3>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  abertas com data no horizonte · atrasadas em destaque
-                </p>
+                <h3 className="text-sm font-medium">{t('tasks.dueSection.dueSoon.title')}</h3>
+                <p className="mt-0.5 text-xs text-muted-foreground">{t('tasks.dueSection.dueSoon.subtitle')}</p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <Swatch color={RED} label="Atrasadas" />
-                <Swatch color={BLUE} label="A vencer" />
+                <Swatch color={RED} label={t('tasks.dueSection.dueSoon.overdueSwatch')} />
+                <Swatch color={BLUE} label={t('tasks.dueSection.dueSoon.upcomingSwatch')} />
               </div>
             </div>
             <div className="mt-4">
@@ -598,24 +603,22 @@ function TarefasTab({ from, to }: { from: string; to: string }) {
             </div>
           </div>
 
-          <Panel title="Trabalho aberto sem data" subtitle="higiene de prazos">
+          <Panel title={t('tasks.dueSection.noDueDate.title')} subtitle={t('tasks.dueSection.noDueDate.subtitle')}>
             <NoDueDateRing data={data.noDueDate} />
           </Panel>
 
           <div className="rounded-xl border bg-card p-4 shadow-sm xl:col-span-2">
             <div className="flex items-center gap-2">
               <CalendarX className="h-3.5 w-3.5 text-muted-foreground" />
-              <h3 className="text-sm font-medium">Taxa de conclusão no prazo</h3>
+              <h3 className="text-sm font-medium">{t('tasks.dueSection.onTimeRate.title')}</h3>
             </div>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              das tarefas com data · denominador sempre visível
-            </p>
+            <p className="mt-0.5 text-xs text-muted-foreground">{t('tasks.dueSection.onTimeRate.subtitle')}</p>
             <div className="mt-4">
               <OnTimeRate data={data.onTimeRate} />
             </div>
           </div>
 
-          <Panel title="Atrasadas por tempo de atraso" subtitle="deslize fresco vs apodrecimento crônico">
+          <Panel title={t('tasks.dueSection.overdueHistogram.title')} subtitle={t('tasks.dueSection.overdueHistogram.subtitle')}>
             <OverdueHistogram data={data.overdueByAgeBucket} />
           </Panel>
         </div>
@@ -623,11 +626,11 @@ function TarefasTab({ from, to }: { from: string; to: string }) {
 
       {/* Heatmap */}
       <section>
-        <SectionHeading icon={Grid3x3}>Heatmap de conclusões</SectionHeading>
+        <SectionHeading icon={Grid3x3}>{t('tasks.heatmap.heading')}</SectionHeading>
         <div className="rounded-xl border bg-card p-4 shadow-sm">
-          <h3 className="text-sm font-medium">Tarefas concluídas por dia</h3>
+          <h3 className="text-sm font-medium">{t('tasks.heatmap.title')}</h3>
           {heatmapPending || !heatmap ? (
-            <div className="p-6 text-center text-sm text-muted-foreground">Carregando…</div>
+            <div className="p-6 text-center text-sm text-muted-foreground">{t('common:states.loading')}</div>
           ) : (
             <div className="mt-3">
               <TaskHeatmap data={heatmap} />
@@ -647,11 +650,13 @@ function ConsistencyChart({
   data: HabitReport['dailyConsistency']
   reference: number
 }) {
+  const { t } = useTranslation('dashboards')
+  const { dayMonth } = useFormat()
   const svgRef = useRef<SVGSVGElement | null>(null)
   const [hover, setHover] = useState<number | null>(null)
 
   if (data.length < 2) {
-    return <p className="py-8 text-center text-sm text-muted-foreground">Sem dados no período.</p>
+    return <p className="py-8 text-center text-sm text-muted-foreground">{t('charts.noData')}</p>
   }
 
   const W = 560
@@ -719,14 +724,14 @@ function ConsistencyChart({
           strokeDasharray="4 4"
         />
         <text x={W - padR} y={Y(reference) - 4} textAnchor="end" fill={MUTED} fontSize={9}>
-          média {reference}%
+          {t('habits.consistencySection.chart.averageLabel', { value: reference })}
         </text>
 
         {/* x labels (sparse) */}
         {data.map((d, i) =>
           i % labelEvery === 0 ? (
             <text key={d.date} x={X(i)} y={H - 6} textAnchor="middle" fill={MUTED} fontSize={9}>
-              {fmtDayMonth(d.date)}
+              {dayMonth(parseLocalDate(d.date))}
             </text>
           ) : null,
         )}
@@ -761,9 +766,9 @@ function ConsistencyChart({
           className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded border bg-popover px-2 py-1 text-xs text-popover-foreground shadow"
           style={{ left: `${(X(hover) / W) * 100}%`, top: `${(Y(Math.max(data[hover].pct, ma[hover])) / H) * 100}%` }}
         >
-          <div className="font-medium">{fmtDayMonth(data[hover].date)}</div>
+          <div className="font-medium">{dayMonth(parseLocalDate(data[hover].date))}</div>
           <div className="text-muted-foreground">
-            diário {data[hover].pct}% · média 7d {Math.round(ma[hover])}%
+            {t('habits.consistencySection.chart.tooltip', { pct: data[hover].pct, avg: Math.round(ma[hover]) })}
           </div>
         </div>
       )}
@@ -773,8 +778,9 @@ function ConsistencyChart({
 
 // ============ Sequência por hábito (current vs best) ============
 function StreaksList({ items }: { items: HabitReport['perHabitStreaks'] }) {
+  const { t } = useTranslation('dashboards')
   if (items.length === 0) {
-    return <p className="py-8 text-center text-sm text-muted-foreground">Nenhum hábito ativo.</p>
+    return <p className="py-8 text-center text-sm text-muted-foreground">{t('habits.consistencySection.streaks.empty')}</p>
   }
   const max = Math.max(1, ...items.map((i) => i.best))
   return (
@@ -791,8 +797,8 @@ function StreaksList({ items }: { items: HabitReport['perHabitStreaks'] }) {
                 <span className="truncate">{it.name}</span>
               </span>
               <span className={`ml-2 shrink-0 tabular-nums ${broken ? 'text-red-500' : 'text-muted-foreground'}`}>
-                atual <span className="font-medium text-foreground">{it.current}</span> · recorde{' '}
-                <span className="font-medium text-foreground">{it.best}</span>
+                {t('habits.consistencySection.streaks.current')} <span className="font-medium text-foreground">{it.current}</span> ·{' '}
+                {t('habits.consistencySection.streaks.record')} <span className="font-medium text-foreground">{it.best}</span>
               </span>
             </div>
             <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted">
@@ -813,12 +819,13 @@ function StreaksList({ items }: { items: HabitReport['perHabitStreaks'] }) {
 
 // ============ Hábitos tab ============
 function HabitosTab({ from, to }: { from: string; to: string }) {
+  const { t } = useTranslation(['dashboards', 'common'])
   const { data, isPending } = useHabitReport(from, to)
   const { data: stats, isPending: statsPending } = useHabitStats(from, to)
   const { data: heatmap, isPending: heatmapPending } = useHabitHeatmap(from, to)
 
   if (isPending || !data) {
-    return <div className="p-8 text-center text-sm text-muted-foreground">Carregando…</div>
+    return <div className="p-8 text-center text-sm text-muted-foreground">{t('common:states.loading')}</div>
   }
 
   const consistencySpark = data.dailyConsistency.map((d) => d.pct)
@@ -828,71 +835,69 @@ function HabitosTab({ from, to }: { from: string; to: string }) {
       {/* Stat-tile row */}
       <section>
         <div className="mb-3 flex items-baseline justify-between">
-          <h2 className="text-sm font-semibold tracking-tight">Destaques de hábitos</h2>
-          <p className="hidden text-xs text-muted-foreground sm:block">delta vs período anterior</p>
+          <h2 className="text-sm font-semibold tracking-tight">{t('habits.highlights.heading')}</h2>
+          <p className="hidden text-xs text-muted-foreground sm:block">{t('tasks.highlights.deltaCaption')}</p>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatTile
-            label="Dias perfeitos"
+            label={t('habits.stats.perfectDays')}
             icon={Flame}
             value={data.perfectDays}
-            caption={`atual ${data.currentPerfectStreak} · recorde ${data.recordPerfectStreak}`}
+            caption={t('habits.stats.perfectDaysCaption', { current: data.currentPerfectStreak, record: data.recordPerfectStreak })}
           />
           <StatTile
-            label="Consistência"
+            label={t('habits.stats.consistency')}
             icon={LineChart}
             value={`${data.consistencyPct}%`}
             delta={data.consistencyDelta}
             deltaLabel="pp"
             deltaGood="up"
-            caption="feito/exigido por dia · média do período"
+            caption={t('habits.stats.consistencyCaption')}
             sparkline={consistencySpark}
           />
           <StatTile
-            label="Aderência média"
+            label={t('habits.stats.avgAdherence')}
             icon={Target}
             value={`${data.avgAdherence}%`}
-            caption="média das metas de todos os hábitos"
+            caption={t('habits.stats.avgAdherenceCaption')}
           />
           <StatTile
-            label="Hábitos ativos"
+            label={t('habits.stats.activeHabits')}
             icon={Repeat}
             value={data.activeHabitsCount}
-            caption="em acompanhamento"
+            caption={t('habits.stats.activeHabitsCaption')}
           />
         </div>
       </section>
 
       {/* Consistência & aderência */}
       <section>
-        <SectionHeading icon={Repeat}>Consistência &amp; aderência</SectionHeading>
+        <SectionHeading icon={Repeat}>{t('habits.consistencySection.heading')}</SectionHeading>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
           <div className="rounded-xl border bg-card p-4 shadow-sm xl:col-span-2">
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div>
-                <h3 className="text-sm font-medium">Consistência diária</h3>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  % feito/exigido por dia · média móvel 7d · linha de referência da média
-                </p>
+                <h3 className="text-sm font-medium">{t('habits.consistencySection.chart.title')}</h3>
+                <p className="mt-0.5 text-xs text-muted-foreground">{t('habits.consistencySection.chart.subtitle')}</p>
               </div>
               <div className="flex flex-wrap gap-4">
                 <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
                   <svg width="18" height="8" aria-hidden>
                     <line x1="0" y1="4" x2="18" y2="4" stroke={BLUE} strokeWidth={2.5} />
                   </svg>
-                  Média móvel 7d
+                  {t('habits.consistencySection.chart.movingAverageLegend')}
                 </span>
                 <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
                   <svg width="18" height="8" aria-hidden>
                     <line x1="0" y1="4" x2="18" y2="4" stroke={BLUE} strokeWidth={1} opacity={0.4} />
                   </svg>
-                  % diário
+                  {t('habits.consistencySection.chart.dailyLegend')}
                 </span>
                 <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
                   <svg width="18" height="8" aria-hidden>
                     <line x1="0" y1="4" x2="18" y2="4" stroke={MUTED} strokeWidth={1} strokeDasharray="4 4" />
                   </svg>
-                  Média do período
+                  {t('habits.consistencySection.chart.averageLegend')}
                 </span>
               </div>
             </div>
@@ -901,17 +906,17 @@ function HabitosTab({ from, to }: { from: string; to: string }) {
             </div>
           </div>
 
-          <Panel title="Radar de aderência por hábito" subtitle="% de aderência à meta no período">
+          <Panel title={t('habits.consistencySection.radar.title')} subtitle={t('habits.consistencySection.radar.subtitle')}>
             {statsPending || !stats ? (
-              <div className="p-6 text-center text-sm text-muted-foreground">Carregando…</div>
+              <div className="p-6 text-center text-sm text-muted-foreground">{t('common:states.loading')}</div>
             ) : (
               <HabitRadar habits={stats.habits} />
             )}
           </Panel>
 
           <Panel
-            title="Sequência por hábito"
-            subtitle="momentum atual vs recorde · sequência quebrada em vermelho"
+            title={t('habits.consistencySection.streaks.title')}
+            subtitle={t('habits.consistencySection.streaks.subtitle')}
           >
             <StreaksList items={data.perHabitStreaks} />
           </Panel>
@@ -920,11 +925,11 @@ function HabitosTab({ from, to }: { from: string; to: string }) {
 
       {/* Heatmap */}
       <section>
-        <SectionHeading icon={Grid3x3}>Heatmap de conclusões</SectionHeading>
+        <SectionHeading icon={Grid3x3}>{t('habits.heatmap.heading')}</SectionHeading>
         <div className="rounded-xl border bg-card p-4 shadow-sm">
-          <h3 className="text-sm font-medium">Hábitos concluídos por dia</h3>
+          <h3 className="text-sm font-medium">{t('habits.heatmap.title')}</h3>
           {heatmapPending || !heatmap ? (
-            <div className="p-6 text-center text-sm text-muted-foreground">Carregando…</div>
+            <div className="p-6 text-center text-sm text-muted-foreground">{t('common:states.loading')}</div>
           ) : (
             <div className="mt-3">
               <HabitHeatmap data={heatmap} />
@@ -937,19 +942,26 @@ function HabitosTab({ from, to }: { from: string; to: string }) {
 }
 
 // ============ Cérebro: funil de status ============
-const BRAIN_STATUS: { key: keyof BrainReport['statuses']; label: string; color: string }[] = [
-  { key: 'novo', label: 'Novo', color: BLUE },
-  { key: 'estudando', label: 'Estudando', color: AMBER },
-  { key: 'a-revisar', label: 'A revisar', color: RED },
-  { key: 'concluido', label: 'Concluído', color: '#10b981' },
-  { key: 'sem-status', label: 'Sem status', color: SLATE },
+const BRAIN_STATUS: { key: keyof BrainReport['statuses']; color: string }[] = [
+  { key: 'novo', color: BLUE },
+  { key: 'estudando', color: AMBER },
+  { key: 'a-revisar', color: RED },
+  { key: 'concluido', color: '#10b981' },
+  { key: 'sem-status', color: SLATE },
 ]
 
+// Rótulo de cada status: os quatro status reais de nota vêm do namespace `brain`
+// (mesmas chaves usadas no resto do app); "sem-status" é específico deste funil.
+function statusLabel(key: keyof BrainReport['statuses'], t: TFunction<['dashboards', 'brain']>): string {
+  return key === 'sem-status' ? t('dashboards:brain.pipelineSection.statusFunnel.noStatus') : t(`brain:status.${key}`)
+}
+
 function StatusFunnel({ statuses }: { statuses: BrainReport['statuses'] }) {
+  const { t } = useTranslation(['dashboards', 'brain'])
   const max = Math.max(1, ...BRAIN_STATUS.map((s) => statuses[s.key]))
   const total = BRAIN_STATUS.reduce((a, s) => a + statuses[s.key], 0)
   if (total === 0) {
-    return <p className="py-8 text-center text-sm text-muted-foreground">Nenhuma nota ainda.</p>
+    return <p className="py-8 text-center text-sm text-muted-foreground">{t('dashboards:brain.pipelineSection.statusFunnel.empty')}</p>
   }
   return (
     <div className="space-y-3">
@@ -958,7 +970,7 @@ function StatusFunnel({ statuses }: { statuses: BrainReport['statuses'] }) {
         return (
           <div key={s.key}>
             <div className="mb-1 flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">{s.label}</span>
+              <span className="text-muted-foreground">{statusLabel(s.key, t)}</span>
               <span className="tabular-nums font-medium">{v}</span>
             </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
@@ -976,10 +988,11 @@ function StatusFunnel({ statuses }: { statuses: BrainReport['statuses'] }) {
 
 // ============ Cérebro: volume por categoria ============
 function CategoryVolumeBars() {
+  const { t } = useTranslation('dashboards')
   const { data } = useBrainCategories()
   const categories = data?.data ?? []
   if (categories.length === 0) {
-    return <p className="py-8 text-center text-sm text-muted-foreground">Nenhuma categoria.</p>
+    return <p className="py-8 text-center text-sm text-muted-foreground">{t('brain.pipelineSection.categoryVolume.empty')}</p>
   }
   const max = Math.max(1, ...categories.map((c) => c.total))
   return (
@@ -1004,8 +1017,10 @@ function CategoryVolumeBars() {
 
 // ============ Cérebro: atividade de escrita por semana (criadas vs atualizadas) ============
 function WritingActivityChart({ weekly }: { weekly: BrainReport['weekly'] }) {
+  const { t } = useTranslation('dashboards')
+  const { dayMonth } = useFormat()
   if (weekly.length === 0) {
-    return <p className="py-8 text-center text-sm text-muted-foreground">Sem dados no período.</p>
+    return <p className="py-8 text-center text-sm text-muted-foreground">{t('charts.noData')}</p>
   }
   const W = 560
   const H = 200
@@ -1039,14 +1054,17 @@ function WritingActivityChart({ weekly }: { weekly: BrainReport['weekly'] }) {
         const gx = padL + i * groupW
         const x1 = gx + groupW / 2 - barW - gap / 2
         const x2 = gx + groupW / 2 + gap / 2
+        const weekLabel = dayMonth(parseLocalDate(w.weekStart))
         return (
           <g key={w.weekStart}>
-            <title>{`Semana de ${fmtDayMonth(w.weekStart)} · criadas ${w.created} · atualizadas ${w.updated}`}</title>
+            <title>
+              {t('brain.activitySection.writingChart.tooltip', { date: weekLabel, created: w.created, updated: w.updated })}
+            </title>
             <rect x={x1} y={Y(w.created)} width={barW} height={padT + plotH - Y(w.created)} rx={2} fill={BLUE} />
             <rect x={x2} y={Y(w.updated)} width={barW} height={padT + plotH - Y(w.updated)} rx={2} fill={SLATE} opacity={0.75} />
             {i % labelEvery === 0 && (
               <text x={gx + groupW / 2} y={H - 8} textAnchor="middle" fill={MUTED} fontSize={9}>
-                {fmtDayMonth(w.weekStart)}
+                {weekLabel}
               </text>
             )}
           </g>
@@ -1058,14 +1076,16 @@ function WritingActivityChart({ weekly }: { weekly: BrainReport['weekly'] }) {
 
 // ============ Cérebro: idade do backlog do inbox ============
 function InboxBacklogChart({ weekly, pending }: { weekly: BrainReport['inboxWeekly']; pending: number }) {
+  const { t } = useTranslation('dashboards')
+  const { dayMonth } = useFormat()
   if (pending === 0) {
-    return <p className="py-8 text-center text-sm text-muted-foreground">Inbox zerado. Nada esperando.</p>
+    return <p className="py-8 text-center text-sm text-muted-foreground">{t('brain.activitySection.inboxBacklog.empty')}</p>
   }
   const withData = weekly.filter((w) => w.entered > 0)
   if (withData.length === 0) {
     return (
       <p className="py-8 text-center text-sm text-muted-foreground">
-        {pending} pendente{pending > 1 ? 's' : ''}, mas fora da janela selecionada — aumente o período.
+        {t('brain.activitySection.inboxBacklog.outOfWindow', { count: pending })}
       </p>
     )
   }
@@ -1076,7 +1096,7 @@ function InboxBacklogChart({ weekly, pending }: { weekly: BrainReport['inboxWeek
         w.entered === 0 ? null : (
           <div key={w.weekStart}>
             <div className="mb-1 flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">Semana de {fmtDayMonth(w.weekStart)}</span>
+              <span className="text-muted-foreground">{t('charts.weekOf', { date: dayMonth(parseLocalDate(w.weekStart)) })}</span>
               <span className="tabular-nums font-medium">{w.entered}</span>
             </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
@@ -1091,55 +1111,56 @@ function InboxBacklogChart({ weekly, pending }: { weekly: BrainReport['inboxWeek
 
 // ============ Cérebro tab ============
 function CerebroTab({ from, to }: { from: string; to: string }) {
+  const { t } = useTranslation(['dashboards', 'common'])
   const { data, isPending } = useBrainReport(from, to)
 
   if (isPending || !data) {
-    return <div className="p-8 text-center text-sm text-muted-foreground">Carregando…</div>
+    return <div className="p-8 text-center text-sm text-muted-foreground">{t('common:states.loading')}</div>
   }
 
   return (
     <div className="space-y-8">
       <section>
         <div className="mb-3 flex items-baseline justify-between">
-          <h2 className="text-sm font-semibold tracking-tight">Destaques do cérebro</h2>
+          <h2 className="text-sm font-semibold tracking-tight">{t('brain.highlights.heading')}</h2>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <StatTile label="Notas no vault" icon={NotebookPen} value={data.totals.notes} caption="todas as categorias" />
-          <StatTile label="Em estudo" icon={PenLine} value={data.totals.estudando} caption="status estudando" />
-          <StatTile label="Concluídas" icon={CheckCircle2} value={data.totals.concluidas} caption="estudo finalizado" />
+          <StatTile label={t('brain.stats.notes')} icon={NotebookPen} value={data.totals.notes} caption={t('brain.stats.notesCaption')} />
+          <StatTile label={t('brain.stats.studying')} icon={PenLine} value={data.totals.estudando} caption={t('brain.stats.studyingCaption')} />
+          <StatTile label={t('brain.stats.done')} icon={CheckCircle2} value={data.totals.concluidas} caption={t('brain.stats.doneCaption')} />
           <StatTile
-            label="Inbox pendente"
+            label={t('brain.stats.inbox')}
             icon={Inbox}
             value={data.totals.inbox}
-            caption={data.totals.inbox === 0 ? 'nada esperando triagem' : 'esperando triagem'}
+            caption={data.totals.inbox === 0 ? t('brain.stats.inboxCaptionEmpty') : t('brain.stats.inboxCaption')}
           />
         </div>
       </section>
 
       <section>
-        <SectionHeading icon={Brain}>Pipeline de estudo</SectionHeading>
+        <SectionHeading icon={Brain}>{t('brain.pipelineSection.heading')}</SectionHeading>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <Panel title="Funil de status" subtitle="onde as notas estão no ciclo de estudo">
+          <Panel title={t('brain.pipelineSection.statusFunnel.title')} subtitle={t('brain.pipelineSection.statusFunnel.subtitle')}>
             <StatusFunnel statuses={data.statuses} />
           </Panel>
-          <Panel title="Notas por categoria" subtitle="volume de conhecimento por área">
+          <Panel title={t('brain.pipelineSection.categoryVolume.title')} subtitle={t('brain.pipelineSection.categoryVolume.subtitle')}>
             <CategoryVolumeBars />
           </Panel>
         </div>
       </section>
 
       <section>
-        <SectionHeading icon={PenLine}>Atividade</SectionHeading>
+        <SectionHeading icon={PenLine}>{t('brain.activitySection.heading')}</SectionHeading>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <div className="rounded-xl border bg-card p-4 shadow-sm">
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div>
-                <h3 className="text-sm font-medium">Atividade de escrita por semana</h3>
-                <p className="mt-0.5 text-xs text-muted-foreground">está estudando de verdade ou só acumulando?</p>
+                <h3 className="text-sm font-medium">{t('brain.activitySection.writingChart.title')}</h3>
+                <p className="mt-0.5 text-xs text-muted-foreground">{t('brain.activitySection.writingChart.subtitle')}</p>
               </div>
               <div className="flex gap-4">
-                <Swatch color={BLUE} label="Criadas" />
-                <Swatch color={SLATE} label="Atualizadas" />
+                <Swatch color={BLUE} label={t('brain.activitySection.writingChart.createdLabel')} />
+                <Swatch color={SLATE} label={t('brain.activitySection.writingChart.updatedLabel')} />
               </div>
             </div>
             <div className="mt-4">
@@ -1147,8 +1168,8 @@ function CerebroTab({ from, to }: { from: string; to: string }) {
             </div>
           </div>
           <Panel
-            title="Backlog do inbox"
-            subtitle={`${data.totals.inbox} pendente${data.totals.inbox === 1 ? '' : 's'} · agrupado pela semana em que entrou`}
+            title={t('brain.activitySection.inboxBacklog.title')}
+            subtitle={t('brain.activitySection.inboxBacklog.subtitle', { count: data.totals.inbox })}
           >
             <InboxBacklogChart weekly={data.inboxWeekly} pending={data.totals.inbox} />
           </Panel>
@@ -1159,6 +1180,7 @@ function CerebroTab({ from, to }: { from: string; to: string }) {
 }
 
 export default function Dashboards() {
+  const { t } = useTranslation(['dashboards', 'common'])
   const [period, setPeriod] = useState<string>('30d')
   const { from, to } = useMemo(() => rangeForDays(daysForKey(period)), [period])
   const { isEnabled } = useEnabledModules()
@@ -1172,7 +1194,7 @@ export default function Dashboards() {
   const [tab, setTab] = useState<string>(defaultTab)
 
   return (
-    <AppLayout title="Dashboards">
+    <AppLayout title={t('common:nav.dashboards')}>
       <main className="min-h-0 flex-1 overflow-auto p-4 md:p-6">
         <div className="mx-auto w-full max-w-[1400px] space-y-6">
           <Tabs value={tab} onValueChange={setTab}>
@@ -1180,22 +1202,22 @@ export default function Dashboards() {
               <TabsList>
                 {habitsEnabled && (
                   <TabsTrigger value="habitos">
-                    <Repeat className="h-3.5 w-3.5" /> Hábitos
+                    <Repeat className="h-3.5 w-3.5" /> {t('common:nav.habits')}
                   </TabsTrigger>
                 )}
                 {tasksEnabled && (
                   <TabsTrigger value="tarefas">
-                    <Kanban className="h-3.5 w-3.5" /> Tarefas
+                    <Kanban className="h-3.5 w-3.5" /> {t('common:nav.tasks')}
                   </TabsTrigger>
                 )}
                 {brainEnabled && (
                   <TabsTrigger value="cerebro">
-                    <Brain className="h-3.5 w-3.5" /> Cérebro
+                    <Brain className="h-3.5 w-3.5" /> {t('common:nav.brain')}
                   </TabsTrigger>
                 )}
               </TabsList>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">Período</span>
+                <span className="text-xs text-muted-foreground">{t('dashboards:periodLabel')}</span>
                 <PeriodFilter value={period} onChange={setPeriod} />
               </div>
             </div>

@@ -1,1 +1,180 @@
-export default {} as const
+export default {
+  periodLabel: 'Period',
+  units: {
+    days: '{{value}}d',
+  },
+  charts: {
+    noData: 'No data in the period.',
+    weekOf: 'Week of {{date}}',
+  },
+  tasks: {
+    highlights: {
+      heading: 'Task highlights',
+      deltaCaption: 'delta vs previous period',
+    },
+    stats: {
+      completed: 'Completed tasks',
+      completedCaption: 'raw throughput for the period',
+      netFlow: 'Net flow',
+      netFlowCaption: 'completed − created',
+      overdue: 'Overdue tasks',
+      overdueCaption: 'live · oldest {{value}}',
+      cycleTime: 'Median cycle time',
+      cycleTimeCaption: 'created → completed · median',
+      cycleTimeEmpty: '—',
+    },
+    flowSection: {
+      heading: 'Task flow',
+      weeklyChart: {
+        title: 'Created vs completed per week',
+        subtitle: 'throughput vs intake · shaded weeks = completed < created',
+        createdLabel: 'Created',
+        completedLabel: 'Completed',
+        tooltip: 'Week of {{date}} · created {{created}} · completed {{completed}}',
+      },
+      categoryDonut: {
+        title: 'Open work by category',
+        subtitle: 'where the backlog is concentrated',
+        empty: 'Nothing open right now.',
+        openLabel: 'open',
+      },
+      agingWip: {
+        title: 'Oldest open tasks',
+        subtitle: 'aging WIP · act or kill',
+        empty: 'No open tasks.',
+        legendOver7: '> 7 days',
+        legendOver30: '> 30 days',
+      },
+    },
+    dueSection: {
+      heading: 'Due dates',
+      dueSoon: {
+        title: 'Due soon — next 7 days',
+        subtitle: 'open items with a date on the horizon · overdue highlighted',
+        overdueSwatch: 'Overdue',
+        upcomingSwatch: 'Upcoming',
+        overdueShort: 'Overdue',
+        today: 'Today',
+      },
+      noDueDate: {
+        title: 'Open work without a date',
+        subtitle: 'due-date hygiene',
+        caption: '{{count}} of {{total}} open with no date',
+        hint: 'invisible to every due-date view — explains the "on time" denominator.',
+      },
+      onTimeRate: {
+        title: 'On-time completion rate',
+        subtitle: 'of tasks with a date · denominator always visible',
+        caption: 'on time · n={{total}}',
+        onTimeTitle: 'On time {{rate}}%',
+        lateTitle: 'Late {{rate}}%',
+        onTimeSwatch: 'On time ({{count}})',
+        lateSwatch: 'Late ({{count}})',
+      },
+      overdueHistogram: {
+        title: 'Overdue by age',
+        subtitle: 'fresh slip vs chronic rot',
+        buckets: {
+          '1-3': '1–3d',
+          '4-7': '4–7d',
+          '8-30': '8–30d',
+          '30+': '30d+',
+        },
+      },
+    },
+    heatmap: {
+      heading: 'Completion heatmap',
+      title: 'Tasks completed per day',
+    },
+  },
+  habits: {
+    highlights: {
+      heading: 'Habit highlights',
+    },
+    stats: {
+      perfectDays: 'Perfect days',
+      perfectDaysCaption: 'current {{current}} · record {{record}}',
+      consistency: 'Consistency',
+      consistencyCaption: 'done/required per day · period average',
+      avgAdherence: 'Average adherence',
+      avgAdherenceCaption: 'average of all habit targets',
+      activeHabits: 'Active habits',
+      activeHabitsCaption: 'being tracked',
+    },
+    consistencySection: {
+      heading: 'Consistency & adherence',
+      chart: {
+        title: 'Daily consistency',
+        subtitle: '% done/required per day · 7-day moving average · average reference line',
+        movingAverageLegend: '7-day moving average',
+        dailyLegend: 'Daily %',
+        averageLegend: 'Period average',
+        averageLabel: 'average {{value}}%',
+        tooltip: 'daily {{pct}}% · 7d average {{avg}}%',
+      },
+      radar: {
+        title: 'Adherence radar per habit',
+        subtitle: '% adherence to target in the period',
+      },
+      streaks: {
+        title: 'Streak per habit',
+        subtitle: 'current momentum vs record · broken streak in red',
+        empty: 'No active habits.',
+        current: 'current',
+        record: 'record',
+      },
+    },
+    heatmap: {
+      heading: 'Completion heatmap',
+      title: 'Habits completed per day',
+    },
+  },
+  brain: {
+    highlights: {
+      heading: 'Brain highlights',
+    },
+    stats: {
+      notes: 'Notes in vault',
+      notesCaption: 'all categories',
+      studying: 'Studying',
+      studyingCaption: 'studying status',
+      done: 'Done',
+      doneCaption: 'study finished',
+      inbox: 'Pending inbox',
+      inboxCaptionEmpty: 'nothing waiting for triage',
+      inboxCaption: 'waiting for triage',
+    },
+    pipelineSection: {
+      heading: 'Study pipeline',
+      statusFunnel: {
+        title: 'Status funnel',
+        subtitle: 'where notes sit in the study cycle',
+        empty: 'No notes yet.',
+        noStatus: 'No status',
+      },
+      categoryVolume: {
+        title: 'Notes by category',
+        subtitle: 'volume of knowledge by area',
+        empty: 'No categories.',
+      },
+    },
+    activitySection: {
+      heading: 'Activity',
+      writingChart: {
+        title: 'Writing activity per week',
+        subtitle: 'really studying, or just piling up?',
+        createdLabel: 'Created',
+        updatedLabel: 'Updated',
+        tooltip: 'Week of {{date}} · created {{created}} · updated {{updated}}',
+      },
+      inboxBacklog: {
+        title: 'Inbox backlog',
+        subtitle_one: '{{count}} pending · grouped by the week it entered',
+        subtitle_other: '{{count}} pending · grouped by the week it entered',
+        empty: 'Inbox clear. Nothing waiting.',
+        outOfWindow_one: '{{count}} pending, but outside the selected window — widen the period.',
+        outOfWindow_other: '{{count}} pending, but outside the selected window — widen the period.',
+      },
+    },
+  },
+} as const
