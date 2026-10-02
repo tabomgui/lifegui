@@ -1,9 +1,11 @@
 import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { CalendarCog, CircleCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useFormat } from '@/i18n/format'
 import { useCalendarStatus, useDisconnectCalendar } from '@/hooks/use-calendar'
 import { CalendarCredentialsHint } from '@/components/calendar/calendar-credentials-hint'
 
@@ -12,6 +14,8 @@ import { CalendarCredentialsHint } from '@/components/calendar/calendar-credenti
  * O callback do backend volta pra cá com ?calendar=connected|mismatch|error.
  */
 export function CalendarSettings() {
+  const { t } = useTranslation(['settings', 'common'])
+  const { date } = useFormat()
   const { data, isLoading } = useCalendarStatus()
   const disconnect = useDisconnectCalendar()
   const qc = useQueryClient()
@@ -21,16 +25,16 @@ export function CalendarSettings() {
     const result = params.get('calendar')
     if (!result) return
     if (result === 'connected') {
-      toast.success('Google Calendar conectado')
+      toast.success(t('calendar.toast.connected'))
       qc.invalidateQueries({ queryKey: ['calendar'] })
     } else if (result === 'mismatch') {
-      toast.error('Use a mesma conta Google do seu login')
+      toast.error(t('calendar.toast.mismatch'))
     } else {
-      toast.error('Não foi possível conectar o Google Calendar')
+      toast.error(t('calendar.toast.connectError'))
     }
     params.delete('calendar')
     setParams(params, { replace: true })
-  }, [params, setParams, qc])
+  }, [params, setParams, qc, t])
 
   return (
     <div className="rounded-lg border p-4">
@@ -40,20 +44,17 @@ export function CalendarSettings() {
         </div>
         <div className="min-w-0 flex-1 space-y-3">
           <div>
-            <div className="text-sm font-semibold">Google Calendar</div>
-            <div className="text-sm text-muted-foreground">
-              Agende estudos, hábitos e tarefas direto no seu calendário. O Google é a fonte
-              da verdade — o lifegui lê e escreve na sua agenda, sem cópia local.
-            </div>
+            <div className="text-sm font-semibold">{t('calendar.title')}</div>
+            <div className="text-sm text-muted-foreground">{t('calendar.description')}</div>
           </div>
           {isLoading ? (
-            <p className="text-xs text-muted-foreground">Carregando…</p>
+            <p className="text-xs text-muted-foreground">{t('common:states.loading')}</p>
           ) : data?.connected ? (
             <div className="flex flex-wrap items-center gap-3">
               <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
                 <CircleCheck className="h-3.5 w-3.5 text-emerald-500" />
-                Conectado
-                {data.connected_at && <> desde {new Date(data.connected_at).toLocaleDateString('pt-BR')}</>}
+                {t('calendar.connected')}
+                {data.connected_at && <> {t('calendar.connectedSince', { date: date(data.connected_at) })}</>}
               </span>
               <Button
                 size="sm"
@@ -63,13 +64,13 @@ export function CalendarSettings() {
                 onClick={async () => {
                   try {
                     await disconnect.mutateAsync()
-                    toast.success('Google Calendar desconectado')
+                    toast.success(t('calendar.toast.disconnected'))
                   } catch {
-                    toast.error('Não foi possível desconectar')
+                    toast.error(t('calendar.toast.disconnectError'))
                   }
                 }}
               >
-                Desconectar
+                {t('calendar.disconnect')}
               </Button>
             </div>
           ) : data?.configured ? (
@@ -78,7 +79,7 @@ export function CalendarSettings() {
               className="h-8"
               onClick={() => { window.location.href = '/api/auth/google-calendar/redirect' }}
             >
-              Conectar Google Calendar
+              {t('calendar.connect')}
             </Button>
           ) : (
             <CalendarCredentialsHint />

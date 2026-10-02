@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Copy, Smartphone, Trash2 } from 'lucide-react'
 import { api, csrf } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { useFormat } from '@/i18n/format'
 import { useEnabledModules } from '@/hooks/use-modules'
 
 interface ApiToken {
@@ -15,10 +17,12 @@ interface ApiToken {
 }
 
 export function CaptureSettings() {
+  const { t } = useTranslation(['settings', 'common'])
+  const { dateTime } = useFormat()
   const { isEnabled } = useEnabledModules()
   const enabled = isEnabled('brain')
   const qc = useQueryClient()
-  const [name, setName] = useState('Atalho iPhone')
+  const [name, setName] = useState<string>(t('capture.defaultTokenName'))
   // Token recém-criado: aparece uma única vez (o servidor guarda só o hash).
   const [fresh, setFresh] = useState<string | null>(null)
 
@@ -37,7 +41,7 @@ export function CaptureSettings() {
       setFresh(data.token)
       qc.invalidateQueries({ queryKey: ['tokens'] })
     },
-    onError: () => toast.error('Não foi possível gerar o token'),
+    onError: () => toast.error(t('capture.toast.createError')),
   })
 
   const revoke = useMutation({
@@ -47,9 +51,9 @@ export function CaptureSettings() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tokens'] })
-      toast.success('Token revogado')
+      toast.success(t('capture.toast.revoked'))
     },
-    onError: () => toast.error('Não foi possível revogar'),
+    onError: () => toast.error(t('capture.toast.revokeError')),
   })
 
   if (!enabled) return null
@@ -58,9 +62,9 @@ export function CaptureSettings() {
     if (!fresh) return
     try {
       await navigator.clipboard.writeText(fresh)
-      toast.success('Token copiado')
+      toast.success(t('capture.toast.copied'))
     } catch {
-      toast.error('Selecione e copie manualmente')
+      toast.error(t('capture.toast.copyError'))
     }
   }
 
@@ -72,11 +76,8 @@ export function CaptureSettings() {
         </div>
         <div className="min-w-0 flex-1 space-y-3">
           <div>
-            <div className="text-sm font-semibold">Captura pelo celular</div>
-            <div className="text-sm text-muted-foreground">
-              Tokens pro Atalho do iOS mandarem conteúdo direto pro Inbox do Cérebro.
-              Cada token só consegue capturar — nada mais.
-            </div>
+            <div className="text-sm font-semibold">{t('capture.title')}</div>
+            <div className="text-sm text-muted-foreground">{t('capture.description')}</div>
           </div>
 
           <form
@@ -86,22 +87,22 @@ export function CaptureSettings() {
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Nome do token"
-              aria-label="Nome do token"
+              placeholder={t('capture.tokenNamePlaceholder')}
+              aria-label={t('capture.tokenNamePlaceholder')}
               className="h-9"
             />
             <Button type="submit" size="sm" className="h-9" disabled={create.isPending || !name.trim()}>
-              Gerar token
+              {t('capture.generate')}
             </Button>
           </form>
 
           {fresh && (
             <div className="space-y-1.5 rounded-md border border-amber-500/40 bg-amber-500/5 p-3">
-              <p className="text-xs font-medium">Copie agora — ele não aparece de novo:</p>
+              <p className="text-xs font-medium">{t('capture.copyNowWarning')}</p>
               <div className="flex items-center gap-2">
                 <code className="min-w-0 flex-1 break-all rounded bg-muted px-2 py-1 text-xs">{fresh}</code>
                 <Button type="button" size="sm" variant="outline" className="h-8 shrink-0" onClick={copy}>
-                  <Copy className="mr-1 h-3.5 w-3.5" /> Copiar
+                  <Copy className="mr-1 h-3.5 w-3.5" /> {t('common:actions.copy')}
                 </Button>
               </div>
             </div>
@@ -109,14 +110,14 @@ export function CaptureSettings() {
 
           {tokens.length > 0 && (
             <div className="space-y-1.5">
-              {tokens.map((t) => (
-                <div key={t.id} className="flex items-center justify-between gap-2 rounded-md border px-3 py-2">
+              {tokens.map((tk) => (
+                <div key={tk.id} className="flex items-center justify-between gap-2 rounded-md border px-3 py-2">
                   <div className="min-w-0">
-                    <p className="truncate text-sm">{t.name}</p>
+                    <p className="truncate text-sm">{tk.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {t.last_used_at
-                        ? `usado em ${new Date(t.last_used_at).toLocaleString('pt-BR')}`
-                        : 'nunca usado'}
+                      {tk.last_used_at
+                        ? t('capture.lastUsed', { date: dateTime(tk.last_used_at) })
+                        : t('capture.neverUsed')}
                     </p>
                   </div>
                   <Button
@@ -124,8 +125,8 @@ export function CaptureSettings() {
                     size="sm"
                     variant="ghost"
                     className="h-8 shrink-0 text-muted-foreground hover:text-destructive"
-                    aria-label={`Revogar ${t.name}`}
-                    onClick={() => revoke.mutate(t.id)}
+                    aria-label={t('capture.revoke', { name: tk.name })}
+                    onClick={() => revoke.mutate(tk.id)}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
