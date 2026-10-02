@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { AppLayout } from '@/components/app-layout'
 import { CategoryTabs } from '@/components/category-tabs'
 import type { TaskTab } from '@/components/category-tabs'
@@ -20,6 +21,7 @@ function matchesSearch(task: Task, needle: string): boolean {
 }
 
 export default function Dashboard() {
+  const { t } = useTranslation(['common', 'tasks'])
   const { data: tasks = [], isLoading, isError } = useTasks()
   const [activeCat, setActiveCat] = useState<TaskTab>('all')
   const [search, setSearch] = useState('')
@@ -36,14 +38,14 @@ export default function Dashboard() {
   }, [tasks, activeCat, search])
 
   return (
-    <AppLayout title="Tarefas">
+    <AppLayout title={t('common:nav.tasks')}>
       <main className="flex min-h-0 flex-1 flex-col">
         <BrainDump activeCategoryId={typeof activeCat === 'number' ? activeCat : null} />
         <CategoryTabs active={activeCat} onChange={setActiveCat} search={search} onSearchChange={setSearch} />
         {isError
-          ? <div className="flex flex-1 items-center justify-center text-muted-foreground">Não foi possível carregar as tarefas.</div>
+          ? <div className="flex flex-1 items-center justify-center text-muted-foreground">{t('tasks:loadError')}</div>
           : isLoading
-            ? <div className="flex flex-1 items-center justify-center text-muted-foreground">Carregando…</div>
+            ? <div className="flex flex-1 items-center justify-center text-muted-foreground">{t('common:states.loading')}</div>
             : <KanbanBoard tasks={visible} />}
       </main>
     </AppLayout>

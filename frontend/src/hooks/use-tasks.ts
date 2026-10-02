@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { api, csrf } from '@/lib/api'
+import i18n from '@/i18n'
 import type { Subtask, Task, TaskStatus } from '@/types/api'
 
 const KEY = ['tasks']
@@ -218,16 +219,16 @@ export function useDeferredDeleteTask() {
           await api.delete(`/tasks/${task.id}`)
         } catch {
           if (prev) qc.setQueryData(KEY, prev)
-          toast.error('Não foi possível apagar')
+          toast.error(i18n.t('tasks:toast.deleteError'))
         } finally {
           qc.invalidateQueries({ queryKey: KEY })
         }
       }, 5000)
 
-      toast('Tarefa apagada', {
+      toast(i18n.t('tasks:toast.deleted'), {
         duration: 5000,
         action: {
-          label: 'Desfazer',
+          label: i18n.t('common:actions.undo'),
           onClick: () => {
             cancelled = true
             clearTimeout(timer)

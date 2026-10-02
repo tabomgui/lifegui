@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { CheckSquare, Loader2, Plus, Square, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -13,6 +14,7 @@ import { ScheduleSection } from '@/components/calendar/schedule-section'
 import type { Subtask } from '@/types/api'
 
 function SubtaskRow({ taskId, subtask }: { taskId: number; subtask: Subtask }) {
+  const { t } = useTranslation('tasks')
   const updateSubtask = useUpdateSubtask()
   const deleteSubtask = useDeleteSubtask()
 
@@ -21,7 +23,7 @@ function SubtaskRow({ taskId, subtask }: { taskId: number; subtask: Subtask }) {
       <button
         type="button"
         aria-pressed={subtask.done}
-        aria-label={subtask.done ? `Marcar "${subtask.title}" como não feita` : `Marcar "${subtask.title}" como feita`}
+        aria-label={subtask.done ? t('subtasks.markUndone', { title: subtask.title }) : t('subtasks.markDone', { title: subtask.title })}
         onClick={() => updateSubtask.mutate({ taskId, subtaskId: subtask.id, done: !subtask.done })}
         className="shrink-0 rounded p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground">
         {subtask.done ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
@@ -31,7 +33,7 @@ function SubtaskRow({ taskId, subtask }: { taskId: number; subtask: Subtask }) {
       </span>
       <button
         type="button"
-        aria-label={`Remover subtarefa "${subtask.title}"`}
+        aria-label={t('subtasks.remove', { title: subtask.title })}
         onClick={() => deleteSubtask.mutate({ taskId, subtaskId: subtask.id })}
         className="shrink-0 rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground">
         <X className="h-3.5 w-3.5" />
@@ -41,6 +43,7 @@ function SubtaskRow({ taskId, subtask }: { taskId: number; subtask: Subtask }) {
 }
 
 function SubtasksSection({ taskId, subtasks }: { taskId: number; subtasks: Subtask[] }) {
+  const { t } = useTranslation('tasks')
   const addSubtask = useAddSubtask()
   const [newTitle, setNewTitle] = useState('')
 
@@ -57,7 +60,7 @@ function SubtasksSection({ taskId, subtasks }: { taskId: number; subtasks: Subta
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <Label>Subtarefas</Label>
+        <Label>{t('subtasks.label')}</Label>
         <span className="text-xs text-muted-foreground">{done}/{total}</span>
       </div>
       <div className="max-h-48 space-y-0.5 overflow-y-auto">
@@ -75,10 +78,10 @@ function SubtasksSection({ taskId, subtasks }: { taskId: number; subtasks: Subta
               onAdd()
             }
           }}
-          placeholder="Nova subtarefa"
-          aria-label="Nova subtarefa"
+          placeholder={t('subtasks.newPlaceholder')}
+          aria-label={t('subtasks.newPlaceholder')}
         />
-        <Button type="button" size="icon" variant="outline" aria-label="Adicionar subtarefa" onClick={onAdd}>
+        <Button type="button" size="icon" variant="outline" aria-label={t('subtasks.addAria')} onClick={onAdd}>
           <Plus className="h-4 w-4" />
         </Button>
       </div>
@@ -89,6 +92,7 @@ function SubtasksSection({ taskId, subtasks }: { taskId: number; subtasks: Subta
 export function TaskDialog({
   taskId, open, onOpenChange,
 }: { taskId: number | null; open: boolean; onOpenChange: (o: boolean) => void }) {
+  const { t } = useTranslation(['tasks', 'common'])
   const { data: task, isPending } = useTaskDetail(open ? taskId : null)
   const { data: categories = [] } = useCategories()
   const updateTask = useUpdateTask()
@@ -111,7 +115,7 @@ export function TaskDialog({
 
   async function onSave() {
     if (!task) return
-    if (!title.trim()) return toast.error('Dê um título à tarefa')
+    if (!title.trim()) return toast.error(t('taskDialog.titleRequired'))
     try {
       await updateTask.mutateAsync({
         id: task.id,
@@ -120,17 +124,17 @@ export function TaskDialog({
         due_date: dueDate || null,
         category_id: categoryId ? Number(categoryId) : null,
       })
-      toast.success('Tarefa salva')
+      toast.success(t('taskDialog.saved'))
       onOpenChange(false)
     } catch {
-      toast.error('Não foi possível salvar a tarefa')
+      toast.error(t('taskDialog.saveError'))
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogHeader><DialogTitle>Editar tarefa</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{t('taskDialog.editTitle')}</DialogTitle></DialogHeader>
         {isPending || !task ? (
           <div className="flex items-center justify-center py-10 text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -139,16 +143,16 @@ export function TaskDialog({
           <form onSubmit={(e) => { e.preventDefault(); onSave() }}>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="task-title">Título</Label>
+                <Label htmlFor="task-title">{t('taskDialog.titleLabel')}</Label>
                 <Input id="task-title" value={title} onChange={(e) => setTitle(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="task-notes">Descrição</Label>
+                <Label htmlFor="task-notes">{t('taskDialog.descriptionLabel')}</Label>
                 <Textarea id="task-notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="task-due">Prazo</Label>
+                  <Label htmlFor="task-due">{t('taskDialog.dueLabel')}</Label>
                   <input
                     id="task-due"
                     type="date"
@@ -158,13 +162,13 @@ export function TaskDialog({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="task-category">Categoria</Label>
+                  <Label htmlFor="task-category">{t('taskDialog.categoryLabel')}</Label>
                   <select
                     id="task-category"
                     value={categoryId}
                     onChange={(e) => setCategoryId(e.target.value)}
                     className="border-input flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50">
-                    <option value="">Sem categoria</option>
+                    <option value="">{t('card.noCategory')}</option>
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
@@ -176,7 +180,7 @@ export function TaskDialog({
               <ScheduleSection type="task" refId={String(task.id)} title={task.title} />
             </div>
             <DialogFooter className="mt-4">
-              <Button type="submit" disabled={updateTask.isPending}>Salvar</Button>
+              <Button type="submit" disabled={updateTask.isPending}>{t('common:actions.save')}</Button>
             </DialogFooter>
           </form>
         )}
