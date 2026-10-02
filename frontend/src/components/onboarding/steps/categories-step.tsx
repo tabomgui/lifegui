@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type * as React from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { useCategories, useCreateCategory } from '@/hooks/use-categories'
 import { Button } from '@/components/ui/button'
@@ -9,6 +10,7 @@ import { SuggestionChip } from '@/components/onboarding/suggestion-chip'
 import { CATEGORY_SUGGESTIONS, nameKey } from '@/components/onboarding/suggestions'
 
 export function CategoriesStep() {
+  const { t } = useTranslation(['onboarding'])
   const { data: categories = [], isSuccess } = useCategories()
   const create = useCreateCategory()
   const [custom, setCustom] = useState('')
@@ -20,7 +22,7 @@ export function CategoriesStep() {
       await create.mutateAsync({ name, icon, color })
       return true
     } catch {
-      toast.error(`Não foi possível criar "${name}"`)
+      toast.error(t('errors.createFailed', { name }))
       return false
     }
   }
@@ -34,35 +36,41 @@ export function CategoriesStep() {
 
   return (
     <div className="space-y-4">
-      <StepHeader
-        title="Categorias de tarefas"
-        description="Cada categoria vira uma aba do quadro de tarefas. Toque para adicionar."
-      />
+      <StepHeader title={t('categories.title')} description={t('categories.description')} />
       <div className="flex flex-wrap gap-2">
-        {CATEGORY_SUGGESTIONS.map((s) => (
-          <SuggestionChip
-            key={s.name}
-            label={s.name}
-            icon={s.icon}
-            color={s.color}
-            added={existing.has(nameKey(s.name))}
-            disabled={create.isPending || !isSuccess}
-            onAdd={() => add(s.name, s.icon, s.color)}
-          />
-        ))}
+        {CATEGORY_SUGGESTIONS.map((s) => {
+          // Nome traduzido é o valor enviado à API e a base da comparação de "já adicionado".
+          const label = t(`suggestions.categories.${s.key}`)
+          return (
+            <SuggestionChip
+              key={s.key}
+              label={label}
+              icon={s.icon}
+              color={s.color}
+              added={existing.has(nameKey(label))}
+              disabled={create.isPending || !isSuccess}
+              onAdd={() => add(label, s.icon, s.color)}
+            />
+          )
+        })}
       </div>
       <form onSubmit={onCustom} className="flex gap-2">
-        <Input value={custom} onChange={(e) => setCustom(e.target.value)} placeholder="Outra categoria" maxLength={255} />
+        <Input
+          value={custom}
+          onChange={(e) => setCustom(e.target.value)}
+          placeholder={t('categories.customPlaceholder')}
+          maxLength={255}
+        />
         <Button
           type="submit"
           variant="outline"
           disabled={!custom.trim() || create.isPending || !isSuccess || existing.has(customKey)}
         >
-          Adicionar
+          {t('actions.add')}
         </Button>
       </form>
       {categories.length > 0 && (
-        <p className="text-xs text-muted-foreground">{categories.length} categoria(s) no quadro.</p>
+        <p className="text-xs text-muted-foreground">{t('categories.count', { count: categories.length })}</p>
       )}
     </div>
   )

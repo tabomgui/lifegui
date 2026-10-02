@@ -1,1 +1,95 @@
-export default {} as const
+export default {
+  dialog: {
+    title: 'Initial setup',
+    description: 'Step {{current}} of {{total}}: {{step}}',
+  },
+  steps: {
+    welcome: 'Start',
+    modules: 'Modules',
+    categories: 'Categories',
+    habits: 'Habits',
+    integrations: 'Integrations',
+    done: 'Done',
+  },
+  actions: {
+    skip: 'Skip setup',
+    start: 'Start',
+    add: 'Add',
+  },
+  errors: {
+    finish: 'Could not finish. Try again.',
+    createFailed: 'Could not create "{{name}}"',
+  },
+  welcome: {
+    title: 'Welcome',
+    titleWithName: 'Welcome, {{name}}',
+    description:
+      'lifegui brings tasks, habits, notes and calendar together in one place. In a few steps you choose what to use and you are ready to go.',
+  },
+  modules: {
+    title: 'Choose your modules',
+    description: 'Enable only what makes sense now. You can change it later in Settings.',
+    loadError: 'Could not load the modules.',
+    toggleLabel: 'Enable {{label}}',
+    enableError: 'Could not enable {{label}}',
+    disableError: 'Could not disable {{label}}',
+    vaultError: 'Brain enabled, but the vault was not created. Try again in Settings.',
+  },
+  categories: {
+    title: 'Task categories',
+    description: 'Each category becomes a tab on the task board. Tap to add.',
+    customPlaceholder: 'Another category',
+    count_one: '{{count}} category on the board.',
+    count_other: '{{count}} categories on the board.',
+  },
+  habits: {
+    title: 'Habits',
+    description: 'Pick a few to start and adjust the weekly goal.',
+    timesPerWeek: '{{count}}x/week',
+    decreaseTarget: 'Decrease goal',
+    increaseTarget: 'Increase goal',
+    added: 'Added',
+  },
+  integrations: {
+    title: 'Integrations',
+    description: 'Optional. You can set these up later in Settings.',
+    calendarTitle: 'Google Calendar',
+    calendarDescription: 'Schedule tasks, habits and study sessions straight into your calendar.',
+    connected: 'Connected',
+    connectCalendar: 'Connect Google Calendar',
+    mcpTitle: 'AI assistants (MCP)',
+    mcpDescription: 'Connect claude.ai, Claude Code or ChatGPT to talk to your tasks, habits and notes.',
+    urlCopied: 'URL copied',
+    copyError: 'Could not copy',
+    mcpHint: 'In claude.ai, add a custom connector with this URL. In Claude Code:',
+  },
+  done: {
+    title: 'All set',
+    modulesActive: 'Active modules: {{modules}}.',
+    noModules: 'none',
+    categoriesCount_one: '{{count}} task category',
+    categoriesCount_other: '{{count}} task categories',
+    habitsCount_one: '{{count}} habit',
+    habitsCount_other: '{{count}} habits',
+  },
+  settingsCard: {
+    title: 'Introduction',
+    description: 'Reopen the initial setup assistant.',
+    replay: 'Review introduction',
+  },
+  suggestions: {
+    categories: {
+      work: 'Work',
+      personal: 'Personal',
+      studies: 'Studies',
+      home: 'Home',
+      health: 'Health',
+    },
+    habits: {
+      read: 'Read',
+      exercise: 'Exercise',
+      meditate: 'Meditate',
+      water: 'Drink water',
+    },
+  },
+} as const

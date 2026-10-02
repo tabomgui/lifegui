@@ -1,8 +1,10 @@
 import { Sparkles } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { useOnboarding } from '@/contexts/onboarding-context'
 
 export function OnboardingSettings() {
+  const { t } = useTranslation(['onboarding'])
   const { replay } = useOnboarding()
   return (
     <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
@@ -11,12 +13,12 @@ export function OnboardingSettings() {
           <Sparkles className="h-4 w-4" />
         </div>
         <div className="min-w-0">
-          <div className="text-sm font-semibold">Introdução</div>
-          <div className="text-sm text-muted-foreground">Reabra o assistente de configuração inicial.</div>
+          <div className="text-sm font-semibold">{t('settingsCard.title')}</div>
+          <div className="text-sm text-muted-foreground">{t('settingsCard.description')}</div>
         </div>
       </div>
       <Button size="sm" variant="outline" className="h-8" onClick={replay}>
-        Rever introdução
+        {t('settingsCard.replay')}
       </Button>
     </div>
   )
