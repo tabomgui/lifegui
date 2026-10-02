@@ -13,7 +13,6 @@ export default {
     description:
       'Agende estudos, hábitos e tarefas direto no seu calendário. O Google é a fonte ' +
       'da verdade — o lifegui lê e escreve na sua agenda, sem cópia local.',
-    loading: 'Carregando…',
     connected: 'Conectado',
     connectedSince: 'desde {{date}}',
     disconnect: 'Desconectar',

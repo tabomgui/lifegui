@@ -10,7 +10,6 @@ export default {
     description:
       'Schedule studies, habits and tasks straight into your calendar. Google is the source ' +
       'of truth — lifegui reads and writes to your calendar, with no local copy.',
-    loading: 'Loading…',
     connected: 'Connected',
     connectedSince: 'since {{date}}',
     disconnect: 'Disconnect',
@@ -32,7 +31,7 @@ export default {
     tokenNamePlaceholder: 'Token name',
     generate: 'Generate token',
     copyNowWarning: "Copy it now — it won't show again:",
-    lastUsed: 'used {{date}}',
+    lastUsed: 'last used {{date}}',
     neverUsed: 'never used',
     revoke: 'Revoke {{name}}',
     toast: {
@@ -59,12 +58,12 @@ export default {
     scopeNote: 'Applies to the whole instance.',
     pathLabel: 'Vaults root',
     pathDefault: 'default: {{path}}',
-    pathExample: 'e.g.: /vaults',
+    pathExample: 'e.g. /vaults',
     yourVault: 'Your vault:',
     rootExistsPrefix: "The root exists, but your vault (",
     rootExistsSuffix: ") doesn't exist yet.",
     rootMissingPrefix: 'The root',
-    rootMissingSuffix: 'does not exist on the server.',
+    rootMissingSuffix: "doesn't exist on the server.",
     toast: {
       saved: 'Settings saved',
       invalidPath: 'Invalid path: use an absolute path (starting with /)',

@@ -33,18 +33,18 @@ function TaskCategoryMenu({ task }: { task: Task }) {
       <DropdownMenuTrigger asChild>
         <button
           aria-label={current ? t('card.categoryAria', { name: current.name }) : t('card.setCategoryAria')}
-          title={current ? current.name : t('card.noCategory')}
+          title={current ? current.name : t('category.none')}
           className="flex items-center gap-1 rounded px-1.5 py-1 text-xs text-muted-foreground hover:bg-accent">
           {current
             ? <DynamicIcon name={current.icon} className="h-3.5 w-3.5" style={{ color: current.color }} />
             : <CircleDashed className="h-3.5 w-3.5" />}
-          <span className="max-w-20 truncate">{current ? current.name : t('card.noCategory')}</span>
+          <span className="max-w-20 truncate">{current ? current.name : t('category.none')}</span>
           <ChevronDown className="h-3 w-3" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
         <DropdownMenuItem onClick={() => updateCategory.mutate({ id: task.id, category_id: null })}>
-          <CircleDashed className="h-3.5 w-3.5" /> {t('card.noCategory')}
+          <CircleDashed className="h-3.5 w-3.5" /> {t('category.none')}
         </DropdownMenuItem>
         {categories.map((c) => (
           <DropdownMenuItem key={c.id} onClick={() => updateCategory.mutate({ id: task.id, category_id: c.id })}>

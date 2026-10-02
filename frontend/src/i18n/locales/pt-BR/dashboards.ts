@@ -9,11 +9,11 @@ export default {
   charts: {
     noData: 'Sem dados no período.',
     weekOf: 'Semana de {{date}}',
+    deltaCaption: 'delta vs período anterior',
   },
   tasks: {
     highlights: {
       heading: 'Destaques de tarefas',
-      deltaCaption: 'delta vs período anterior',
     },
     stats: {
       completed: 'Tarefas concluídas',
@@ -71,8 +71,8 @@ export default {
         caption: 'no prazo · n={{total}}',
         onTimeTitle: 'No prazo {{rate}}%',
         lateTitle: 'Fora do prazo {{rate}}%',
-        onTimeSwatch: 'No prazo ({{count}})',
-        lateSwatch: 'Fora do prazo ({{count}})',
+        onTimeSwatch: 'No prazo ({{n}})',
+        lateSwatch: 'Fora do prazo ({{n}})',
       },
       overdueHistogram: {
         title: 'Atrasadas por tempo de atraso',

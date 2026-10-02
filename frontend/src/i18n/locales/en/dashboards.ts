@@ -6,11 +6,11 @@ export default {
   charts: {
     noData: 'No data in the period.',
     weekOf: 'Week of {{date}}',
+    deltaCaption: 'delta vs previous period',
   },
   tasks: {
     highlights: {
       heading: 'Task highlights',
-      deltaCaption: 'delta vs previous period',
     },
     stats: {
       completed: 'Completed tasks',
@@ -68,8 +68,8 @@ export default {
         caption: 'on time · n={{total}}',
         onTimeTitle: 'On time {{rate}}%',
         lateTitle: 'Late {{rate}}%',
-        onTimeSwatch: 'On time ({{count}})',
-        lateSwatch: 'Late ({{count}})',
+        onTimeSwatch: 'On time ({{n}})',
+        lateSwatch: 'Late ({{n}})',
       },
       overdueHistogram: {
         title: 'Overdue by age',

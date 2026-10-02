@@ -141,7 +141,7 @@ function WeeklyFlowChart({ weekly }: { weekly: TaskReport['weekly'] }) {
 function CategoryDonut({ data }: { data: TaskReport['openByCategory'] }) {
   const { t } = useTranslation(['dashboards', 'tasks'])
   const items = data.map((d) => ({
-    name: d.name ?? t('tasks:card.noCategory'),
+    name: d.name ?? t('tasks:category.none'),
     color: d.color ?? SLATE,
     value: d.open,
   }))
@@ -361,8 +361,8 @@ function OnTimeRate({ data }: { data: TaskReport['onTimeRate'] }) {
         <div style={{ width: `${rest}%`, background: AMBER }} title={t('tasks.dueSection.onTimeRate.lateTitle', { rate: rest })} />
       </div>
       <div className="mt-3 flex flex-wrap gap-4">
-        <Swatch color={BLUE} label={t('tasks.dueSection.onTimeRate.onTimeSwatch', { count: data.onTime })} />
-        <Swatch color={AMBER} label={t('tasks.dueSection.onTimeRate.lateSwatch', { count: data.total - data.onTime })} />
+        <Swatch color={BLUE} label={t('tasks.dueSection.onTimeRate.onTimeSwatch', { n: data.onTime })} />
+        <Swatch color={AMBER} label={t('tasks.dueSection.onTimeRate.lateSwatch', { n: data.total - data.onTime })} />
       </div>
     </div>
   )
@@ -513,7 +513,7 @@ function TarefasTab({ from, to }: { from: string; to: string }) {
       <section>
         <div className="mb-3 flex items-baseline justify-between">
           <h2 className="text-sm font-semibold tracking-tight">{t('tasks.highlights.heading')}</h2>
-          <p className="hidden text-xs text-muted-foreground sm:block">{t('tasks.highlights.deltaCaption')}</p>
+          <p className="hidden text-xs text-muted-foreground sm:block">{t('charts.deltaCaption')}</p>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatTile
@@ -836,7 +836,7 @@ function HabitosTab({ from, to }: { from: string; to: string }) {
       <section>
         <div className="mb-3 flex items-baseline justify-between">
           <h2 className="text-sm font-semibold tracking-tight">{t('habits.highlights.heading')}</h2>
-          <p className="hidden text-xs text-muted-foreground sm:block">{t('tasks.highlights.deltaCaption')}</p>
+          <p className="hidden text-xs text-muted-foreground sm:block">{t('charts.deltaCaption')}</p>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatTile

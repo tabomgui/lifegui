@@ -3,6 +3,9 @@ import type { Messages } from '../../types'
 
 export default {
   loadError: 'Não foi possível carregar as tarefas.',
+  category: {
+    none: 'Sem categoria',
+  },
   brainDump: {
     focusHintPress: 'Tecla',
     focusHintFocus: 'foca aqui',
@@ -47,7 +50,6 @@ export default {
     goToColumn: 'Ir para {{label}}',
   },
   card: {
-    noCategory: 'Sem categoria',
     categoryAria: 'Categoria: {{name}}',
     setCategoryAria: 'Definir categoria',
     dueAria: 'Prazo: {{label}}',

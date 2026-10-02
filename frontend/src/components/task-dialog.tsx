@@ -168,7 +168,7 @@ export function TaskDialog({
                     value={categoryId}
                     onChange={(e) => setCategoryId(e.target.value)}
                     className="border-input flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50">
-                    <option value="">{t('card.noCategory')}</option>
+                    <option value="">{t('category.none')}</option>
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}

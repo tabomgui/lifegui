@@ -1,5 +1,8 @@
 export default {
   loadError: 'Could not load the tasks.',
+  category: {
+    none: 'No category',
+  },
   brainDump: {
     focusHintPress: 'Press',
     focusHintFocus: 'to focus here',
@@ -44,7 +47,6 @@ export default {
     goToColumn: 'Go to {{label}}',
   },
   card: {
-    noCategory: 'No category',
     categoryAria: 'Category: {{name}}',
     setCategoryAria: 'Set category',
     dueAria: 'Due date: {{label}}',

@@ -18,11 +18,11 @@ interface ApiToken {
 
 export function CaptureSettings() {
   const { t } = useTranslation(['settings', 'common'])
-  const { dateTime } = useFormat()
+  const { dateTime, locale } = useFormat()
   const { isEnabled } = useEnabledModules()
   const enabled = isEnabled('brain')
   const qc = useQueryClient()
-  const [name, setName] = useState<string>(t('capture.defaultTokenName'))
+  const [name, setName] = useState<string | null>(null)
   // Token recém-criado: aparece uma única vez (o servidor guarda só o hash).
   const [fresh, setFresh] = useState<string | null>(null)
 
@@ -82,16 +82,25 @@ export function CaptureSettings() {
 
           <form
             className="flex gap-2"
-            onSubmit={(e) => { e.preventDefault(); if (name.trim()) create.mutate(name.trim()) }}
+            onSubmit={(e) => {
+              e.preventDefault()
+              const value = (name ?? t('capture.defaultTokenName')).trim()
+              if (value) create.mutate(value)
+            }}
           >
             <Input
-              value={name}
+              value={name ?? t('capture.defaultTokenName')}
               onChange={(e) => setName(e.target.value)}
               placeholder={t('capture.tokenNamePlaceholder')}
               aria-label={t('capture.tokenNamePlaceholder')}
               className="h-9"
             />
-            <Button type="submit" size="sm" className="h-9" disabled={create.isPending || !name.trim()}>
+            <Button
+              type="submit"
+              size="sm"
+              className="h-9"
+              disabled={create.isPending || !(name ?? t('capture.defaultTokenName')).trim()}
+            >
               {t('capture.generate')}
             </Button>
           </form>
@@ -116,7 +125,12 @@ export function CaptureSettings() {
                     <p className="truncate text-sm">{tk.name}</p>
                     <p className="text-xs text-muted-foreground">
                       {tk.last_used_at
-                        ? t('capture.lastUsed', { date: dateTime(tk.last_used_at) })
+                        ? t('capture.lastUsed', {
+                            date: dateTime(
+                              tk.last_used_at,
+                              locale === 'pt-BR' ? undefined : { dateStyle: 'medium', timeStyle: 'short' },
+                            ),
+                          })
                         : t('capture.neverUsed')}
                     </p>
                   </div>

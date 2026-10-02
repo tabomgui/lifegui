@@ -15,7 +15,7 @@ import { CalendarCredentialsHint } from '@/components/calendar/calendar-credenti
  */
 export function CalendarSettings() {
   const { t } = useTranslation(['settings', 'common'])
-  const { date } = useFormat()
+  const { date, locale } = useFormat()
   const { data, isLoading } = useCalendarStatus()
   const disconnect = useDisconnectCalendar()
   const qc = useQueryClient()
@@ -54,7 +54,14 @@ export function CalendarSettings() {
               <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
                 <CircleCheck className="h-3.5 w-3.5 text-emerald-500" />
                 {t('calendar.connected')}
-                {data.connected_at && <> {t('calendar.connectedSince', { date: date(data.connected_at) })}</>}
+                {data.connected_at && (
+                  <>
+                    {' '}
+                    {t('calendar.connectedSince', {
+                      date: date(data.connected_at, locale === 'pt-BR' ? undefined : { dateStyle: 'medium' }),
+                    })}
+                  </>
+                )}
               </span>
               <Button
                 size="sm"
