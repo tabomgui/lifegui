@@ -15,7 +15,7 @@ use Laravel\Mcp\Server\Attributes\Version;
 use Laravel\Mcp\Server\ServerContext;
 
 #[Name('lifegui')]
-#[Version('2.0.0')]
+#[Version('1.0.1')]
 class LifeguiServer extends Server
 {
     protected array $tools = [
