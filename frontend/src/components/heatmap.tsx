@@ -62,7 +62,7 @@ const NUM_TEXT: Record<0 | 1 | 2 | 3 | 4, string> = {
 }
 
 // Linhas da grade (0=dom..6=sáb) que levam um rótulo de dia da semana.
-const DOW_LABEL_ROWS = [1, 3, 5] as const
+const DOW_LABEL_ROWS: readonly number[] = [1, 3, 5]
 
 function titleFor(count: number, day: string, copy: HeatmapCopy): string {
   return count > 0 ? copy.cell(count, day) : copy.empty(day)
@@ -89,7 +89,7 @@ function DetailedView({ from, totalDays, counts, copy }: {
   counts: Record<string, number>
   copy: HeatmapCopy
 }) {
-  const { date: formatDate } = useFormat()
+  const { dayMonth } = useFormat()
   const days = Array.from({ length: totalDays }, (_, i) => addDays(from, i))
   return (
     <div className="flex flex-wrap justify-center gap-1.5">
@@ -99,12 +99,12 @@ function DetailedView({ from, totalDays, counts, copy }: {
         return (
           <div
             key={formatLocalDate(d)}
-            title={titleFor(count, formatDate(d, { day: 'numeric', month: 'short' }), copy)}
+            title={titleFor(count, dayMonth(d), copy)}
             className={`flex h-11 w-10 flex-col items-center justify-center rounded-md ${LEVEL_CLASSES[lvl]}`}
           >
             <span className={`text-sm font-bold ${NUM_TEXT[lvl]}`}>{count || ''}</span>
             <span className={`text-[9px] ${count > 0 ? NUM_TEXT[lvl] : 'text-muted-foreground'} opacity-90`}>
-              {d.getDate()}/{d.getMonth() + 1}
+              {dayMonth(d)}
             </span>
           </div>
         )
@@ -121,7 +121,7 @@ function GridView({ from, to, counts, copy }: {
   counts: Record<string, number>
   copy: HeatmapCopy
 }) {
-  const { date: formatDate } = useFormat()
+  const { weekdayShort, monthShort, dayMonth } = useFormat()
   const ref = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(0)
 
@@ -156,13 +156,10 @@ function GridView({ from, to, counts, copy }: {
     const month = week[0].getMonth()
     const show = month !== prevMonth
     if (show) prevMonth = month
-    return show ? formatDate(week[0], { month: 'short' }) : null
+    return show ? monthShort(week[0]) : null
   })
 
-  // 1/jan/2023 é domingo, então `new Date(2023, 0, 1 + row)` cai no dia da
-  // semana igual a `row` (0=dom..6=sáb) — usado só pra formatar o rótulo.
-  const dowLabel = (row: number) =>
-    (DOW_LABEL_ROWS as readonly number[]).includes(row) ? formatDate(new Date(2023, 0, 1 + row), { weekday: 'short' }) : ''
+  const dowLabel = (row: number) => (DOW_LABEL_ROWS.includes(row) ? weekdayShort(row) : '')
 
   const cellStyle = { width: size, height: size }
 
@@ -196,7 +193,7 @@ function GridView({ from, to, counts, copy }: {
                       <div
                         key={j}
                         style={cellStyle}
-                        title={titleFor(count, formatDate(date, { day: 'numeric', month: 'short' }), copy)}
+                        title={titleFor(count, dayMonth(date), copy)}
                         className={`rounded-sm ${LEVEL_CLASSES[level(count)]}`}
                       />
                     )

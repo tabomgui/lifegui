@@ -79,7 +79,8 @@ export default {
   radar: {
     empty: 'Nenhum hábito para exibir.',
     ariaLabel: 'Radar de aderência: {{list}}',
-    daysDetail: '{{done}} de {{days}} dias',
+    daysDetail_one: '{{done}} de {{count}} dias',
+    daysDetail_other: '{{done}} de {{count}} dias',
     targetDetail_one: '{{count}} feito · meta {{target}}×/sem',
     targetDetail_other: '{{count}} feitos · meta {{target}}×/sem',
   },

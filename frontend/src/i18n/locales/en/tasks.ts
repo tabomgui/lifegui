@@ -25,7 +25,7 @@ export default {
     movedToCategory: 'Moved to {{name}}',
     moveCategoryError: 'Could not move the task',
   },
-  dialog: {
+  categoryDialog: {
     editTitle: 'Edit category',
     newTitle: 'New category',
     nameLabel: 'Name',
@@ -55,8 +55,8 @@ export default {
     tomorrowButton: 'Tomorrow',
     nextWeekButton: 'Next week',
     subtasksMore: '+{{count}} more',
-    priorityOn: 'Remove priority',
-    priorityOff: 'Mark as priority',
+    removePriority: 'Remove priority',
+    markPriority: 'Mark as priority',
     editAria: 'Edit task',
     moveTo: 'Move to {{label}}',
     deleteAria: 'Delete task',
@@ -98,5 +98,6 @@ export default {
   toast: {
     deleted: 'Task deleted',
     deleteError: 'Could not delete',
+    categoryDeleteError: 'Could not delete',
   },
 } as const

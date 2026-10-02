@@ -72,7 +72,7 @@ export function HabitRow({
                       ? 'border-dashed border-amber-500/50 text-amber-400'
                       : 'text-muted-foreground hover:bg-accent'
               }`}>
-              {d.done ? <Check className="h-4 w-4" /> : d.skipped ? <Minus className="h-4 w-4" /> : weekDow[i][0].toUpperCase()}
+              {d.done ? <Check className="h-4 w-4" /> : d.skipped ? <Minus className="h-4 w-4" /> : weekDow[i][0]}
             </button>
           )
         })}

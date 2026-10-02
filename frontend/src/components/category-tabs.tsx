@@ -53,7 +53,7 @@ export function CategoryTabs({
   async function remove(c: Category) {
     if (!confirm(t('tabs.deleteConfirm', { name: c.name }))) return
     try { await del.mutateAsync(c.id); if (active === c.id) onChange('all') }
-    catch { toast.error(t('toast.deleteError')) }
+    catch { toast.error(t('toast.categoryDeleteError')) }
   }
 
   // Arrastar um card de tarefa (dataTransfer com o id, setado no task-card) e soltar

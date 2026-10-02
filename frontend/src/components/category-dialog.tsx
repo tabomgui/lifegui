@@ -31,28 +31,28 @@ export function CategoryDialog({
   }, [open, category])
 
   async function onSave() {
-    if (!name.trim()) return toast.error(t('dialog.nameRequired'))
+    if (!name.trim()) return toast.error(t('categoryDialog.nameRequired'))
     try {
       if (category) await update.mutateAsync({ id: category.id, name, color, icon })
       else await create.mutateAsync({ name, color, icon })
       onOpenChange(false)
     } catch {
-      toast.error(t('dialog.saveError'))
+      toast.error(t('categoryDialog.saveError'))
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogHeader><DialogTitle>{category ? t('dialog.editTitle') : t('dialog.newTitle')}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{category ? t('categoryDialog.editTitle') : t('categoryDialog.newTitle')}</DialogTitle></DialogHeader>
         <form onSubmit={(e) => { e.preventDefault(); onSave() }}>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="cat-name">{t('dialog.nameLabel')}</Label>
+              <Label htmlFor="cat-name">{t('categoryDialog.nameLabel')}</Label>
               <Input id="cat-name" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>{t('dialog.colorLabel')}</Label>
+              <Label>{t('categoryDialog.colorLabel')}</Label>
               <div className="flex gap-2">
                 {COLORS.map((c) => (
                   <button key={c} type="button" onClick={() => setColor(c)}
@@ -62,7 +62,7 @@ export function CategoryDialog({
               </div>
             </div>
             <div className="space-y-2">
-              <Label>{t('dialog.iconLabel')}</Label>
+              <Label>{t('categoryDialog.iconLabel')}</Label>
               <div className="grid grid-cols-8 gap-1.5">
                 {ICONS.map((i) => (
                   <button key={i} type="button" onClick={() => setIcon(i)} aria-label={i} aria-pressed={icon === i}

@@ -5,7 +5,7 @@ import type { Task, TaskStatus } from '@/types/api'
 import { useMoveTask, useDeferredDeleteTask, useSetTaskPriority, useUpdateTaskCategory, useUpdateTaskDueDate } from '@/hooks/use-tasks'
 import { useCategories } from '@/hooks/use-categories'
 import { DynamicIcon } from '@/components/icon'
-import { dueDateMeta, isoOffset, TONE_CLASSES } from '@/lib/due-date'
+import { dueDateMeta, isoOffset, TONE_CLASSES, type DueTone } from '@/lib/due-date'
 import { useFormat } from '@/i18n/format'
 import { TaskDialog } from '@/components/task-dialog'
 import {
@@ -62,21 +62,29 @@ function TaskDueControl({ task }: { task: Task }) {
   const [open, setOpen] = useState(false)
   const updateDueDate = useUpdateTaskDueDate()
   const meta = dueDateMeta(task.due_date)
-  const label = meta
-    ? meta.key === 'dueDate.onDate'
-      ? t(meta.key, { date: format.date(meta.date!, { day: '2-digit', month: '2-digit' }) })
-      : t(meta.key, { count: meta.count })
-    : null
+  // Combina meta + label num só valor: evita checar `meta && label` na hora de renderizar
+  // (os dois só existem juntos) e deixa o TS enxergar `label` como `string` de verdade.
+  const dueBadge: { tone: DueTone; label: string } | null = !meta
+    ? null
+    : {
+        tone: meta.tone,
+        label:
+          meta.key === 'dueDate.onDate'
+            ? t(meta.key, { date: format.dayMonth(meta.date) })
+            : meta.key === 'dueDate.today' || meta.key === 'dueDate.tomorrow'
+              ? t(meta.key)
+              : t(meta.key, { count: meta.count }),
+      }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        {meta && label ? (
+        {dueBadge ? (
           <button
-            aria-label={t('card.dueAria', { label })}
-            title={label}
-            className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[11px] ${TONE_CLASSES[meta.tone]}`}>
-            <Calendar className="h-3 w-3" /> {label}
+            aria-label={t('card.dueAria', { label: dueBadge.label })}
+            title={dueBadge.label}
+            className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[11px] ${TONE_CLASSES[dueBadge.tone]}`}>
+            <Calendar className="h-3 w-3" /> {dueBadge.label}
           </button>
         ) : (
           <button
@@ -149,9 +157,9 @@ export function TaskCard({ task }: { task: Task }) {
           {task.title}
         </p>
         <button
-          aria-label={task.is_priority ? t('card.priorityOn') : t('card.priorityOff')}
+          aria-label={task.is_priority ? t('card.removePriority') : t('card.markPriority')}
           aria-pressed={task.is_priority}
-          title={task.is_priority ? t('card.priorityOn') : t('card.priorityOff')}
+          title={task.is_priority ? t('card.removePriority') : t('card.markPriority')}
           onClick={() => setPriority.mutate({ id: task.id, is_priority: !task.is_priority })}
           className={`shrink-0 rounded p-0.5 hover:bg-accent ${task.is_priority ? '' : 'opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:group-focus-within:opacity-100'}`}>
           <Star className={`h-4 w-4 ${task.is_priority ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground'}`} />

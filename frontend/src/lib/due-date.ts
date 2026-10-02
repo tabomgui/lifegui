@@ -2,12 +2,14 @@ export type DueTone = 'overdue' | 'soon' | 'near' | 'week' | 'far'
 
 export type DueDateKey = 'dueDate.overdue' | 'dueDate.today' | 'dueDate.tomorrow' | 'dueDate.inDays' | 'dueDate.onDate'
 
-export interface DueDateMeta {
-  key: DueDateKey
-  tone: DueTone
-  count?: number
-  date?: Date
-}
+// União discriminada por `key`: cada variante só carrega os params que sua chave de
+// tradução usa (ex.: só 'dueDate.onDate' tem `date`, sem precisar de `!` em quem lê).
+export type DueDateMeta =
+  | { key: 'dueDate.overdue'; tone: DueTone; count: number }
+  | { key: 'dueDate.today'; tone: DueTone }
+  | { key: 'dueDate.tomorrow'; tone: DueTone }
+  | { key: 'dueDate.inDays'; tone: DueTone; count: number }
+  | { key: 'dueDate.onDate'; tone: DueTone; date: Date }
 
 // Determinístico, baseado em data LOCAL (não UTC): due vem como 'Y-m-d' puro, sem hora.
 // Retorna a chave de tradução (+ params) em vez de texto; quem renderiza chama t(key, params)

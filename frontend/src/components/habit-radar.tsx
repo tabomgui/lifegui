@@ -26,7 +26,7 @@ function angleFor(i: number, n: number): number {
 function detailFor(h: HabitStat, t: TFunction<'habits'>): string {
   if (h.target_per_week == null) {
     const days = Math.round(h.expected)
-    return t('radar.daysDetail', { done: h.done_count, days })
+    return t('radar.daysDetail', { done: h.done_count, count: days })
   }
   return t('radar.targetDetail', { count: h.done_count, target: h.target_per_week })
 }

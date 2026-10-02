@@ -28,7 +28,7 @@ export default {
     movedToCategory: 'Movida para {{name}}',
     moveCategoryError: 'Não foi possível mover a tarefa',
   },
-  dialog: {
+  categoryDialog: {
     editTitle: 'Editar categoria',
     newTitle: 'Nova categoria',
     nameLabel: 'Nome',
@@ -58,8 +58,8 @@ export default {
     tomorrowButton: 'Amanhã',
     nextWeekButton: 'Próx. semana',
     subtasksMore: '+{{count}} mais',
-    priorityOn: 'Remover prioridade',
-    priorityOff: 'Marcar como prioridade',
+    removePriority: 'Remover prioridade',
+    markPriority: 'Marcar como prioridade',
     editAria: 'Editar tarefa',
     moveTo: 'Mover para {{label}}',
     deleteAria: 'Apagar tarefa',
@@ -101,5 +101,6 @@ export default {
   toast: {
     deleted: 'Tarefa apagada',
     deleteError: 'Não foi possível apagar',
+    categoryDeleteError: 'Não foi possível apagar',
   },
 } satisfies Messages<typeof en>

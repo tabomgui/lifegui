@@ -76,7 +76,8 @@ export default {
   radar: {
     empty: 'No habits to show.',
     ariaLabel: 'Adherence radar: {{list}}',
-    daysDetail: '{{done}} of {{days}} days',
+    daysDetail_one: '{{done}} of {{count}} day',
+    daysDetail_other: '{{done}} of {{count}} days',
     targetDetail_one: '{{count}} done · target {{target}}×/wk',
     targetDetail_other: '{{count}} done · target {{target}}×/wk',
   },
