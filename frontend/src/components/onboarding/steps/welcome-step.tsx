@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { LanguageSelect } from '@/components/language-select'
 
 export function WelcomeStep() {
-  const { t } = useTranslation(['onboarding'])
+  const { t } = useTranslation('onboarding')
   const { user } = useAuth()
   const firstName = user?.name.split(' ')[0] ?? ''
   return (

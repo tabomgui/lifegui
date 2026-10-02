@@ -7,9 +7,10 @@ import { DynamicIcon } from '@/components/icon'
 import { Button } from '@/components/ui/button'
 import { StepHeader } from '@/components/onboarding/step-header'
 import { HABIT_SUGGESTIONS, nameKey, type HabitSuggestion } from '@/components/onboarding/suggestions'
+import { SUPPORTED_LOCALES } from '@/i18n/types'
 
 export function HabitsStep() {
-  const { t } = useTranslation(['onboarding'])
+  const { t, i18n } = useTranslation(['onboarding', 'common'])
   const { data: habits = [], isSuccess } = useHabits()
   const create = useCreateHabit()
   // Estado indexado pela key estável da sugestão, não pelo nome traduzido (que muda com o idioma).
@@ -35,9 +36,13 @@ export function HabitsStep() {
       <StepHeader title={t('habits.title')} description={t('habits.description')} />
       <div className="space-y-2">
         {HABIT_SUGGESTIONS.map((s) => {
-          // Nome traduzido é o valor enviado à API e a base da comparação de "já adicionado".
+          // Nome traduzido no idioma ativo: é o texto exibido e o valor enviado à API.
           const name = t(`suggestions.habits.${s.key}`)
-          const added = existing.has(nameKey(name))
+          // "Já adicionado" compara com o nome em qualquer idioma suportado, não só o ativo:
+          // evita duplicar quando o hábito foi criado antes de trocar de idioma ou ao repetir o wizard.
+          const added = SUPPORTED_LOCALES.some((lng) =>
+            existing.has(nameKey(i18n.t(`onboarding:suggestions.habits.${s.key}`, { lng }))),
+          )
           return (
             <div key={s.key} className="flex items-center gap-3 rounded-lg border p-3">
               <DynamicIcon name={s.icon} className="h-4 w-4 shrink-0" style={{ color: s.color }} />
@@ -79,7 +84,7 @@ export function HabitsStep() {
                   disabled={create.isPending || !isSuccess}
                   onClick={() => add(s, name)}
                 >
-                  {t('actions.add')}
+                  {t('common:actions.add')}
                 </Button>
               )}
             </div>

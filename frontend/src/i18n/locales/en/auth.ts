@@ -9,7 +9,7 @@ export default {
     title: 'Sign in to lifegui',
     submit: 'Sign in',
     google: 'Sign in with Google',
-    noAccount: 'No account?',
+    noAccount: "Don't have an account?",
     registerLink: 'Sign up',
     invalidCredentials: 'Invalid credentials',
     registrationClosed: 'This Google account is not registered on this instance.',
@@ -22,7 +22,7 @@ export default {
     error: 'Could not sign up',
     disabled: {
       title: 'Registration disabled',
-      description: 'This instance is not accepting new accounts. Contact whoever manages lifegui.',
+      description: 'This instance is not accepting new accounts. Contact your lifegui administrator.',
       backToLogin: 'Back to login',
     },
   },

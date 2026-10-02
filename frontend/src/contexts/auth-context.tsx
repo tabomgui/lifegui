@@ -83,8 +83,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await csrf()
     const r = await api.patch('/me', { locale })
     applyUser(r.data.data)
-    // Dados do servidor localizados (ex.: labels de módulos) precisam ser refeitos no novo idioma.
-    await queryClient.invalidateQueries()
+    // Dados do servidor localizados (ex.: labels de módulos) precisam ser refeitos no novo idioma;
+    // não espera terminar pra não atrasar o toast de sucesso de quem chamou setLocale.
+    void queryClient.invalidateQueries()
   }
 
   async function logout() {

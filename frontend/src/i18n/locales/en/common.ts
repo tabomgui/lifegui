@@ -5,6 +5,7 @@ export default {
     'pt-BR': 'Português (Brasil)',
   },
   actions: {
+    add: 'Add',
     save: 'Save',
     cancel: 'Cancel',
     delete: 'Delete',

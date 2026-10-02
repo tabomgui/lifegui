@@ -4,7 +4,7 @@ export default {
     description: 'Step {{current}} of {{total}}: {{step}}',
   },
   steps: {
-    welcome: 'Start',
+    welcome: 'Welcome',
     modules: 'Modules',
     categories: 'Categories',
     habits: 'Habits',
@@ -14,7 +14,6 @@ export default {
   actions: {
     skip: 'Skip setup',
     start: 'Start',
-    add: 'Add',
   },
   errors: {
     finish: 'Could not finish. Try again.',
@@ -24,7 +23,7 @@ export default {
     title: 'Welcome',
     titleWithName: 'Welcome, {{name}}',
     description:
-      'lifegui brings tasks, habits, notes and calendar together in one place. In a few steps you choose what to use and you are ready to go.',
+      'lifegui brings tasks, habits, notes and calendar together in one place. In a few steps, pick what to use and you are ready to go.',
   },
   modules: {
     title: 'Choose your modules',
@@ -44,10 +43,10 @@ export default {
   },
   habits: {
     title: 'Habits',
-    description: 'Pick a few to start and adjust the weekly goal.',
+    description: 'Pick a few to start and adjust the weekly target.',
     timesPerWeek: '{{count}}x/week',
-    decreaseTarget: 'Decrease goal',
-    increaseTarget: 'Increase goal',
+    decreaseTarget: 'Decrease target',
+    increaseTarget: 'Increase target',
     added: 'Added',
   },
   integrations: {
@@ -74,8 +73,8 @@ export default {
   },
   settingsCard: {
     title: 'Introduction',
-    description: 'Reopen the initial setup assistant.',
-    replay: 'Review introduction',
+    description: 'Reopen the initial setup wizard.',
+    replay: 'Replay introduction',
   },
   suggestions: {
     categories: {

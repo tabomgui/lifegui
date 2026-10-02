@@ -12,5 +12,7 @@ export function useFormat() {
     dateTime: (value: Date | string, opts?: Intl.DateTimeFormatOptions) => new Date(value).toLocaleString(locale, opts),
     number: (value: number, opts?: Intl.NumberFormatOptions) => value.toLocaleString(locale, opts),
     compare: (a: string, b: string) => a.localeCompare(b, locale, { sensitivity: 'base' }),
+    // Lista por extenso no idioma ativo ("A, B e C" / "A, B and C"), em vez de join(', ').
+    list: (items: string[]) => new Intl.ListFormat(locale, { style: 'long', type: 'conjunction' }).format(items),
   }
 }

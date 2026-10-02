@@ -8,6 +8,7 @@ export default {
     'pt-BR': 'Português (Brasil)',
   },
   actions: {
+    add: 'Adicionar',
     save: 'Salvar',
     cancel: 'Cancelar',
     delete: 'Excluir',

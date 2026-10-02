@@ -8,9 +8,10 @@ import { Input } from '@/components/ui/input'
 import { StepHeader } from '@/components/onboarding/step-header'
 import { SuggestionChip } from '@/components/onboarding/suggestion-chip'
 import { CATEGORY_SUGGESTIONS, nameKey } from '@/components/onboarding/suggestions'
+import { SUPPORTED_LOCALES } from '@/i18n/types'
 
 export function CategoriesStep() {
-  const { t } = useTranslation(['onboarding'])
+  const { t, i18n } = useTranslation(['onboarding', 'common'])
   const { data: categories = [], isSuccess } = useCategories()
   const create = useCreateCategory()
   const [custom, setCustom] = useState('')
@@ -39,15 +40,20 @@ export function CategoriesStep() {
       <StepHeader title={t('categories.title')} description={t('categories.description')} />
       <div className="flex flex-wrap gap-2">
         {CATEGORY_SUGGESTIONS.map((s) => {
-          // Nome traduzido é o valor enviado à API e a base da comparação de "já adicionado".
+          // Nome traduzido no idioma ativo: é o texto exibido e o valor enviado à API.
           const label = t(`suggestions.categories.${s.key}`)
+          // "Já adicionada" compara com o nome em qualquer idioma suportado, não só o ativo:
+          // evita duplicar quando a categoria foi criada antes de trocar de idioma ou ao repetir o wizard.
+          const added = SUPPORTED_LOCALES.some((lng) =>
+            existing.has(nameKey(i18n.t(`onboarding:suggestions.categories.${s.key}`, { lng }))),
+          )
           return (
             <SuggestionChip
               key={s.key}
               label={label}
               icon={s.icon}
               color={s.color}
-              added={existing.has(nameKey(label))}
+              added={added}
               disabled={create.isPending || !isSuccess}
               onAdd={() => add(label, s.icon, s.color)}
             />
@@ -66,7 +72,7 @@ export function CategoriesStep() {
           variant="outline"
           disabled={!custom.trim() || create.isPending || !isSuccess || existing.has(customKey)}
         >
-          {t('actions.add')}
+          {t('common:actions.add')}
         </Button>
       </form>
       {categories.length > 0 && (

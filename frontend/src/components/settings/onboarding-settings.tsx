@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { useOnboarding } from '@/contexts/onboarding-context'
 
 export function OnboardingSettings() {
-  const { t } = useTranslation(['onboarding'])
+  const { t } = useTranslation('onboarding')
   const { replay } = useOnboarding()
   return (
     <div className="flex items-center justify-between gap-4 rounded-lg border p-4">

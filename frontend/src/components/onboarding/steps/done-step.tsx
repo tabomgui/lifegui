@@ -1,18 +1,20 @@
 import { CircleCheck } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { useFormat } from '@/i18n/format'
 import { useModules } from '@/hooks/use-modules'
 import { useCategories } from '@/hooks/use-categories'
 import { useHabits } from '@/hooks/use-habits'
 
 export function DoneStep() {
-  const { t } = useTranslation(['onboarding'])
+  const { t } = useTranslation('onboarding')
+  const { list } = useFormat()
   const { data: modules = [] } = useModules()
   const enabled = modules.filter((m) => m.enabled)
   const tasksOn = enabled.some((m) => m.key === 'tasks')
   const habitsOn = enabled.some((m) => m.key === 'habits')
   const { data: categories = [] } = useCategories()
   const { data: habits = [] } = useHabits(false, habitsOn)
-  const modulesText = enabled.length ? enabled.map((m) => m.label).join(', ') : t('done.noModules')
+  const modulesText = enabled.length ? list(enabled.map((m) => m.label)) : t('done.noModules')
 
   return (
     <div className="space-y-4 py-4 text-center">

@@ -17,7 +17,6 @@ export default {
   actions: {
     skip: 'Pular configuração',
     start: 'Começar',
-    add: 'Adicionar',
   },
   errors: {
     finish: 'Não foi possível concluir. Tente de novo.',
