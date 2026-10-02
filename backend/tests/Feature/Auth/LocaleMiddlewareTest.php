@@ -23,6 +23,13 @@ test('sem login e sem header cai no padrão en', function () {
         ->assertJsonPath('locale', 'en');
 });
 
+test('sem login e sem header cai no APP_LOCALE da instância, não sempre en', function () {
+    config(['app.locale' => 'pt_BR']);
+
+    $this->getJson('/api/_locale-test', ['Accept-Language' => ''])
+        ->assertJsonPath('locale', 'pt_BR');
+});
+
 test('com login o locale do usuário vence o header', function () {
     $user = User::factory()->create(['locale' => 'en']);
 

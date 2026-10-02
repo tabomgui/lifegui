@@ -21,10 +21,21 @@ class SetLocale
 
         $locale = Locale::isSupported($userLocale)
             ? $userLocale
-            : (Locale::negotiate($request->getLanguages()) ?? Locale::DEFAULT);
+            : (Locale::negotiate($request->getLanguages()) ?? $this->fallbackLocale());
 
         App::setLocale(Locale::toLaravel($locale));
 
         return $next($request);
+    }
+
+    /**
+     * Sem usuário logado e sem Accept-Language reconhecido, cai no idioma da
+     * instância (APP_LOCALE) em vez de sempre inglês.
+     */
+    private function fallbackLocale(): string
+    {
+        $configured = Locale::fromLaravel((string) config('app.locale'));
+
+        return Locale::isSupported($configured) ? $configured : Locale::DEFAULT;
     }
 }
