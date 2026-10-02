@@ -17,9 +17,9 @@ use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Tool;
 
-#[Name('agendar')]
-#[Description('Cria um evento no Google Calendar do usuário (calendário principal): avulso ou vinculado a tarefa/hábito/nota. IMPORTANTE: confirme título, data e hora com o usuário antes de chamar. Recorrência semanal via recorrencia_dias.')]
-class AgendarTool extends Tool
+#[Name('schedule')]
+#[Description("Creates an event on the user's Google Calendar (primary calendar): standalone or linked to a task/habit/note. IMPORTANT: confirm title, date and time with the user before calling. Weekly recurrence via repeat_days.")]
+class ScheduleTool extends Tool
 {
     private const TZ = 'America/Sao_Paulo';
 
@@ -31,16 +31,16 @@ class AgendarTool extends Tool
     public function handle(Request $request): Response
     {
         $request->validate([
-            'titulo' => ['required', 'string', 'max:255'],
-            'inicio' => ['required', 'date'],
-            'duracao_minutos' => ['nullable', 'integer', 'min:5', 'max:1440'],
-            'tipo' => ['nullable', 'in:event,task,habit,note'],
+            'title' => ['required', 'string', 'max:255'],
+            'start' => ['required', 'date'],
+            'duration_minutes' => ['nullable', 'integer', 'min:5', 'max:1440'],
+            'type' => ['nullable', 'in:event,task,habit,note'],
             'ref' => ['nullable', 'string', 'max:500'],
-            'recorrencia_dias' => ['nullable', 'array'],
-            'recorrencia_dias.*' => ['in:MO,TU,WE,TH,FR,SA,SU'],
+            'repeat_days' => ['nullable', 'array'],
+            'repeat_days.*' => ['in:MO,TU,WE,TH,FR,SA,SU'],
         ]);
 
-        $tipo = $request->get('tipo') ?? 'event';
+        $tipo = $request->get('type') ?? 'event';
         $ref = (string) ($request->get('ref') ?? '');
 
         if ($tipo !== 'event') {
@@ -57,13 +57,13 @@ class AgendarTool extends Tool
             }
         }
 
-        $inicio = CarbonImmutable::parse($request->get('inicio'), self::TZ);
-        $fim = $inicio->addMinutes($request->get('duracao_minutos') ?? 60);
-        $dias = $request->get('recorrencia_dias') ?? [];
+        $inicio = CarbonImmutable::parse($request->get('start'), self::TZ);
+        $fim = $inicio->addMinutes($request->get('duration_minutes') ?? 60);
+        $dias = $request->get('repeat_days') ?? [];
 
         try {
             $event = $this->calendar->create(Auth::user(), [
-                'title' => $request->get('titulo'),
+                'title' => $request->get('title'),
                 'description' => 'Criado pelo lifegui (assistente) · '.config('app.frontend_url').'/agenda',
                 'start' => $inicio->toRfc3339String(),
                 'end' => $fim->toRfc3339String(),
@@ -86,12 +86,12 @@ class AgendarTool extends Tool
     public function schema(JsonSchema $schema): array
     {
         return [
-            'titulo' => $schema->string()->description('Título do evento.')->required(),
-            'inicio' => $schema->string()->description('Início ISO (ex.: 2026-09-25T19:00:00). Interpretado em America/Sao_Paulo se sem offset.')->required(),
-            'duracao_minutos' => $schema->integer()->description('Duração em minutos (padrão 60).'),
-            'tipo' => $schema->string()->enum(['event', 'task', 'habit', 'note'])->description('event = avulso (padrão); task/habit/note vincula a um item.'),
-            'ref' => $schema->string()->description('Id da tarefa/hábito ou caminho da nota, quando tipo não é event.'),
-            'recorrencia_dias' => $schema->array()->description('Dias da semana pra repetir toda semana: MO,TU,WE,TH,FR,SA,SU.'),
+            'title' => $schema->string()->description('Event title.')->required(),
+            'start' => $schema->string()->description('ISO start (e.g. 2026-09-25T19:00:00). Interpreted in America/Sao_Paulo if no offset is given.')->required(),
+            'duration_minutes' => $schema->integer()->description('Duration in minutes (default 60).'),
+            'type' => $schema->string()->enum(['event', 'task', 'habit', 'note'])->description('event = standalone (default); task/habit/note links to an item.'),
+            'ref' => $schema->string()->description('Id of the task/habit or path of the note, when type is not event.'),
+            'repeat_days' => $schema->array()->description('Days of the week to repeat every week: MO,TU,WE,TH,FR,SA,SU.'),
         ];
     }
 }

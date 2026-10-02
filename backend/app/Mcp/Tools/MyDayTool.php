@@ -17,9 +17,9 @@ use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Tool;
 
-#[Name('meu_dia')]
-#[Description('Resumo do dia do usuário: tarefas atrasadas e com prazo no dia, eventos da agenda (Google Calendar), hábitos ainda não feitos e capturas pendentes no inbox do segundo cérebro. Use para "o que tenho que fazer hoje" ou planejar o dia.')]
-class MeuDiaTool extends Tool
+#[Name('my_day')]
+#[Description("Summary of the user's day: overdue tasks and tasks due today, calendar events (Google Calendar), habits not done yet and pending captures in the second-brain inbox. Use for \"what do I have to do today\" or planning the day.")]
+class MyDayTool extends Tool
 {
     private const TZ = 'America/Sao_Paulo';
 
@@ -30,8 +30,8 @@ class MeuDiaTool extends Tool
 
     public function handle(Request $request): Response
     {
-        $dia = $request->get('data')
-            ? CarbonImmutable::parse($request->get('data'), self::TZ)
+        $dia = $request->get('date')
+            ? CarbonImmutable::parse($request->get('date'), self::TZ)
             : CarbonImmutable::now(self::TZ);
 
         $out = ['# '.$dia->locale('pt_BR')->isoFormat('dddd, D [de] MMMM'), ''];
@@ -97,8 +97,8 @@ class MeuDiaTool extends Tool
     public function schema(JsonSchema $schema): array
     {
         return [
-            'data' => $schema->string()
-                ->description('Dia desejado no formato Y-m-d. Omita para hoje.'),
+            'date' => $schema->string()
+                ->description('Desired day in Y-m-d format. Omit for today.'),
         ];
     }
 }

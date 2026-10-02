@@ -12,22 +12,22 @@ use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Tool;
 
-#[Name('concluir_habito')]
-#[Description('Marca um hábito como feito hoje, pelo nome. Nunca desfaz: se já estava feito, apenas informa.')]
-class ConcluirHabitoTool extends Tool
+#[Name('complete_habit')]
+#[Description('Marks a habit as done today, by name. Never undoes: if it is already done, it only says so.')]
+class CompleteHabitTool extends Tool
 {
     public function handle(Request $request): Response
     {
-        $request->validate(['nome' => ['required', 'string']]);
+        $request->validate(['name' => ['required', 'string']]);
 
         $habit = Habit::whereNull('archived_at')
-            ->whereRaw('LOWER(name) = ?', [mb_strtolower($request->get('nome'))])
+            ->whereRaw('LOWER(name) = ?', [mb_strtolower($request->get('name'))])
             ->first();
 
         if ($habit === null) {
             $nomes = Habit::whereNull('archived_at')->pluck('name')->implode(', ');
 
-            return Response::error("Hábito \"{$request->get('nome')}\" não encontrado. Ativos: {$nomes}.");
+            return Response::error("Hábito \"{$request->get('name')}\" não encontrado. Ativos: {$nomes}.");
         }
 
         $hoje = CarbonImmutable::now('America/Sao_Paulo')->toDateString();
@@ -59,7 +59,7 @@ class ConcluirHabitoTool extends Tool
     public function schema(JsonSchema $schema): array
     {
         return [
-            'nome' => $schema->string()->description('Nome do hábito (ex.: Leitura, Exercício).')->required(),
+            'name' => $schema->string()->description('Habit name (e.g. Reading, Exercise).')->required(),
         ];
     }
 }

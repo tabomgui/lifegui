@@ -12,16 +12,16 @@ use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Tool;
 use Symfony\Component\Yaml\Yaml;
 
-#[Name('buscar_notas')]
-#[Description('Busca notas no segundo cérebro (vault Obsidian) por texto no título ou no conteúdo, ou lê uma nota inteira pelo caminho. Use para "o que anotei sobre X" ou pra recuperar o conteúdo de uma nota.')]
-class BuscarNotasTool extends Tool
+#[Name('search_notes')]
+#[Description('Searches notes in the second brain (Obsidian vault) by text in the title or content, or reads an entire note by path. Use for "what did I write about X" or to retrieve the content of a note.')]
+class SearchNotesTool extends Tool
 {
     public function __construct(private VaultService $vault) {}
 
     public function handle(Request $request): Response
     {
-        $busca = trim((string) $request->get('busca'));
-        $caminho = trim((string) $request->get('caminho'));
+        $busca = trim((string) $request->get('query'));
+        $caminho = trim((string) $request->get('path'));
 
         if ($caminho !== '') {
             $note = $this->vault->read($caminho);
@@ -34,7 +34,7 @@ class BuscarNotasTool extends Tool
         }
 
         if ($busca === '') {
-            return Response::error('Informe "busca" (texto) ou "caminho" (nota específica).');
+            return Response::error('Informe "query" (texto) ou "path" (nota específica).');
         }
 
         $hits = [];
@@ -60,15 +60,15 @@ class BuscarNotasTool extends Tool
         return $hits === []
             ? Response::text("Nenhuma nota encontrada pra \"{$busca}\".")
             : Response::text("Notas encontradas pra \"{$busca}\":\n\n".implode("\n", $hits)
-                ."\n\nUse buscar_notas com o caminho pra ler uma nota inteira.");
+                ."\n\nUse search_notes com o path pra ler uma nota inteira.");
     }
 
     /** @return array<string, Type> */
     public function schema(JsonSchema $schema): array
     {
         return [
-            'busca' => $schema->string()->description('Texto pra procurar em títulos e conteúdo.'),
-            'caminho' => $schema->string()->description('Caminho relativo da nota (ex.: IA/RAG.md) pra ler inteira.'),
+            'query' => $schema->string()->description('Text to search for in titles and content.'),
+            'path' => $schema->string()->description('Relative path of the note (e.g. IA/RAG.md) to read in full.'),
         ];
     }
 }

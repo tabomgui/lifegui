@@ -4,7 +4,7 @@ namespace App\Support\Vault;
 
 /**
  * Criação de capturas no 00-Inbox do vault — compartilhada entre a rota HTTP
- * (SPA / Atalho do iPhone) e a tool MCP `capturar`.
+ * (SPA / Atalho do iPhone) e a tool MCP `capture`.
  */
 class InboxCaptureService
 {

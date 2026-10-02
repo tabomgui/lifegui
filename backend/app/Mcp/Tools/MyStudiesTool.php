@@ -16,9 +16,9 @@ use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Tool;
 
-#[Name('meus_estudos')]
-#[Description('Panorama dos estudos: notas do segundo cérebro por status e categoria (com títulos do que está em estudo e a revisar), progresso do hábito Estudar na semana e próximos blocos de estudo agendados. Use para "como estão meus estudos".')]
-class MeusEstudosTool extends Tool
+#[Name('my_studies')]
+#[Description('Overview of studies: second-brain notes by status and category (with titles of what is being studied and what needs review), progress of the Study habit this week, and upcoming scheduled study blocks. Use for "how are my studies going".')]
+class MyStudiesTool extends Tool
 {
     private const TZ = 'America/Sao_Paulo';
 
@@ -64,7 +64,7 @@ class MeusEstudosTool extends Tool
         }
         $out[] = '';
 
-        // Hábito Estudar
+        // Hábito de estudo (pt-BR: "Estudar", en: "Study")
         $habit = Habit::whereNull('archived_at')->whereRaw('LOWER(name) = ?', ['estudar'])->first();
         $out[] = '## Hábito Estudar';
         if ($habit === null) {

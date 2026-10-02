@@ -34,7 +34,7 @@ class InboxController extends Controller
 
     public function store(StoreInboxRequest $request, \App\Support\Vault\InboxCaptureService $capture): JsonResponse
     {
-        // Lógica compartilhada com a tool MCP `capturar`.
+        // Lógica compartilhada com a tool MCP `capture`.
         $created = $capture->capture($request->validated('content'), $request->validated('title'));
 
         abort_if($created === null, 422, __('messages.brain.inbox_missing'));

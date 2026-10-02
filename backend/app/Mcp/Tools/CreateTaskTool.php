@@ -12,42 +12,42 @@ use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Tool;
 
-#[Name('criar_tarefa')]
-#[Description('Cria uma tarefa no lifegui, com prazo, categoria (pelo nome) e prioridade opcionais.')]
-class CriarTarefaTool extends Tool
+#[Name('create_task')]
+#[Description('Creates a task in lifegui, with optional due date, category (by name) and priority.')]
+class CreateTaskTool extends Tool
 {
     public function handle(Request $request): Response
     {
         $request->validate([
-            'titulo' => ['required', 'string', 'max:255'],
-            'prazo' => ['nullable', 'date_format:Y-m-d'],
-            'categoria' => ['nullable', 'string'],
-            'prioridade' => ['nullable', 'boolean'],
+            'title' => ['required', 'string', 'max:255'],
+            'due' => ['nullable', 'date_format:Y-m-d'],
+            'category' => ['nullable', 'string'],
+            'priority' => ['nullable', 'boolean'],
         ]);
 
         $categoryId = null;
-        if ($request->get('categoria')) {
-            $category = Category::whereRaw('LOWER(name) = ?', [mb_strtolower($request->get('categoria'))])->first();
+        if ($request->get('category')) {
+            $category = Category::whereRaw('LOWER(name) = ?', [mb_strtolower($request->get('category'))])->first();
             if ($category === null) {
                 $nomes = Category::pluck('name')->implode(', ');
 
-                return Response::error("Categoria \"{$request->get('categoria')}\" não existe. Disponíveis: {$nomes}.");
+                return Response::error("Categoria \"{$request->get('category')}\" não existe. Disponíveis: {$nomes}.");
             }
             $categoryId = $category->id;
         }
 
         $task = Task::create([
-            'title' => $request->get('titulo'),
+            'title' => $request->get('title'),
             'status' => 'todo',
-            'due_date' => $request->get('prazo'),
+            'due_date' => $request->get('due'),
             'category_id' => $categoryId,
-            'is_priority' => (bool) $request->get('prioridade'),
+            'is_priority' => (bool) $request->get('priority'),
             'position' => (Task::where('status', 'todo')->max('position') ?? 0) + 1,
         ]);
 
         $extras = array_filter([
             $task->due_date?->format('d/m/Y'),
-            $categoryId ? $request->get('categoria') : null,
+            $categoryId ? $request->get('category') : null,
             $task->is_priority ? 'prioridade' : null,
         ]);
 
@@ -59,10 +59,10 @@ class CriarTarefaTool extends Tool
     public function schema(JsonSchema $schema): array
     {
         return [
-            'titulo' => $schema->string()->description('Título da tarefa.')->required(),
-            'prazo' => $schema->string()->description('Prazo Y-m-d, opcional.'),
-            'categoria' => $schema->string()->description('Nome de uma categoria existente do usuário, opcional.'),
-            'prioridade' => $schema->boolean()->description('Marcar como prioridade.'),
+            'title' => $schema->string()->description('Task title.')->required(),
+            'due' => $schema->string()->description('Due date Y-m-d, optional.'),
+            'category' => $schema->string()->description("Name of an existing category of the user's, optional."),
+            'priority' => $schema->boolean()->description('Mark as priority.'),
         ];
     }
 }
