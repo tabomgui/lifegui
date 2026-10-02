@@ -58,7 +58,7 @@ test('servidor expõe as tools com nomes em inglês', function () {
 });
 
 test('my_day resume tarefas, agenda, hábitos e inbox', function () {
-    Task::factory()->for($this->user)->create(['title' => 'Pagar boleto', 'status' => 'todo', 'due_date' => now()->subDay()]);
+    Task::factory()->for($this->user)->create(['title' => 'Pagar boleto', 'status' => 'todo', 'due_date' => now('America/Sao_Paulo')->subDay()]);
     Habit::factory()->for($this->user)->create(['name' => 'Leitura']);
     makeNote('00-Inbox/captura-x.md', ['status' => 'novo'], "https://exemplo.com\n");
 
@@ -80,7 +80,7 @@ test('my_day avisa quando Google Calendar não está conectado', function () {
 
 test('my_studies mostra notas por status e hábito Estudar', function () {
     $habit = Habit::factory()->for($this->user)->create(['name' => 'Estudar', 'target_per_week' => 4]);
-    $habit->logs()->create(['date' => now()->format('Y-m-d'), 'done' => true, 'skipped' => false]);
+    $habit->logs()->create(['date' => now('America/Sao_Paulo')->format('Y-m-d'), 'done' => true, 'skipped' => false]);
 
     LifeguiServer::actingAs($this->user)->tool(MyStudiesTool::class)
         ->assertOk()
