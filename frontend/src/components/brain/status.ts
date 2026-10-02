@@ -2,12 +2,14 @@ import type { NoteStatus } from '@/types/api'
 
 export const NOTE_STATUSES: NoteStatus[] = ['novo', 'estudando', 'concluido', 'a-revisar']
 
-export const STATUS_LABEL: Record<NoteStatus, string> = {
-  novo: 'Novo',
-  estudando: 'Estudando',
-  concluido: 'Concluído',
-  'a-revisar': 'A revisar',
-}
+// Chave de tradução (namespace brain) por status; o rótulo vem de t(STATUS_LABEL_KEY[status]).
+// `as const satisfies` preserva o tipo literal de cada valor (exigido pelo `t` tipado).
+export const STATUS_LABEL_KEY = {
+  novo: 'status.novo',
+  estudando: 'status.estudando',
+  concluido: 'status.concluido',
+  'a-revisar': 'status.a-revisar',
+} as const satisfies Record<NoteStatus, string>
 
 // Classes de badge por status (par claro/escuro seguindo a paleta neutral do app).
 export const STATUS_BADGE: Record<NoteStatus, string> = {
