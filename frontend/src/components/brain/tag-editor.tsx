@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { Plus, X } from 'lucide-react'
 import { useBrainTags, useUpdateNote } from '@/hooks/use-brain'
 
@@ -9,6 +10,7 @@ import { useBrainTags, useUpdateNote } from '@/hooks/use-brain'
  * mudança salva na hora (frontmatter.tags), igual ao pill de status.
  */
 export function TagEditor({ path, tags }: { path: string; tags: string[] }) {
+  const { t } = useTranslation('brain')
   const { data: allTags = [] } = useBrainTags()
   const update = useUpdateNote()
   const [adding, setAdding] = useState(false)
@@ -28,7 +30,7 @@ export function TagEditor({ path, tags }: { path: string; tags: string[] }) {
     try {
       await update.mutateAsync({ path, frontmatter: { tags: next } })
     } catch {
-      toast.error('Não foi possível salvar as tags')
+      toast.error(t('tagEditor.saveError'))
     }
   }
 
@@ -57,7 +59,7 @@ export function TagEditor({ path, tags }: { path: string; tags: string[] }) {
           {tag}
           <button
             type="button"
-            aria-label={`Remover tag ${tag}`}
+            aria-label={t('tagEditor.removeAria', { tag })}
             className="ml-0.5 rounded p-0.5 opacity-50 hover:bg-accent hover:text-foreground hover:opacity-100"
             onClick={() => save(tags.filter((t) => t !== tag))}
           >
@@ -82,7 +84,7 @@ export function TagEditor({ path, tags }: { path: string; tags: string[] }) {
               }
             }}
             onBlur={() => setTimeout(() => { setAdding(false); setQuery('') }, 150)}
-            placeholder="tag…"
+            placeholder={t('tagEditor.placeholder')}
             className="h-5 w-24 rounded border border-input bg-transparent px-1.5 text-[11px] outline-none focus-visible:border-ring"
           />
           {(suggestions.length > 0 || isNew) && (
@@ -104,7 +106,7 @@ export function TagEditor({ path, tags }: { path: string; tags: string[] }) {
                   onMouseDown={(e) => { e.preventDefault(); add(query) }}
                   className="block w-full truncate rounded px-2 py-1 text-left text-xs text-muted-foreground hover:bg-accent"
                 >
-                  Criar “{query.trim()}”
+                  {t('tagEditor.create', { tag: query.trim() })}
                 </button>
               )}
             </div>
@@ -116,7 +118,7 @@ export function TagEditor({ path, tags }: { path: string; tags: string[] }) {
           onClick={() => setAdding(true)}
           className="inline-flex items-center gap-0.5 rounded border border-dashed px-1.5 py-0.5 text-[11px] text-muted-foreground hover:bg-accent hover:text-foreground"
         >
-          <Plus className="h-2.5 w-2.5" /> Tag
+          <Plus className="h-2.5 w-2.5" /> {t('tagEditor.addButton')}
         </button>
       )}
     </>

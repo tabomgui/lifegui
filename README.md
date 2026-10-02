@@ -4,7 +4,9 @@
 
 ![lifegui dashboards](.github/assets/dashboards.png)
 
-> The interface is in Brazilian Portuguese.
+> The interface is available in English and Brazilian Portuguese. Each user picks a language in Settings.
+
+**Documentation:** [docs-lifegui.hengen.com.br](https://docs-lifegui.hengen.com.br) (English and Brazilian Portuguese). Source in [tabomgui/lifegui-docs](https://github.com/tabomgui/lifegui-docs).
 
 ## Quick start
 
@@ -134,7 +136,7 @@ The MCP endpoint is `https://life.example.com/mcp`. Clients sign in with your li
 - **Claude Code:** `claude mcp add --transport http lifegui https://life.example.com/mcp`
 - **ChatGPT:** in developer mode, create a connector with the endpoint URL.
 
-Tools: today's agenda, study progress, note search, inbox capture, create a task, complete a habit and schedule an event.
+Tools: `my_day`, `my_studies`, `search_notes`, `capture`, `create_task`, `complete_habit` and `schedule`. Answers follow your language setting.
 
 ## Updating
 

@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Support\Locale;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class RegisterRequest extends FormRequest
 {
@@ -14,7 +16,7 @@ class RegisterRequest extends FormRequest
 
     protected function failedAuthorization(): void
     {
-        throw new AuthorizationException('Cadastro desativado nesta instância.');
+        throw new AuthorizationException(__('messages.auth.registration_disabled'));
     }
 
     public function rules(): array
@@ -23,6 +25,7 @@ class RegisterRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'locale' => ['nullable', 'string', Rule::in(Locale::SUPPORTED)],
         ];
     }
 }

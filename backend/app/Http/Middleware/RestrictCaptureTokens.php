@@ -22,7 +22,7 @@ class RestrictCaptureTokens
         if ($token instanceof PersonalAccessToken) {
             $isCapture = $request->isMethod('POST') && $request->is('api/brain/inbox');
 
-            abort_unless($isCapture && $token->can('brain:capture'), 403, 'Este token só permite capturar no inbox.');
+            abort_unless($isCapture && $token->can('brain:capture'), 403, __('messages.tokens.capture_only'));
         }
 
         return $next($request);

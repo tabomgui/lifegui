@@ -38,7 +38,7 @@ resumo:
 
 # {{title}}
 
-## Minhas anotações
+## {{annotations}}
 
 
 MD;
@@ -107,15 +107,16 @@ MD;
         $category = $request->validated('category');
         $title = $this->sanitizeTitle($request->validated('title'));
 
-        abort_if($title === '', 422, 'Título inválido.');
+        abort_if($title === '', 422, __('messages.brain.invalid_title'));
 
         $path = "{$category}/{$title}.md";
 
-        abort_if($this->vault->resolve($path) !== null, 409, 'Já existe uma nota com esse título.');
+        abort_if($this->vault->resolve($path) !== null, 409, __('messages.brain.note_exists'));
 
         $raw = strtr($this->template($category), [
             '{{title}}' => $title,
             '{{date}}' => now()->format('Y-m-d'),
+            '{{annotations}}' => __('notes.annotations_heading'),
         ]);
 
         $parsed = $this->vault->parse($raw);
@@ -130,7 +131,7 @@ MD;
 
         $body = $request->validated('body') ?? $parsed['body'];
 
-        abort_if($this->vault->write($path, $frontmatter, $body, mustExist: false) === null, 422, 'Categoria inválida.');
+        abort_if($this->vault->write($path, $frontmatter, $body, mustExist: false) === null, 422, __('messages.brain.invalid_category'));
 
         return response()->json(['data' => $this->full($path, $this->vault->read($path))], 201);
     }
@@ -164,7 +165,7 @@ MD;
 
         $target = '.trash/'.now()->format('Y-m-d').'-'.basename($path);
         $absoluteTarget = $this->vault->resolve($target, mustExist: false);
-        abort_if($absoluteTarget === null, 422, 'Lixeira não encontrada no vault.');
+        abort_if($absoluteTarget === null, 422, __('messages.brain.trash_missing'));
         rename($absolute, $absoluteTarget);
 
         // Vínculos com tarefas/hábitos apontam pro path antigo: limpa.

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { ArrowRight, Inbox as InboxIcon, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,6 +23,7 @@ import { useBrainInbox, useCaptureInbox, useDiscardInbox, usePromoteInbox } from
 import type { BrainCategory, InboxItem } from '@/types/api'
 
 export function CaptureBar() {
+  const { t } = useTranslation('brain')
   const capture = useCaptureInbox()
   const [content, setContent] = useState('')
   const [title, setTitle] = useState('')
@@ -32,29 +34,29 @@ export function CaptureBar() {
       await capture.mutateAsync({ content, ...(title.trim() ? { title: title.trim() } : {}) })
       setContent('')
       setTitle('')
-      toast.success('Capturado no inbox')
+      toast.success(t('inbox.captureSuccess'))
     } catch {
-      toast.error('Não foi possível capturar')
+      toast.error(t('inbox.captureError'))
     }
   }
 
   return (
     <div className="space-y-2 rounded-lg border bg-card p-3">
       <Textarea
-        placeholder="Cole um link ou texto pra guardar…"
+        placeholder={t('inbox.capturePlaceholder')}
         value={content}
         onChange={(e) => setContent(e.target.value)}
         className="min-h-[72px] text-sm"
       />
       <div className="flex gap-2">
         <Input
-          placeholder="Título (opcional)"
+          placeholder={t('inbox.titlePlaceholder')}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           className="h-8 text-sm"
         />
         <Button size="sm" onClick={submit} disabled={capture.isPending || !content.trim()}>
-          <Plus className="mr-1 h-3.5 w-3.5" /> Capturar
+          <Plus className="mr-1 h-3.5 w-3.5" /> {t('inbox.captureButton')}
         </Button>
       </div>
     </div>
@@ -66,6 +68,7 @@ function PromoteDialog({ item, categories, onClose }: {
   categories: BrainCategory[]
   onClose: () => void
 }) {
+  const { t } = useTranslation('brain')
   const promote = usePromoteInbox()
   const [category, setCategory] = useState<string>('')
   const [title, setTitle] = useState('')
@@ -89,10 +92,10 @@ function PromoteDialog({ item, categories, onClose }: {
         title: title.trim(),
         ...(resumo.trim() ? { resumo: resumo.trim() } : {}),
       })
-      toast.success('Nota criada')
+      toast.success(t('inbox.promote.success'))
       onClose()
     } catch {
-      toast.error('Não foi possível criar a nota')
+      toast.error(t('inbox.promote.error'))
     }
   }
 
@@ -100,15 +103,15 @@ function PromoteDialog({ item, categories, onClose }: {
     <Dialog open={item !== null} onOpenChange={(open) => { if (!open) onClose() }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Transformar em nota</DialogTitle>
+          <DialogTitle>{t('inbox.promote.title')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label>Categoria</Label>
+            <Label>{t('inbox.promote.categoryLabel')}</Label>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="w-full justify-start">
-                  {category || 'Escolher categoria'}
+                  {category || t('inbox.promote.chooseCategory')}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
@@ -121,17 +124,17 @@ function PromoteDialog({ item, categories, onClose }: {
             </DropdownMenu>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="promote-title">Título da nota</Label>
+            <Label htmlFor="promote-title">{t('inbox.promote.titleLabel')}</Label>
             <Input id="promote-title" value={title} onChange={(e) => setTitle(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="promote-resumo">Resumo (opcional)</Label>
+            <Label htmlFor="promote-resumo">{t('inbox.promote.resumoLabel')}</Label>
             <Input id="promote-resumo" value={resumo} onChange={(e) => setResumo(e.target.value)} />
           </div>
         </div>
         <DialogFooter>
           <Button onClick={submit} disabled={promote.isPending || !category || !title.trim()}>
-            Criar nota
+            {t('inbox.promote.submit')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -164,18 +167,19 @@ function LinkifiedPreview({ text }: { text: string }) {
 }
 
 export function InboxList({ categories }: { categories: BrainCategory[] }) {
+  const { t } = useTranslation('brain')
   const { data } = useBrainInbox()
   const items = data?.data ?? []
   const [promoting, setPromoting] = useState<InboxItem | null>(null)
   const discard = useDiscardInbox()
 
   async function discardItem(item: InboxItem) {
-    if (!confirm(`Descartar "${item.title}"? Vai pra 00-Inbox/descartados no vault.`)) return
+    if (!confirm(t('inbox.discardConfirm', { title: item.title }))) return
     try {
       await discard.mutateAsync(item.path)
-      toast.success('Captura descartada')
+      toast.success(t('inbox.discardSuccess'))
     } catch {
-      toast.error('Não foi possível descartar')
+      toast.error(t('inbox.discardError'))
     }
   }
 
@@ -183,7 +187,7 @@ export function InboxList({ categories }: { categories: BrainCategory[] }) {
     return (
       <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
         <InboxIcon className="h-6 w-6" />
-        Inbox vazio. Capture um link ou texto acima.
+        {t('inbox.empty')}
       </div>
     )
   }
@@ -202,7 +206,7 @@ export function InboxList({ categories }: { categories: BrainCategory[] }) {
             </div>
             <div className="flex shrink-0 items-center gap-1">
               <Button size="sm" variant="outline" onClick={() => setPromoting(item)}>
-                <ArrowRight className="mr-1 h-3.5 w-3.5" /> Virar nota
+                <ArrowRight className="mr-1 h-3.5 w-3.5" /> {t('inbox.turnIntoNote')}
               </Button>
               <Button
                 size="sm"
@@ -210,8 +214,8 @@ export function InboxList({ categories }: { categories: BrainCategory[] }) {
                 className="text-muted-foreground hover:text-destructive"
                 onClick={() => discardItem(item)}
                 disabled={discard.isPending}
-                aria-label={`Descartar ${item.title}`}
-                title="Descartar"
+                aria-label={t('inbox.discardAria', { title: item.title })}
+                title={t('inbox.discardTitle')}
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>

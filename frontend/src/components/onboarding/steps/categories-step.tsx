@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type * as React from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { useCategories, useCreateCategory } from '@/hooks/use-categories'
 import { Button } from '@/components/ui/button'
@@ -7,8 +8,10 @@ import { Input } from '@/components/ui/input'
 import { StepHeader } from '@/components/onboarding/step-header'
 import { SuggestionChip } from '@/components/onboarding/suggestion-chip'
 import { CATEGORY_SUGGESTIONS, nameKey } from '@/components/onboarding/suggestions'
+import { SUPPORTED_LOCALES } from '@/i18n/types'
 
 export function CategoriesStep() {
+  const { t, i18n } = useTranslation(['onboarding', 'common'])
   const { data: categories = [], isSuccess } = useCategories()
   const create = useCreateCategory()
   const [custom, setCustom] = useState('')
@@ -20,7 +23,7 @@ export function CategoriesStep() {
       await create.mutateAsync({ name, icon, color })
       return true
     } catch {
-      toast.error(`Não foi possível criar "${name}"`)
+      toast.error(t('errors.createFailed', { name }))
       return false
     }
   }
@@ -34,35 +37,46 @@ export function CategoriesStep() {
 
   return (
     <div className="space-y-4">
-      <StepHeader
-        title="Categorias de tarefas"
-        description="Cada categoria vira uma aba do quadro de tarefas. Toque para adicionar."
-      />
+      <StepHeader title={t('categories.title')} description={t('categories.description')} />
       <div className="flex flex-wrap gap-2">
-        {CATEGORY_SUGGESTIONS.map((s) => (
-          <SuggestionChip
-            key={s.name}
-            label={s.name}
-            icon={s.icon}
-            color={s.color}
-            added={existing.has(nameKey(s.name))}
-            disabled={create.isPending || !isSuccess}
-            onAdd={() => add(s.name, s.icon, s.color)}
-          />
-        ))}
+        {CATEGORY_SUGGESTIONS.map((s) => {
+          // Nome traduzido no idioma ativo: é o texto exibido e o valor enviado à API.
+          const label = t(`suggestions.categories.${s.key}`)
+          // "Já adicionada" compara com o nome em qualquer idioma suportado, não só o ativo:
+          // evita duplicar quando a categoria foi criada antes de trocar de idioma ou ao repetir o wizard.
+          const added = SUPPORTED_LOCALES.some((lng) =>
+            existing.has(nameKey(i18n.t(`onboarding:suggestions.categories.${s.key}`, { lng }))),
+          )
+          return (
+            <SuggestionChip
+              key={s.key}
+              label={label}
+              icon={s.icon}
+              color={s.color}
+              added={added}
+              disabled={create.isPending || !isSuccess}
+              onAdd={() => add(label, s.icon, s.color)}
+            />
+          )
+        })}
       </div>
       <form onSubmit={onCustom} className="flex gap-2">
-        <Input value={custom} onChange={(e) => setCustom(e.target.value)} placeholder="Outra categoria" maxLength={255} />
+        <Input
+          value={custom}
+          onChange={(e) => setCustom(e.target.value)}
+          placeholder={t('categories.customPlaceholder')}
+          maxLength={255}
+        />
         <Button
           type="submit"
           variant="outline"
           disabled={!custom.trim() || create.isPending || !isSuccess || existing.has(customKey)}
         >
-          Adicionar
+          {t('common:actions.add')}
         </Button>
       </form>
       {categories.length > 0 && (
-        <p className="text-xs text-muted-foreground">{categories.length} categoria(s) no quadro.</p>
+        <p className="text-xs text-muted-foreground">{t('categories.count', { count: categories.length })}</p>
       )}
     </div>
   )

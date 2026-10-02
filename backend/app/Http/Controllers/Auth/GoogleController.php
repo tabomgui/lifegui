@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\GoogleCredentials;
+use App\Support\Locale;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -34,14 +35,17 @@ class GoogleController extends Controller
             return redirect(config('app.frontend_url').'/login?error=registration_closed');
         }
 
-        $user = User::updateOrCreate(
-            ['email' => $googleUser->getEmail()],
-            [
-                'name' => $googleUser->getName(),
-                'google_id' => $googleUser->getId(),
-                'avatar' => $googleUser->getAvatar(),
-            ]
-        );
+        $user = User::firstOrNew(['email' => $googleUser->getEmail()]);
+        $user->fill([
+            'name' => $googleUser->getName(),
+            'google_id' => $googleUser->getId(),
+            'avatar' => $googleUser->getAvatar(),
+        ]);
+        // Conta nova herda o idioma do navegador; conta existente mantém o dela.
+        if (! $user->exists) {
+            $user->locale = Locale::current();
+        }
+        $user->save();
 
         Auth::login($user);
 

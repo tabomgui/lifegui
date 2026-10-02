@@ -7,6 +7,7 @@ use App\Support\Calendar\CalendarNotConnectedException;
 use App\Support\Calendar\CalendarService;
 use App\Support\Vault\VaultService;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
 use Illuminate\Support\Facades\Auth;
@@ -16,11 +17,15 @@ use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Tool;
 
-#[Name('meus_estudos')]
-#[Description('Panorama dos estudos: notas do segundo cérebro por status e categoria (com títulos do que está em estudo e a revisar), progresso do hábito Estudar na semana e próximos blocos de estudo agendados. Use para "como estão meus estudos".')]
-class MeusEstudosTool extends Tool
+#[Name('my_studies')]
+#[Description('Overview of studies: second-brain notes by status and category (with titles of what is being studied and what needs review), progress of the Study habit this week, and upcoming scheduled study blocks. Use for "how are my studies going".')]
+class MyStudiesTool extends Tool
 {
     private const TZ = 'America/Sao_Paulo';
+
+    // Nomes aceitos pro hábito de estudo (já em minúsculas pra comparação
+    // case-insensitive), independente do idioma do usuário.
+    private const STUDY_HABIT_NAMES = ['estudar', 'study'];
 
     public function __construct(
         private VaultService $vault,
@@ -29,17 +34,17 @@ class MeusEstudosTool extends Tool
 
     public function handle(Request $request): Response
     {
-        $out = ['# Seus estudos', ''];
+        $out = [__('mcp.my_studies.heading'), ''];
 
         // Notas por categoria/status
         $estudando = [];
         $aRevisar = [];
-        $out[] = '## Notas';
+        $out[] = __('mcp.my_studies.notes_heading');
         foreach ($this->vault->categories() as $categoria) {
             $porStatus = [];
             foreach ($this->vault->listMarkdown($categoria) as $path) {
                 $note = $this->vault->read($path);
-                $status = $note['frontmatter']['status'] ?? 'sem-status';
+                $status = $note['frontmatter']['status'] ?? __('mcp.my_studies.no_status_label');
                 $porStatus[$status] = ($porStatus[$status] ?? 0) + 1;
                 $titulo = basename($path, '.md');
                 if ($status === 'estudando') {
@@ -57,26 +62,31 @@ class MeusEstudosTool extends Tool
         }
         if ($estudando !== []) {
             $out[] = '';
-            $out[] = '**Estudando agora:** '.implode('; ', $estudando);
+            $out[] = __('mcp.my_studies.studying_label').implode('; ', $estudando);
         }
         if ($aRevisar !== []) {
-            $out[] = '**A revisar:** '.implode('; ', $aRevisar);
+            $out[] = __('mcp.my_studies.to_review_label').implode('; ', $aRevisar);
         }
         $out[] = '';
 
-        // Hábito Estudar
-        $habit = Habit::whereNull('archived_at')->whereRaw('LOWER(name) = ?', ['estudar'])->first();
-        $out[] = '## Hábito Estudar';
+        // Hábito de estudo: qualquer nome em self::STUDY_HABIT_NAMES (ex.: "Estudar", "Study").
+        $placeholders = implode(',', array_fill(0, count(self::STUDY_HABIT_NAMES), '?'));
+        $habit = Habit::whereNull('archived_at')
+            ->whereRaw("LOWER(name) IN ({$placeholders})", self::STUDY_HABIT_NAMES)
+            ->orderBy('id')
+            ->first();
+        $out[] = __('mcp.my_studies.habit_heading');
         if ($habit === null) {
-            $out[] = 'Nenhum hábito chamado "Estudar" ativo.';
+            $out[] = __('mcp.my_studies.habit_not_found');
         } else {
             $hoje = CarbonImmutable::now(self::TZ);
             $semana = $habit->logs()
-                ->whereBetween('date', [$hoje->startOfWeek()->toDateString(), $hoje->endOfWeek()->toDateString()])
+                ->whereBetween('date', [$hoje->startOfWeek(CarbonInterface::MONDAY)->toDateString(), $hoje->endOfWeek(CarbonInterface::SUNDAY)->toDateString()])
                 ->where('done', true)
                 ->count();
-            $meta = $habit->target_per_week ? " de {$habit->target_per_week} (meta)" : '';
-            $out[] = "Feito {$semana}x nesta semana{$meta}.";
+            $out[] = $habit->target_per_week
+                ? __('mcp.my_studies.progress_with_target', ['n' => $semana, 'target' => $habit->target_per_week])
+                : __('mcp.my_studies.progress', ['n' => $semana]);
 
             // Sequência: dias consecutivos com registro, contando de ontem/hoje pra trás.
             $dates = $habit->logs()->where('done', true)->orderByDesc('date')->pluck('date')->map(fn ($d) => $d->format('Y-m-d'))->all();
@@ -86,27 +96,27 @@ class MeusEstudosTool extends Tool
                 $streak++;
                 $cursor = $cursor->subDay();
             }
-            $out[] = "Sequência atual: {$streak} dia(s).";
+            $out[] = trans_choice('mcp.my_studies.streak', $streak);
         }
         $out[] = '';
 
         // Próximos blocos agendados
-        $out[] = '## Próximos blocos na agenda';
+        $out[] = __('mcp.my_studies.upcoming_heading');
         try {
             $eventos = $habit !== null
                 ? $this->calendar->linked(Auth::user(), 'habit', (string) $habit->id)
                 : [];
             if ($eventos === []) {
-                $out[] = 'Nenhum bloco de estudo agendado.';
+                $out[] = __('mcp.my_studies.no_upcoming');
             }
             foreach ($eventos as $e) {
                 $inicio = $e['start'] ? CarbonImmutable::parse($e['start'])->setTimezone(self::TZ)->format('H:i') : '';
                 $rec = collect($e['recurrence'] ?? [])->first(fn ($r) => str_starts_with($r, 'RRULE:'));
-                $dias = $rec && preg_match('/BYDAY=([^;]+)/', $rec, $m) ? " (toda {$m[1]})" : '';
-                $out[] = "- {$e['title']} às {$inicio}{$dias}";
+                $dias = $rec && preg_match('/BYDAY=([^;]+)/', $rec, $m) ? __('mcp.my_studies.weekly_suffix', ['day' => $m[1]]) : '';
+                $out[] = __('mcp.my_studies.event_item', ['title' => $e['title'], 'time' => $inicio, 'days' => $dias]);
             }
         } catch (CalendarNotConnectedException) {
-            $out[] = 'Google Calendar não conectado.';
+            $out[] = __('mcp.my_studies.calendar_not_connected');
         }
 
         return Response::text(implode("\n", $out));

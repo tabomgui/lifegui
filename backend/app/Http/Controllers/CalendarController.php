@@ -94,7 +94,7 @@ class CalendarController extends Controller
 
         $event = $this->calendar->create($request->user(), [
             'title' => $data['title'],
-            'description' => 'Criado pelo lifegui · '.$this->backlink($data['type']),
+            'description' => $this->calendar->createdByDescription($data['type']),
             'start' => $start->toRfc3339String(),
             'end' => $end->toRfc3339String(),
             'timezone' => $data['timezone'] ?? config('app.timezone'),
@@ -126,7 +126,7 @@ class CalendarController extends Controller
 
         $user = $request->user();
         $event = $this->calendar->get($user, $eventId);
-        abort_if($event['external'], 403, 'Evento não gerenciado pelo lifegui.');
+        abort_if($event['external'], 403, __('messages.calendar.external_event'));
 
         $tz = $data['timezone'] ?? config('app.timezone');
         $targetId = $eventId;
@@ -184,7 +184,7 @@ class CalendarController extends Controller
     {
         $event = $this->calendar->get($request->user(), $eventId);
 
-        abort_if($event['external'], 403, 'Evento não gerenciado pelo lifegui.');
+        abort_if($event['external'], 403, __('messages.calendar.external_event'));
     }
 
     /** ref precisa existir e ser do usuário (tarefa/hábito no banco, nota no vault). */
@@ -197,19 +197,7 @@ class CalendarController extends Controller
         };
 
         if (! $owned) {
-            throw ValidationException::withMessages(['ref' => 'Item não encontrado.']);
+            throw ValidationException::withMessages(['ref' => __('messages.calendar.item_not_found')]);
         }
-    }
-
-    private function backlink(string $type): string
-    {
-        $path = match ($type) {
-            'task' => '/',
-            'habit' => '/habits',
-            'note' => '/cerebro',
-            'event' => '/agenda',
-        };
-
-        return config('app.frontend_url').$path;
     }
 }

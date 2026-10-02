@@ -1,8 +1,10 @@
 import { Link2 } from 'lucide-react'
-import { STATUS_BADGE, STATUS_LABEL } from '@/components/brain/status'
+import { useTranslation } from 'react-i18next'
+import { STATUS_BADGE, STATUS_LABEL_KEY } from '@/components/brain/status'
 import type { BrainNoteSummary } from '@/types/api'
 
 export function NoteCard({ note, onOpen }: { note: BrainNoteSummary; onOpen: (path: string) => void }) {
+  const { t } = useTranslation('brain')
   return (
     <button
       type="button"
@@ -13,7 +15,7 @@ export function NoteCard({ note, onOpen }: { note: BrainNoteSummary; onOpen: (pa
         <span className="text-sm font-medium leading-snug">{note.title}</span>
         {note.status && (
           <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${STATUS_BADGE[note.status]}`}>
-            {STATUS_LABEL[note.status]}
+            {t(STATUS_LABEL_KEY[note.status])}
           </span>
         )}
       </div>

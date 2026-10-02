@@ -1,0 +1,47 @@
+export default {
+  language: {
+    label: 'Language',
+    en: 'English',
+    'pt-BR': 'Português (Brasil)',
+  },
+  actions: {
+    add: 'Add',
+    save: 'Save',
+    cancel: 'Cancel',
+    delete: 'Delete',
+    edit: 'Edit',
+    create: 'Create',
+    close: 'Close',
+    back: 'Back',
+    continue: 'Continue',
+    copy: 'Copy',
+    undo: 'Undo',
+  },
+  states: {
+    loading: 'Loading…',
+    error: 'Something went wrong',
+  },
+  nav: {
+    tasks: 'Tasks',
+    habits: 'Habits',
+    brain: 'Brain',
+    calendar: 'Calendar',
+    dashboards: 'Dashboards',
+    settings: 'Settings',
+    docs: 'Documentation',
+    logout: 'Sign out',
+    openMenu: 'Open menu',
+    closeMenu: 'Close menu',
+    toggleTheme: 'Toggle theme',
+  },
+  period: {
+    '7d': '7 days',
+    '30d': '30 days',
+    '90d': '90 days',
+    '365d': '1 year',
+  },
+  heatmap: {
+    less: 'Less',
+    more: 'More',
+  },
+} as const

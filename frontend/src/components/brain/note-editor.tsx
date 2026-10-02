@@ -3,6 +3,7 @@ import { Crepe } from '@milkdown/crepe'
 import { editorViewCtx } from '@milkdown/kit/core'
 import { SlashProvider, slashFactory } from '@milkdown/kit/plugin/slash'
 import type { EditorView } from '@milkdown/prose/view'
+import i18n from '@/i18n'
 import '@milkdown/crepe/theme/common/style.css'
 import '@milkdown/crepe/theme/frame.css'
 
@@ -77,7 +78,7 @@ function makeWikilinkProvider(titles: () => string[]) {
 
     if (options.length === 0) {
       const empty = document.createElement('div')
-      empty.textContent = 'Nenhuma nota com esse título'
+      empty.textContent = i18n.t('brain:editor.noMatch')
       empty.className = 'px-2 py-1.5 text-sm text-muted-foreground'
       content.replaceChildren(empty)
     }

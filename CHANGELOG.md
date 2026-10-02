@@ -5,6 +5,45 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **English interface.** Each user picks English or Português (Brasil) in Settings or in
+  the first-run wizard. New accounts start in the browser language; existing accounts
+  stay in Portuguese.
+- API errors, validation messages and the MCP authorization page follow the user's
+  language.
+- Link to the documentation site in the sidebar.
+- `PATCH /api/me` to change the signed-in user's language; `GET /api/me` now also
+  returns the user's `locale`.
+
+### Changed
+
+- **Breaking:** MCP tools were renamed to English, and because of this breaking change
+  the next release is a major version (`2.0.0`):
+
+  | Old name          | New name       |
+  | ----------------- | -------------- |
+  | `meu_dia`         | `my_day`       |
+  | `meus_estudos`    | `my_studies`   |
+  | `buscar_notas`    | `search_notes` |
+  | `capturar`        | `capture`      |
+  | `criar_tarefa`    | `create_task`  |
+  | `concluir_habito` | `complete_habit` |
+  | `agendar`         | `schedule`     |
+
+  Their parameters are in English too. MCP answers follow the user's language. Update
+  any prompt or skill that mentions the old names.
+- New notes created from the default template use the heading "My notes" for English
+  users. Existing notes are unchanged.
+- Events that lifegui creates in Google Calendar get their description in the user's
+  language.
+
+### Fixed
+
+- Weeks always start on Monday, whatever the user's language.
+
 ## [1.0.0] - 2026-10-01
 
 First stable release.

@@ -39,7 +39,7 @@ class TaskReportRequest extends FormRequest
             // Janela INCLUSIVA: diff + 1 é o nº de dias. Cap de 400 dias como o heatmap.
             $periodDays = $fromDate->diffInDays($toDate, true) + 1;
             if ($periodDays > 400) {
-                $validator->errors()->add('to', 'Período máximo de 400 dias.');
+                $validator->errors()->add('to', __('messages.validation.max_period', ['days' => 400]));
             }
         });
     }

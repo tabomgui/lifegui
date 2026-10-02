@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\MeController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\SetupController;
 use App\Http\Controllers\Brain\CategoryController as BrainCategoryController;
@@ -19,8 +20,6 @@ use App\Http\Controllers\SubtaskController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TokenController;
 use App\Http\Middleware\RestrictCaptureTokens;
-use App\Http\Resources\UserResource;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Primeira conta da instância (só funciona com a tabela users vazia).
@@ -32,14 +31,14 @@ Route::post('/register', RegisterController::class);
 Route::post('/login', [LoginController::class, 'store']);
 Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth:sanctum');
 
-Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
-    return new UserResource($request->user());
-});
+Route::middleware('auth:sanctum')->get('/me', [MeController::class, 'show']);
 
 // Rotas OAuth do Google movidas para routes/web.php (precisam do middleware web:
 // sessão/cookies) — o callback vem do Google, fora do fluxo stateful do Sanctum.
 
 Route::middleware(['auth:sanctum', RestrictCaptureTokens::class])->group(function () {
+    Route::patch('/me', [MeController::class, 'update']);
+
     Route::post('/onboarding/complete', [OnboardingController::class, 'complete']);
 
     Route::get('/categories', [CategoryController::class, 'index']);

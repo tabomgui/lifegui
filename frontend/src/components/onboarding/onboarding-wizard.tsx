@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ComponentType } from 'react'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -15,16 +16,18 @@ import { DoneStep } from '@/components/onboarding/steps/done-step'
 
 type StepKey = 'welcome' | 'modules' | 'categories' | 'habits' | 'integrations' | 'done'
 
-const STEPS: Record<StepKey, { label: string; component: ComponentType }> = {
-  welcome: { label: 'Início', component: WelcomeStep },
-  modules: { label: 'Módulos', component: ModulesStep },
-  categories: { label: 'Categorias', component: CategoriesStep },
-  habits: { label: 'Hábitos', component: HabitsStep },
-  integrations: { label: 'Integrações', component: IntegrationsStep },
-  done: { label: 'Pronto', component: DoneStep },
+// Rótulos vêm de t(`steps.${key}`); aqui só o componente de cada passo.
+const STEP_COMPONENTS: Record<StepKey, ComponentType> = {
+  welcome: WelcomeStep,
+  modules: ModulesStep,
+  categories: CategoriesStep,
+  habits: HabitsStep,
+  integrations: IntegrationsStep,
+  done: DoneStep,
 }
 
 export function OnboardingWizard({ open, onFinish }: { open: boolean; onFinish: () => Promise<void> }) {
+  const { t } = useTranslation(['onboarding', 'common'])
   const { isEnabled } = useEnabledModules()
   const tasksOn = isEnabled('tasks')
   const habitsOn = isEnabled('habits')
@@ -48,7 +51,8 @@ export function OnboardingWizard({ open, onFinish }: { open: boolean; onFinish: 
   const index = Math.max(0, steps.indexOf(current))
   const key = steps[index]
   const last = index === steps.length - 1
-  const Step = STEPS[key].component
+  const Step = STEP_COMPONENTS[key]
+  const stepLabel = t(`steps.${key}`)
 
   // Reabertura (ex.: replay()): o fechado->aberto relê o storage, que o replay() já limpou,
   // então o wizard sempre recomeça em 'welcome' nesse caso.
@@ -75,7 +79,7 @@ export function OnboardingWizard({ open, onFinish }: { open: boolean; onFinish: 
       sessionStorage.removeItem(STEP_STORAGE_KEY)
       setCurrent('welcome')
     } catch {
-      toast.error('Não foi possível concluir. Tente de novo.')
+      toast.error(t('errors.finish'))
     } finally {
       setFinishing(false)
     }
@@ -89,15 +93,15 @@ export function OnboardingWizard({ open, onFinish }: { open: boolean; onFinish: 
         onInteractOutside={(e) => e.preventDefault()}
         className="sm:max-w-lg"
       >
-        <DialogTitle className="sr-only">Configuração inicial</DialogTitle>
+        <DialogTitle className="sr-only">{t('dialog.title')}</DialogTitle>
         <DialogDescription className="sr-only">
-          Passo {index + 1} de {steps.length}: {STEPS[key].label}
+          {t('dialog.description', { current: index + 1, total: steps.length, step: stepLabel })}
         </DialogDescription>
         <ol className="flex items-center gap-1.5" aria-hidden="true">
           {steps.map((s, i) => (
             <li
               key={s}
-              title={STEPS[s].label}
+              title={t(`steps.${s}`)}
               className={cn('h-1.5 flex-1 rounded-full', i <= index ? 'bg-primary' : 'bg-muted')}
             />
           ))}
@@ -110,22 +114,22 @@ export function OnboardingWizard({ open, onFinish }: { open: boolean; onFinish: 
             <span />
           ) : (
             <Button variant="ghost" size="sm" onClick={finish} disabled={finishing}>
-              Pular configuração
+              {t('actions.skip')}
             </Button>
           )}
           <div className="flex gap-2">
             {index > 0 && (
               <Button variant="outline" size="sm" onClick={() => go(-1)}>
-                <ArrowLeft className="h-4 w-4" /> Voltar
+                <ArrowLeft className="h-4 w-4" /> {t('common:actions.back')}
               </Button>
             )}
             {last ? (
               <Button size="sm" onClick={finish} disabled={finishing}>
-                Começar
+                {t('actions.start')}
               </Button>
             ) : (
               <Button size="sm" onClick={() => go(1)}>
-                Continuar <ArrowRight className="h-4 w-4" />
+                {t('common:actions.continue')} <ArrowRight className="h-4 w-4" />
               </Button>
             )}
           </div>

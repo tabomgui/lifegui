@@ -1,23 +1,25 @@
 <?php
 
 use App\Mcp\Servers\LifeguiServer;
-use App\Mcp\Tools\AgendarTool;
-use App\Mcp\Tools\BuscarNotasTool;
-use App\Mcp\Tools\CapturarTool;
-use App\Mcp\Tools\ConcluirHabitoTool;
-use App\Mcp\Tools\CriarTarefaTool;
-use App\Mcp\Tools\MeuDiaTool;
-use App\Mcp\Tools\MeusEstudosTool;
+use App\Mcp\Tools\CaptureTool;
+use App\Mcp\Tools\CompleteHabitTool;
+use App\Mcp\Tools\CreateTaskTool;
+use App\Mcp\Tools\MyDayTool;
+use App\Mcp\Tools\MyStudiesTool;
+use App\Mcp\Tools\ScheduleTool;
+use App\Mcp\Tools\SearchNotesTool;
 use App\Models\Category;
 use App\Models\Habit;
 use App\Models\Task;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     Cache::flush();
+    app()->setLocale('pt_BR');
     $this->user = User::factory()->create(['google_calendar_refresh_token' => 'rt-abc']);
     $this->actingAs($this->user);
 
@@ -44,34 +46,43 @@ beforeEach(function () {
 
 afterEach(function () {
     File::deleteDirectory($this->vaultRoot);
+    Carbon::setTestNow();
 });
 
-test('meu_dia resume tarefas, agenda, hábitos e inbox', function () {
-    Task::factory()->for($this->user)->create(['title' => 'Pagar boleto', 'status' => 'todo', 'due_date' => now()->subDay()]);
+test('servidor expõe as tools com nomes em inglês', function () {
+    $names = collect((new ReflectionClass(LifeguiServer::class))->getDefaultProperties()['tools'])
+        ->map(fn ($class) => app($class)->name())
+        ->sort()->values()->all();
+
+    expect($names)->toBe(['capture', 'complete_habit', 'create_task', 'my_day', 'my_studies', 'schedule', 'search_notes']);
+});
+
+test('my_day resume tarefas, agenda, hábitos e inbox', function () {
+    Task::factory()->for($this->user)->create(['title' => 'Pagar boleto', 'status' => 'todo', 'due_date' => now('America/Sao_Paulo')->subDay()]);
     Habit::factory()->for($this->user)->create(['name' => 'Leitura']);
     makeNote('00-Inbox/captura-x.md', ['status' => 'novo'], "https://exemplo.com\n");
 
-    LifeguiServer::actingAs($this->user)->tool(MeuDiaTool::class)
+    LifeguiServer::actingAs($this->user)->tool(MyDayTool::class)
         ->assertOk()
         ->assertSee('ATRASADA')
         ->assertSee('Pagar boleto')
         ->assertSee('Leitura')
-        ->assertSee('1 captura(s)');
+        ->assertSee('1 captura esperando');
 });
 
-test('meu_dia avisa quando Google Calendar não está conectado', function () {
+test('my_day avisa quando Google Calendar não está conectado', function () {
     $this->user->forceFill(['google_calendar_refresh_token' => null])->save();
 
-    LifeguiServer::actingAs($this->user)->tool(MeuDiaTool::class)
+    LifeguiServer::actingAs($this->user)->tool(MyDayTool::class)
         ->assertOk()
         ->assertSee('não conectado');
 });
 
-test('meus_estudos mostra notas por status e hábito Estudar', function () {
+test('my_studies mostra notas por status e hábito Estudar', function () {
     $habit = Habit::factory()->for($this->user)->create(['name' => 'Estudar', 'target_per_week' => 4]);
-    $habit->logs()->create(['date' => now()->format('Y-m-d'), 'done' => true, 'skipped' => false]);
+    $habit->logs()->create(['date' => now('America/Sao_Paulo')->format('Y-m-d'), 'done' => true, 'skipped' => false]);
 
-    LifeguiServer::actingAs($this->user)->tool(MeusEstudosTool::class)
+    LifeguiServer::actingAs($this->user)->tool(MyStudiesTool::class)
         ->assertOk()
         ->assertSee('RAG')
         ->assertSee('estudando: 1')
@@ -79,38 +90,54 @@ test('meus_estudos mostra notas por status e hábito Estudar', function () {
         ->assertSee('Sequência atual: 1');
 });
 
-test('buscar_notas acha por conteúdo e lê nota inteira por caminho', function () {
-    LifeguiServer::actingAs($this->user)->tool(BuscarNotasTool::class, ['busca' => 'busca e geração'])
+test('my_studies conta a semana de segunda a domingo mesmo com locale pt-BR', function () {
+    // app()->setLocale('pt_BR') (beforeEach) propaga pra Carbon::setLocale() via o
+    // listener de LocaleUpdated do nesbot/carbon — e pro locale pt_BR, a semana do
+    // Carbon começa no domingo. Sem fixar MONDAY/SUNDAY explicitamente, a consulta
+    // semanal do hábito ficaria errada sempre que "hoje" for domingo.
+    Carbon::setTestNow(Carbon::parse('2026-10-04 12:00:00', 'America/Sao_Paulo')); // domingo
+
+    $habit = Habit::factory()->for($this->user)->create(['name' => 'Estudar', 'target_per_week' => 4]);
+    // Segunda-feira da mesma semana ISO (segunda a domingo) que contém o domingo acima.
+    $habit->logs()->create(['date' => '2026-09-28', 'done' => true, 'skipped' => false]);
+
+    LifeguiServer::actingAs($this->user)->tool(MyStudiesTool::class)
+        ->assertOk()
+        ->assertSee('Feito 1x nesta semana de 4');
+});
+
+test('search_notes acha por conteúdo e lê nota inteira por caminho', function () {
+    LifeguiServer::actingAs($this->user)->tool(SearchNotesTool::class, ['query' => 'busca e geração'])
         ->assertOk()
         ->assertSee('RAG')
         ->assertSee('IA/RAG.md');
 
-    LifeguiServer::actingAs($this->user)->tool(BuscarNotasTool::class, ['caminho' => 'IA/RAG.md'])
+    LifeguiServer::actingAs($this->user)->tool(SearchNotesTool::class, ['path' => 'IA/RAG.md'])
         ->assertOk()
         ->assertSee('Retrieval augmented generation');
 });
 
-test('buscar_notas sem args retorna erro claro', function () {
-    LifeguiServer::actingAs($this->user)->tool(BuscarNotasTool::class)
+test('search_notes sem args retorna erro claro', function () {
+    LifeguiServer::actingAs($this->user)->tool(SearchNotesTool::class)
         ->assertHasErrors();
 });
 
-test('capturar cria arquivo no inbox', function () {
-    LifeguiServer::actingAs($this->user)->tool(CapturarTool::class, [
-        'conteudo' => 'https://exemplo.com/artigo',
-        'titulo' => 'Artigo legal',
+test('capture cria arquivo no inbox', function () {
+    LifeguiServer::actingAs($this->user)->tool(CaptureTool::class, [
+        'content' => 'https://exemplo.com/artigo',
+        'title' => 'Artigo legal',
     ])->assertOk()->assertSee('Artigo legal');
 
     expect(file_exists(vaultPath().'/00-Inbox/Artigo legal.md'))->toBeTrue();
 });
 
-test('criar_tarefa com categoria pelo nome', function () {
+test('create_task com categoria pelo nome', function () {
     Category::factory()->for($this->user)->create(['name' => 'Casa']);
 
-    LifeguiServer::actingAs($this->user)->tool(CriarTarefaTool::class, [
-        'titulo' => 'Trocar lâmpada',
-        'categoria' => 'casa',
-        'prazo' => '2026-09-30',
+    LifeguiServer::actingAs($this->user)->tool(CreateTaskTool::class, [
+        'title' => 'Trocar lâmpada',
+        'category' => 'casa',
+        'due' => '2026-09-30',
     ])->assertOk()->assertSee('Trocar lâmpada');
 
     $task = Task::withoutGlobalScopes()->where('title', 'Trocar lâmpada')->first();
@@ -118,42 +145,42 @@ test('criar_tarefa com categoria pelo nome', function () {
         ->and($task->due_date->format('Y-m-d'))->toBe('2026-09-30');
 });
 
-test('criar_tarefa com categoria inexistente erra com lista', function () {
+test('create_task com categoria inexistente erra com lista', function () {
     Category::factory()->for($this->user)->create(['name' => 'Casa']);
 
-    LifeguiServer::actingAs($this->user)->tool(CriarTarefaTool::class, [
-        'titulo' => 'X', 'categoria' => 'Trabalho',
+    LifeguiServer::actingAs($this->user)->tool(CreateTaskTool::class, [
+        'title' => 'X', 'category' => 'Trabalho',
     ])->assertHasErrors()->assertSee('Casa');
 });
 
-test('concluir_habito marca hoje e não desfaz se repetido', function () {
+test('complete_habit marca hoje e não desfaz se repetido', function () {
     Habit::factory()->for($this->user)->create(['name' => 'Leitura']);
 
-    LifeguiServer::actingAs($this->user)->tool(ConcluirHabitoTool::class, ['nome' => 'leitura'])
+    LifeguiServer::actingAs($this->user)->tool(CompleteHabitTool::class, ['name' => 'leitura'])
         ->assertOk()->assertSee('Sequência atual: 1');
 
-    LifeguiServer::actingAs($this->user)->tool(ConcluirHabitoTool::class, ['nome' => 'Leitura'])
+    LifeguiServer::actingAs($this->user)->tool(CompleteHabitTool::class, ['name' => 'Leitura'])
         ->assertOk()->assertSee('já estava marcado');
 
     expect(Habit::first()->logs()->count())->toBe(1);
 });
 
-test('concluir_habito com nome errado lista os ativos', function () {
+test('complete_habit com nome errado lista os ativos', function () {
     Habit::factory()->for($this->user)->create(['name' => 'Leitura']);
 
-    LifeguiServer::actingAs($this->user)->tool(ConcluirHabitoTool::class, ['nome' => 'Corrida'])
+    LifeguiServer::actingAs($this->user)->tool(CompleteHabitTool::class, ['name' => 'Corrida'])
         ->assertHasErrors()->assertSee('Leitura');
 });
 
-test('agendar cria evento recorrente vinculado a hábito', function () {
+test('schedule cria evento recorrente vinculado a hábito', function () {
     $habit = Habit::factory()->for($this->user)->create(['name' => 'Estudar']);
 
-    LifeguiServer::actingAs($this->user)->tool(AgendarTool::class, [
-        'titulo' => 'Estudar IA',
-        'inicio' => '2026-09-28T19:30:00',
-        'tipo' => 'habit',
+    LifeguiServer::actingAs($this->user)->tool(ScheduleTool::class, [
+        'title' => 'Estudar IA',
+        'start' => '2026-09-28T19:30:00',
+        'type' => 'habit',
         'ref' => (string) $habit->id,
-        'recorrencia_dias' => ['MO', 'WE'],
+        'repeat_days' => ['MO', 'WE'],
     ])->assertOk()->assertSee('Evento criado');
 
     Http::assertSent(function ($request) {
@@ -167,19 +194,19 @@ test('agendar cria evento recorrente vinculado a hábito', function () {
     });
 });
 
-test('agendar sem Calendar conectado erra com instrução', function () {
+test('schedule sem Calendar conectado erra com instrução', function () {
     $this->user->forceFill(['google_calendar_refresh_token' => null])->save();
 
-    LifeguiServer::actingAs($this->user)->tool(AgendarTool::class, [
-        'titulo' => 'X', 'inicio' => '2026-09-28T19:30:00',
+    LifeguiServer::actingAs($this->user)->tool(ScheduleTool::class, [
+        'title' => 'X', 'start' => '2026-09-28T19:30:00',
     ])->assertHasErrors()->assertSee('não conectado');
 });
 
-test('agendar recusa ref de outro usuário', function () {
+test('schedule recusa ref de outro usuário', function () {
     $other = User::factory()->create();
     $task = Task::factory()->for($other)->create();
 
-    LifeguiServer::actingAs($this->user)->tool(AgendarTool::class, [
-        'titulo' => 'X', 'inicio' => '2026-09-28T19:30:00', 'tipo' => 'task', 'ref' => (string) $task->id,
+    LifeguiServer::actingAs($this->user)->tool(ScheduleTool::class, [
+        'title' => 'X', 'start' => '2026-09-28T19:30:00', 'type' => 'task', 'ref' => (string) $task->id,
     ])->assertHasErrors();
 });

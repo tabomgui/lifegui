@@ -17,9 +17,9 @@ use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Tool;
 
-#[Name('meu_dia')]
-#[Description('Resumo do dia do usuário: tarefas atrasadas e com prazo no dia, eventos da agenda (Google Calendar), hábitos ainda não feitos e capturas pendentes no inbox do segundo cérebro. Use para "o que tenho que fazer hoje" ou planejar o dia.')]
-class MeuDiaTool extends Tool
+#[Name('my_day')]
+#[Description("Summary of the user's day: overdue tasks and tasks due today, calendar events (Google Calendar), habits not done yet and pending captures in the second-brain inbox. Use for \"what do I have to do today\" or planning the day.")]
+class MyDayTool extends Tool
 {
     private const TZ = 'America/Sao_Paulo';
 
@@ -30,11 +30,11 @@ class MeuDiaTool extends Tool
 
     public function handle(Request $request): Response
     {
-        $dia = $request->get('data')
-            ? CarbonImmutable::parse($request->get('data'), self::TZ)
+        $dia = $request->get('date')
+            ? CarbonImmutable::parse($request->get('date'), self::TZ)
             : CarbonImmutable::now(self::TZ);
 
-        $out = ['# '.$dia->locale('pt_BR')->isoFormat('dddd, D [de] MMMM'), ''];
+        $out = ['# '.$dia->locale(app()->getLocale())->isoFormat(__('mcp.my_day.heading_format')), ''];
 
         // Tarefas
         $atrasadas = Task::where('status', '!=', 'done')
@@ -46,24 +46,24 @@ class MeuDiaTool extends Tool
             ->whereDate('due_date', $dia->toDateString())
             ->get();
 
-        $out[] = '## Tarefas';
+        $out[] = __('mcp.my_day.tasks_heading');
         if ($atrasadas->isEmpty() && $doDia->isEmpty()) {
-            $out[] = 'Nenhuma tarefa com prazo pra hoje. Nada atrasado.';
+            $out[] = __('mcp.my_day.no_tasks');
         }
         foreach ($atrasadas as $t) {
-            $out[] = "- [ATRASADA desde {$t->due_date->format('d/m')}] {$t->title}";
+            $out[] = __('mcp.my_day.overdue_item', ['date' => $t->due_date->format(__('mcp.date_format')), 'title' => $t->title]);
         }
         foreach ($doDia as $t) {
-            $out[] = '- '.($t->is_priority ? '[prioridade] ' : '').$t->title;
+            $out[] = '- '.($t->is_priority ? __('mcp.my_day.priority_marker') : '').$t->title;
         }
         $out[] = '';
 
         // Agenda
-        $out[] = '## Agenda';
+        $out[] = __('mcp.my_day.agenda_heading');
         try {
             $events = $this->calendar->events(Auth::user(), $dia->startOfDay(), $dia->endOfDay());
             if ($events === []) {
-                $out[] = 'Nenhum evento no dia.';
+                $out[] = __('mcp.my_day.no_events');
             }
             foreach ($events as $e) {
                 $start = $e['start'] ? CarbonImmutable::parse($e['start'])->setTimezone(self::TZ)->format('H:i') : '';
@@ -71,7 +71,7 @@ class MeuDiaTool extends Tool
                 $out[] = "- {$start} {$e['title']}{$tag}";
             }
         } catch (CalendarNotConnectedException) {
-            $out[] = 'Google Calendar não conectado (Configurações do lifegui).';
+            $out[] = __('mcp.my_day.calendar_not_connected');
         }
         $out[] = '';
 
@@ -79,16 +79,16 @@ class MeuDiaTool extends Tool
         $pendentes = Habit::whereNull('archived_at')
             ->whereDoesntHave('logs', fn ($q) => $q->where('date', $dia->toDateString()))
             ->get();
-        $out[] = '## Hábitos pendentes';
+        $out[] = __('mcp.my_day.habits_heading');
         $out[] = $pendentes->isEmpty()
-            ? 'Todos os hábitos do dia já registrados.'
+            ? __('mcp.my_day.all_habits_done')
             : $pendentes->map(fn ($h) => "- {$h->name}")->implode("\n");
         $out[] = '';
 
         // Inbox
         $inbox = count($this->vault->listMarkdown('00-Inbox'));
-        $out[] = '## Inbox do cérebro';
-        $out[] = $inbox === 0 ? 'Inbox zerado.' : "{$inbox} captura(s) esperando processamento.";
+        $out[] = __('mcp.my_day.inbox_heading');
+        $out[] = $inbox === 0 ? __('mcp.my_day.inbox_empty') : trans_choice('mcp.my_day.inbox_count', $inbox);
 
         return Response::text(implode("\n", $out));
     }
@@ -97,8 +97,8 @@ class MeuDiaTool extends Tool
     public function schema(JsonSchema $schema): array
     {
         return [
-            'data' => $schema->string()
-                ->description('Dia desejado no formato Y-m-d. Omita para hoje.'),
+            'date' => $schema->string()
+                ->description('Desired day, YYYY-MM-DD (e.g. 2026-10-01). Omit for today.'),
         ];
     }
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, Link, Navigate, useSearchParams } from 'react-router-dom'
 import type * as React from 'react'
 import axios from 'axios'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/use-auth'
 import { useSetupStatus } from '@/hooks/use-setup-status'
 import { Button } from '@/components/ui/button'
@@ -10,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 
 export default function Login() {
+  const { t } = useTranslation(['auth', 'common'])
   const { login, user, loading } = useAuth()
   const navigate = useNavigate()
   const { data: status, isLoading: statusLoading } = useSetupStatus()
@@ -21,16 +23,16 @@ export default function Login() {
   // O callback do Google volta com ?error=registration_closed para email sem conta.
   useEffect(() => {
     if (params.get('error') !== 'registration_closed') return
-    toast.error('Esta conta Google não está cadastrada nesta instância.')
+    toast.error(t('login.registrationClosed'))
     params.delete('error')
     setParams(params, { replace: true })
-  }, [params, setParams])
+  }, [params, setParams, t])
 
   // Já autenticado: não faz sentido ficar na tela de login.
   if (!loading && user) return <Navigate to="/" replace />
   // Evita flash do formulário (Google/cadastro aparecendo e sumindo) antes de saber o status da instância.
   if (statusLoading) {
-    return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Carregando…</div>
+    return <div className="flex min-h-screen items-center justify-center text-muted-foreground">{t('common:states.loading')}</div>
   }
   if (status?.needs_setup) return <Navigate to="/setup" replace />
 
@@ -42,7 +44,7 @@ export default function Login() {
       navigate('/')
     } catch (error: unknown) {
       const message = axios.isAxiosError(error) ? error.response?.data?.message : undefined
-      toast.error(message ?? 'Credenciais inválidas')
+      toast.error(message ?? t('login.invalidCredentials'))
     } finally {
       setSubmitting(false)
     }
@@ -53,25 +55,25 @@ export default function Login() {
       <form onSubmit={onSubmit} className="w-full max-w-sm space-y-4 rounded-lg border bg-card p-6">
         <div className="flex items-center gap-2">
           <img src="/favicon.svg" alt="lifegui" className="h-8 w-8 rounded-md" />
-          <h1 className="text-lg font-semibold">Entrar no lifegui</h1>
+          <h1 className="text-lg font-semibold">{t('login.title')}</h1>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{t('fields.email')}</Label>
           <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="password">Senha</Label>
+          <Label htmlFor="password">{t('fields.password')}</Label>
           <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
         </div>
-        <Button type="submit" className="w-full" disabled={submitting}>Entrar</Button>
+        <Button type="submit" className="w-full" disabled={submitting}>{t('login.submit')}</Button>
         {status?.google_login_enabled && (
           <a href="/api/auth/google/redirect" className="block w-full rounded-md border py-2 text-center text-sm hover:bg-accent">
-            Entrar com Google
+            {t('login.google')}
           </a>
         )}
         {status?.registration_enabled && (
           <p className="text-center text-sm text-muted-foreground">
-            Não tem conta? <Link to="/register" className="underline">Cadastre-se</Link>
+            {t('login.noAccount')} <Link to="/register" className="underline">{t('login.registerLink')}</Link>
           </p>
         )}
       </form>

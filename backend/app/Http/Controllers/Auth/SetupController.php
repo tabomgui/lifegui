@@ -7,6 +7,7 @@ use App\Http\Requests\Auth\SetupRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Support\GoogleCredentials;
+use App\Support\Locale;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -40,13 +41,14 @@ class SetupController extends Controller
                     'name' => $request->name,
                     'email' => $request->email,
                     'password' => Hash::make($request->password),
+                    'locale' => $request->input('locale') ?? Locale::current(),
                 ]);
             });
         } catch (LockTimeoutException) {
-            abort(409, 'Configuração em andamento. Tente de novo em instantes.');
+            abort(409, __('messages.setup.in_progress'));
         }
 
-        abort_if($user === null, 409, 'Esta instância já foi configurada.');
+        abort_if($user === null, 409, __('messages.setup.already_done'));
 
         Auth::login($user);
 

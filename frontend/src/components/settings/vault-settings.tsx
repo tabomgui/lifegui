@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { CircleAlert, CircleCheck, FolderCog } from 'lucide-react'
 import { api, csrf } from '@/lib/api'
@@ -25,6 +26,7 @@ function useVaultSettings(enabled: boolean) {
 }
 
 export function VaultSettings() {
+  const { t } = useTranslation(['settings', 'common'])
   const { isEnabled } = useEnabledModules()
   const enabled = isEnabled('brain')
   const { data } = useVaultSettings(enabled)
@@ -44,9 +46,9 @@ export function VaultSettings() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['settings', 'vault'] })
       qc.invalidateQueries({ queryKey: ['brain'] })
-      toast.success('Configuração salva')
+      toast.success(t('vault.toast.saved'))
     },
-    onError: () => toast.error('Caminho inválido: use um caminho absoluto (começando com /)'),
+    onError: () => toast.error(t('vault.toast.invalidPath')),
   })
 
   if (!enabled) return null
@@ -59,11 +61,11 @@ export function VaultSettings() {
         </div>
         <div className="min-w-0 flex-1 space-y-3">
           <div>
-            <div className="text-sm font-semibold">Vaults do Cérebro</div>
+            <div className="text-sm font-semibold">{t('vault.title')}</div>
             <div className="text-sm text-muted-foreground">
-              Pasta no servidor que contém um vault Obsidian por usuário
-              (<code className="rounded bg-muted px-1 text-xs">{'{raiz}/{id do usuário}'}</code>).
-              Vale pra instância inteira.
+              {t('vault.description')}{' '}
+              (<code className="rounded bg-muted px-1 text-xs">{t('vault.pathPattern')}</code>).{' '}
+              {t('vault.scopeNote')}
             </div>
           </div>
           <form
@@ -71,17 +73,17 @@ export function VaultSettings() {
             onSubmit={(e) => { e.preventDefault(); save.mutate(path.trim()) }}
           >
             <div className="flex-1 space-y-1">
-              <Label htmlFor="vaults-path" className="sr-only">Raiz dos vaults</Label>
+              <Label htmlFor="vaults-path" className="sr-only">{t('vault.pathLabel')}</Label>
               <Input
                 id="vaults-path"
                 value={path}
                 onChange={(e) => setPath(e.target.value)}
-                placeholder={data ? `padrão: ${data.effective}` : 'ex.: /vaults'}
+                placeholder={data ? t('vault.pathDefault', { path: data.effective }) : t('vault.pathExample')}
                 className="font-mono text-sm"
               />
             </div>
             <Button type="submit" size="sm" className="h-9" disabled={save.isPending}>
-              Salvar
+              {t('common:actions.save')}
             </Button>
           </form>
           {data && (
@@ -89,14 +91,26 @@ export function VaultSettings() {
               {data.initialized ? (
                 <>
                   <CircleCheck className="h-3.5 w-3.5 text-emerald-500" />
-                  Seu vault: <code className="rounded bg-muted px-1">{data.user_vault}</code>
+                  {t('vault.yourVault')} <code className="rounded bg-muted px-1">{data.user_vault}</code>
                 </>
               ) : (
                 <>
                   <CircleAlert className="h-3.5 w-3.5 text-amber-500" />
                   {data.exists
-                    ? <>A raiz existe, mas seu vault (<code className="rounded bg-muted px-1">{data.user_vault}</code>) ainda não.</>
-                    : <>A raiz <code className="rounded bg-muted px-1">{data.effective}</code> não existe no servidor.</>}
+                    ? (
+                      <>
+                        {t('vault.rootExistsPrefix')}
+                        <code className="rounded bg-muted px-1">{data.user_vault}</code>
+                        {t('vault.rootExistsSuffix')}
+                      </>
+                    )
+                    : (
+                      <>
+                        {t('vault.rootMissingPrefix')}{' '}
+                        <code className="rounded bg-muted px-1">{data.effective}</code>{' '}
+                        {t('vault.rootMissingSuffix')}
+                      </>
+                    )}
                 </>
               )}
             </div>

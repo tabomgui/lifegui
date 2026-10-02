@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 {{-- Consent OAuth do servidor MCP. Sem @vite: o backend não tem build de
      assets (o SPA é separado) — CSS inline, dark, alinhado ao tema do app. --}}
-<html lang="pt-BR">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Autorizar acesso — lifegui</title>
+    <title>{{ __('messages.consent.title') }} — lifegui</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <style>
         :root { color-scheme: dark; }
@@ -48,13 +48,12 @@
             <span>lifegui</span>
         </div>
 
-        <h1>Autorizar acesso</h1>
+        <h1>{{ __('messages.consent.title') }}</h1>
         <p class="sub">
-            <span class="client">{{ $client->name }}</span> quer se conectar à sua conta:
-            ler e agir sobre suas tarefas, hábitos, notas e agenda.
+            {!! __('messages.consent.wants_to_connect', ['client' => '<span class="client">'.e($client->name).'</span>']) !!}
         </p>
 
-        <div class="user">Conectando como {{ $user->name }} ({{ $user->email }})</div>
+        <div class="user">{{ __('messages.consent.connecting_as', ['name' => $user->name, 'email' => $user->email]) }}</div>
 
         <div class="actions">
             <form method="POST" action="{{ route('passport.authorizations.deny') }}">
@@ -63,14 +62,14 @@
                 <input type="hidden" name="state" value="{{ request('state') }}">
                 <input type="hidden" name="client_id" value="{{ $client->id }}">
                 <input type="hidden" name="auth_token" value="{{ $authToken }}">
-                <button type="submit" class="deny">Recusar</button>
+                <button type="submit" class="deny">{{ __('messages.consent.deny') }}</button>
             </form>
             <form method="POST" action="{{ route('passport.authorizations.approve') }}">
                 @csrf
                 <input type="hidden" name="state" value="{{ request('state') }}">
                 <input type="hidden" name="client_id" value="{{ $client->id }}">
                 <input type="hidden" name="auth_token" value="{{ $authToken }}">
-                <button type="submit" class="approve">Autorizar</button>
+                <button type="submit" class="approve">{{ __('messages.consent.approve') }}</button>
             </form>
         </div>
     </main>
