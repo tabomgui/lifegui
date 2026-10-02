@@ -1,4 +1,86 @@
 import type en from '../en/habits'
 import type { Messages } from '../../types'
 
-export default {} satisfies Messages<typeof en>
+export default {
+  newHabit: 'Novo hábito',
+  noTarget: 'sem meta',
+  table: {
+    name: 'Hábito',
+    weekSuffix: '· semana',
+  },
+  empty: {
+    noHabits: 'Nenhum hábito ainda. Crie o primeiro acima.',
+  },
+  confirmDelete: 'Apagar o hábito "{{name}}"?',
+  archived: {
+    toggle: 'Arquivados',
+    empty: 'Nenhum hábito arquivado.',
+    restore: 'Restaurar',
+  },
+  toast: {
+    deleteError: 'Não foi possível apagar',
+    archived: '"{{name}}" arquivado',
+    archiveError: 'Não foi possível arquivar',
+    restored: '"{{name}}" restaurado',
+    restoreError: 'Não foi possível restaurar',
+  },
+  row: {
+    archive: 'Arquivar',
+    archiveAria: 'Arquivar {{name}}',
+    editAria: 'Editar {{name}}',
+    deleteAria: 'Apagar {{name}}',
+    progressWithTarget: '{{done}}/{{target}} esta semana',
+    progressNoTarget: '{{done}} esta semana',
+    state: {
+      future: 'futuro',
+      done: 'feito',
+      skipped: 'pulado',
+      notDone: 'não feito',
+    },
+    futureTitle: '{{date}} (dia futuro)',
+    dayTitle: '{{date}} ({{state}})',
+    dayAria: '{{weekday}} {{date}} {{state}}',
+  },
+  today: {
+    heading: 'Hoje · {{date}}',
+    doneCount: '{{done}} de {{total}} feitos',
+    empty: 'Nenhum hábito ativo. Adicione um abaixo.',
+    skippedNote: 'pulado hoje · não quebra o streak',
+    targetWithValue: 'meta {{target}}/sem',
+    uncheckAria: 'Desmarcar {{name}}',
+    checkAria: 'Marcar {{name}} como feito',
+    undoSkip: 'Desfazer pular',
+    skipToday: 'Pular hoje',
+    undoSkipAria: 'Desfazer pular {{name}}',
+    skipAria: 'Pular {{name}} hoje',
+    legend: 'Toggle grande = feito. Botão tracejado = pular (folga/viagem).',
+  },
+  dialog: {
+    editTitle: 'Editar hábito',
+    newTitle: 'Novo hábito',
+    nameLabel: 'Nome',
+    targetLabel: 'Meta semanal (opcional, 1–7)',
+    colorLabel: 'Cor',
+    iconLabel: 'Ícone',
+    nameRequired: 'Dê um nome ao hábito',
+    saveError: 'Não foi possível salvar',
+  },
+  weekStepper: {
+    previous: 'Semana anterior',
+    next: 'Próxima semana',
+  },
+  heatmap: {
+    period_one: '{{count}} hábitos concluídos no período',
+    period_other: '{{count}} hábitos concluídos no período',
+    cell_one: '{{count}} hábito(s) concluído(s) em {{day}}',
+    cell_other: '{{count}} hábito(s) concluído(s) em {{day}}',
+    empty: 'Nenhum hábito em {{day}}',
+  },
+  radar: {
+    empty: 'Nenhum hábito para exibir.',
+    ariaLabel: 'Radar de aderência: {{list}}',
+    daysDetail: '{{done}} de {{days}} dias',
+    targetDetail_one: '{{count}} feito · meta {{target}}×/sem',
+    targetDetail_other: '{{count}} feitos · meta {{target}}×/sem',
+  },
+} satisfies Messages<typeof en>

@@ -43,4 +43,8 @@ export default {
     '90d': '90 dias',
     '365d': '1 ano',
   },
+  heatmap: {
+    less: 'Menos',
+    more: 'Mais',
+  },
 } satisfies Messages<typeof en>

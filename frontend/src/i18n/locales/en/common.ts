@@ -40,4 +40,8 @@ export default {
     '90d': '90 days',
     '365d': '1 year',
   },
+  heatmap: {
+    less: 'Less',
+    more: 'More',
+  },
 } as const
