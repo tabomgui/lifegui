@@ -7,6 +7,7 @@ use App\Http\Requests\Auth\SetupRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Support\GoogleCredentials;
+use App\Support\Locale;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -40,6 +41,7 @@ class SetupController extends Controller
                     'name' => $request->name,
                     'email' => $request->email,
                     'password' => Hash::make($request->password),
+                    'locale' => $request->input('locale') ?? Locale::current(),
                 ]);
             });
         } catch (LockTimeoutException) {

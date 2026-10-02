@@ -97,3 +97,15 @@ test('setup responde 409 quando o lock está ocupado', function () {
         $lock->forceRelease();
     }
 });
+
+test('setup grava o locale enviado', function () {
+    postJson('/api/setup', setupPayload(['locale' => 'pt-BR']))
+        ->assertCreated()
+        ->assertJsonPath('data.locale', 'pt-BR');
+});
+
+test('setup sem locale usa o Accept-Language', function () {
+    postJson('/api/setup', setupPayload(), ['Accept-Language' => 'pt-BR'])
+        ->assertCreated()
+        ->assertJsonPath('data.locale', 'pt-BR');
+});

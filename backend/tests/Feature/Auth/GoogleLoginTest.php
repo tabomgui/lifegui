@@ -102,3 +102,20 @@ test('com cadastro fechado, callback do Google loga conta existente', function (
 
     $this->assertAuthenticatedAs($existing->fresh());
 });
+
+test('conta nova via Google usa o idioma do navegador', function () {
+    fakeGoogleUser('novo@x.test');
+
+    $this->get('/api/auth/google/callback', ['Accept-Language' => 'pt-BR']);
+
+    expect(User::where('email', 'novo@x.test')->value('locale'))->toBe('pt-BR');
+});
+
+test('login via Google não muda o idioma de conta existente', function () {
+    $user = User::factory()->create(['email' => 'existe@x.test', 'locale' => 'en']);
+    fakeGoogleUser('existe@x.test');
+
+    $this->get('/api/auth/google/callback', ['Accept-Language' => 'pt-BR']);
+
+    expect($user->fresh()->locale)->toBe('en');
+});

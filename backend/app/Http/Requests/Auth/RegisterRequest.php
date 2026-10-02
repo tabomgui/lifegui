@@ -23,6 +23,7 @@ class RegisterRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'locale' => ['nullable', 'string', \Illuminate\Validation\Rule::in(\App\Support\Locale::SUPPORTED)],
         ];
     }
 }
