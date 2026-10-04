@@ -3,7 +3,7 @@
 namespace App\Mcp\Tools;
 
 use App\Models\Habit;
-use Carbon\CarbonImmutable;
+use App\Support\HabitStreak;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
 use Illuminate\Support\Facades\Auth;
@@ -44,14 +44,7 @@ class CompleteHabitTool extends Tool
             $habit->logs()->create(['date' => $hoje, 'done' => true, 'skipped' => false]);
         }
 
-        // Sequência: dias consecutivos com registro feito, terminando hoje.
-        $dates = $habit->logs()->where('done', true)->orderByDesc('date')->pluck('date')->map(fn ($d) => $d->format('Y-m-d'))->all();
-        $streak = 0;
-        $cursor = CarbonImmutable::parse($hoje);
-        while (in_array($cursor->toDateString(), $dates, true)) {
-            $streak++;
-            $cursor = $cursor->subDay();
-        }
+        $streak = HabitStreak::current($habit->logs()->get(), $hoje);
 
         return Response::text(trans_choice('mcp.complete_habit.done', $streak, ['name' => $habit->name]));
     }

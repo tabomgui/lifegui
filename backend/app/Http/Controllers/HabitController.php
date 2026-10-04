@@ -125,18 +125,12 @@ class HabitController extends Controller
     public function summary(SummaryRequest $request): JsonResponse
     {
         $weekStart = Carbon::parse($request->validated('week'));
-        $weekEnd = $weekStart->copy()->addDays(6);
+        $today = $request->user()->localToday();
 
-        $habits = Habit::whereNull('archived_at')->orderBy('id')->get();
+        // Histórico inteiro (o streak precisa) numa query só, pra todos os hábitos.
+        $habits = Habit::whereNull('archived_at')->with('logs')->orderBy('id')->get();
 
-        $data = $habits->map(function (Habit $habit) use ($weekStart, $weekEnd) {
-            $logsByDate = $habit->logs()
-                ->whereBetween('date', [$weekStart->toDateString(), $weekEnd->toDateString()])
-                ->get()
-                ->keyBy(fn ($log) => $log->date->toDateString());
-
-            return HabitSummary::forHabit($habit, $weekStart, $logsByDate);
-        });
+        $data = $habits->map(fn (Habit $habit) => HabitSummary::forHabit($habit, $weekStart, $habit->logs, $today));
 
         return response()->json(['data' => $data]);
     }

@@ -187,3 +187,28 @@ test('rejects window larger than 400 days', function () {
         ->assertStatus(422)
         ->assertJsonValidationErrors('to');
 });
+
+test('perHabitStreaks use the habits page rule: a skipped day neither counts nor breaks', function () {
+    $h = Habit::factory()->for($this->user)->create(['target_per_week' => null]);
+    logDone($h, ['2026-08-08', '2026-08-11']);
+    HabitLog::factory()->for($h)->create(['date' => '2026-08-09', 'done' => false, 'skipped' => true]);
+    HabitLog::factory()->for($h)->create(['date' => '2026-08-10', 'done' => false, 'skipped' => true]);
+
+    $res = $this->getJson('/api/reports/habits?from=2026-08-05&to=2026-08-11&tz=UTC')->assertOk();
+
+    $res->assertJsonPath('data.perHabitStreaks.0.current', 2);
+    $res->assertJsonPath('data.perHabitStreaks.0.best', 2);
+});
+
+test('a skipped daily habit breaks the perfect-day streak', function () {
+    $h1 = Habit::factory()->for($this->user)->create(['target_per_week' => null]);
+    $h2 = Habit::factory()->for($this->user)->create(['target_per_week' => null]);
+    logDone($h1, ['2026-08-09', '2026-08-10', '2026-08-11']);
+    logDone($h2, ['2026-08-09', '2026-08-11']);
+    HabitLog::factory()->for($h2)->create(['date' => '2026-08-10', 'done' => false, 'skipped' => true]);
+
+    $res = $this->getJson('/api/reports/habits?from=2026-08-09&to=2026-08-11&tz=UTC')->assertOk();
+
+    $res->assertJsonPath('data.perfectDays', 2);          // 08-09 and 08-11
+    $res->assertJsonPath('data.currentPerfectStreak', 1); // 08-10 skipped breaks
+});

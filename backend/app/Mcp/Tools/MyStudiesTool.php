@@ -5,6 +5,7 @@ namespace App\Mcp\Tools;
 use App\Models\Habit;
 use App\Support\Calendar\CalendarNotConnectedException;
 use App\Support\Calendar\CalendarService;
+use App\Support\HabitStreak;
 use App\Support\Vault\VaultService;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
@@ -86,14 +87,7 @@ class MyStudiesTool extends Tool
                 ? __('mcp.my_studies.progress_with_target', ['n' => $semana, 'target' => $habit->target_per_week])
                 : __('mcp.my_studies.progress', ['n' => $semana]);
 
-            // Sequência: dias consecutivos com registro, contando de ontem/hoje pra trás.
-            $dates = $habit->logs()->where('done', true)->orderByDesc('date')->pluck('date')->map(fn ($d) => $d->format('Y-m-d'))->all();
-            $streak = 0;
-            $cursor = in_array($hoje->toDateString(), $dates, true) ? $hoje : $hoje->subDay();
-            while (in_array($cursor->toDateString(), $dates, true)) {
-                $streak++;
-                $cursor = $cursor->subDay();
-            }
+            $streak = HabitStreak::current($habit->logs()->get(), $hoje->toDateString());
             $out[] = trans_choice('mcp.my_studies.streak', $streak);
         }
         $out[] = '';

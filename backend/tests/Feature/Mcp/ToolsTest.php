@@ -165,6 +165,21 @@ test('complete_habit marca hoje e não desfaz se repetido', function () {
     expect(Habit::first()->logs()->count())->toBe(1);
 });
 
+test('complete_habit e my_studies usam a mesma regra de streak: pulo não quebra', function () {
+    Carbon::setTestNow(Carbon::parse('2026-10-04 12:00:00', 'America/Sao_Paulo'));
+    $habit = Habit::factory()->for($this->user)->create(['name' => 'Estudar']);
+    $habit->logs()->create(['date' => '2026-10-01', 'done' => true, 'skipped' => false]);
+    $habit->logs()->create(['date' => '2026-10-02', 'done' => false, 'skipped' => true]);
+    $habit->logs()->create(['date' => '2026-10-03', 'done' => true, 'skipped' => false]);
+
+    // Antes de marcar hoje: dia de graça, 10-03 + 10-01 (10-02 pulado é transparente).
+    LifeguiServer::actingAs($this->user)->tool(MyStudiesTool::class)
+        ->assertOk()->assertSee('Sequência atual: 2 dias');
+
+    LifeguiServer::actingAs($this->user)->tool(CompleteHabitTool::class, ['name' => 'Estudar'])
+        ->assertOk()->assertSee('Sequência atual: 3 dias');
+});
+
 test('complete_habit com nome errado lista os ativos', function () {
     Habit::factory()->for($this->user)->create(['name' => 'Leitura']);
 
