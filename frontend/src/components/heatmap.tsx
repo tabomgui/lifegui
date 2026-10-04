@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useFormat } from '@/i18n/format'
+import { localDateString } from '@/lib/dates'
 
 // Estrutura de dados do heatmap (igual pra tarefas e hábitos).
 export interface HeatmapData {
@@ -27,13 +28,6 @@ function addDays(date: Date, days: number): Date {
   const copy = new Date(date)
   copy.setDate(copy.getDate() + days)
   return copy
-}
-
-function formatLocalDate(date: Date): string {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
 }
 
 function level(count: number): 0 | 1 | 2 | 3 | 4 {
@@ -94,11 +88,11 @@ function DetailedView({ from, totalDays, counts, copy }: {
   return (
     <div className="flex flex-wrap justify-center gap-1.5">
       {days.map((d) => {
-        const count = counts[formatLocalDate(d)] ?? 0
+        const count = counts[localDateString(d)] ?? 0
         const lvl = level(count)
         return (
           <div
-            key={formatLocalDate(d)}
+            key={localDateString(d)}
             title={titleFor(count, dayMonth(d), copy)}
             className={`flex h-11 w-10 flex-col items-center justify-center rounded-md ${LEVEL_CLASSES[lvl]}`}
           >
@@ -188,7 +182,7 @@ function GridView({ from, to, counts, copy }: {
                   {week.map((date, j) => {
                     const placeholder = date < from || date > to
                     if (placeholder) return <div key={j} style={cellStyle} />
-                    const count = counts[formatLocalDate(date)] ?? 0
+                    const count = counts[localDateString(date)] ?? 0
                     return (
                       <div
                         key={j}

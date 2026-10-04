@@ -14,16 +14,13 @@ import {
 import { browserTimezone, useScheduleEvent } from '@/hooks/use-calendar'
 import { useFormat } from '@/i18n/format'
 import type { CalendarLinkType } from '@/types/api'
+import { localDateString } from '@/lib/dates'
 
 // Ordem visual seg→dom; códigos são os do RRULE (BYDAY) e seus dias da semana (0=dom..6=sáb).
 const WEEK_DAYS = [
   ['MO', 1], ['TU', 2], ['WE', 3], ['TH', 4],
   ['FR', 5], ['SA', 6], ['SU', 0],
 ] as const
-
-function today(): string {
-  return new Date().toISOString().slice(0, 10)
-}
 
 /**
  * Agenda um item (nota/hábito/tarefa) no Google Calendar. Repetição semanal
@@ -42,7 +39,7 @@ export function ScheduleDialog({ open, type, refId, defaultTitle, defaultRecurri
   const format = useFormat()
   const schedule = useScheduleEvent()
   const [title, setTitle] = useState('')
-  const [date, setDate] = useState(today())
+  const [date, setDate] = useState(localDateString)
   const [time, setTime] = useState('19:00')
   const [duration, setDuration] = useState('60')
   const [recurring, setRecurring] = useState(false)
@@ -51,7 +48,7 @@ export function ScheduleDialog({ open, type, refId, defaultTitle, defaultRecurri
   useEffect(() => {
     if (open) {
       setTitle(defaultTitle)
-      setDate(today())
+      setDate(localDateString())
       setTime('19:00')
       setDuration('60')
       setRecurring(defaultRecurring)

@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { api, csrf } from '@/lib/api'
 import i18n from '@/i18n'
 import { isLocale, type Locale } from '@/i18n/types'
+import { browserTimezone } from '@/hooks/use-calendar'
 
 type User = {
   id: number
@@ -44,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Fuso vem do navegador: o servidor usa pra saber qual é o "hoje" do usuário
   // (streak, MCP, datas de notas). Falha silenciosa: tenta de novo no próximo load.
   async function syncTimezone(current: User) {
-    const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    const browserTz = browserTimezone()
     if (!browserTz || current.timezone === browserTz || syncingTimezone.current) return
     syncingTimezone.current = true
     try {

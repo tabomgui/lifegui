@@ -38,6 +38,7 @@ import {
   useUpdateEvent,
 } from '@/hooks/use-calendar'
 import type { CalendarEvent } from '@/types/api'
+import { localDateString } from '@/lib/dates'
 
 // Cores por tipo de vínculo (paleta dos módulos); externo fica neutro.
 const TYPE_COLOR: Record<string, string> = {
@@ -129,7 +130,7 @@ export default function Agenda() {
   function openCreate(start?: Date, durationMinutes = 60) {
     const base = start ?? new Date()
     setSlot({
-      date: `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, '0')}-${String(base.getDate()).padStart(2, '0')}`,
+      date: localDateString(base),
       time: start
         ? `${String(base.getHours()).padStart(2, '0')}:${String(base.getMinutes()).padStart(2, '0')}`
         : '19:00',
@@ -142,7 +143,7 @@ export default function Agenda() {
     const duration = arg.allDay ? 60 : Math.max(15, (arg.end.getTime() - arg.start.getTime()) / 60000)
     openCreate(arg.allDay ? undefined : arg.start, duration)
     if (arg.allDay) {
-      setSlot((s) => (s ? { ...s, date: arg.start.toISOString().slice(0, 10) } : s))
+      setSlot((s) => (s ? { ...s, date: localDateString(arg.start) } : s))
     }
   }
 

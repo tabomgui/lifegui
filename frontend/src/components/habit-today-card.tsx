@@ -6,18 +6,13 @@ import { mondayOf } from '@/components/week-stepper'
 import { DynamicIcon } from '@/components/icon'
 import { ProgressRing } from '@/components/progress-ring'
 import { useFormat } from '@/i18n/format'
-
-// Data local (Y-m-d) de hoje — o card sempre olha para hoje, independente da
-// semana navegada na grade.
-function todayLocal(): string {
-  const n = new Date()
-  return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`
-}
+import { localDateString } from '@/lib/dates'
 
 export function HabitTodayCard({ habits }: { habits: Habit[] }) {
   const { t } = useTranslation('habits')
   const { date } = useFormat()
-  const today = todayLocal()
+  // O card sempre olha para hoje, independente da semana navegada na grade.
+  const today = localDateString()
   const week = mondayOf(new Date())
   const { data: summaries = [] } = useHabitSummary(week)
   const toggle = useToggleHabit(week)

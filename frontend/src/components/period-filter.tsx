@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { localDateString } from '@/lib/dates'
 
 // Filtro de período compartilhado entre os cards de Relatórios (heatmap de
 // tarefas e radar de hábitos), pra manterem visual e comportamento idênticos.
@@ -12,20 +13,11 @@ export const PERIODS = [
 
 export type PeriodKey = (typeof PERIODS)[number]['key']
 
-// Formata uma data como 'Y-m-d' LOCAL (evita `toISOString`, que é UTC e pode
-// cair no dia errado).
-function formatLocalDate(date: Date): string {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
-}
-
 // Janela inclusiva de `days` dias terminando hoje (datas locais).
 export function rangeForDays(days: number): { from: string; to: string } {
   const today = new Date()
   const start = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (days - 1))
-  return { from: formatLocalDate(start), to: formatLocalDate(today) }
+  return { from: localDateString(start), to: localDateString(today) }
 }
 
 export function PeriodFilter({ value, onChange }: { value: string; onChange: (key: string) => void }) {

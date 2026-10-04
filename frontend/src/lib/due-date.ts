@@ -1,3 +1,5 @@
+import { localDateString } from '@/lib/dates'
+
 export type DueTone = 'overdue' | 'soon' | 'near' | 'week' | 'far'
 
 export type DueDateKey = 'dueDate.overdue' | 'dueDate.today' | 'dueDate.tomorrow' | 'dueDate.inDays' | 'dueDate.onDate'
@@ -33,10 +35,7 @@ export function dueDateMeta(due: string | null): DueDateMeta | null {
 export function isoOffset(days = 0): string {
   const d = new Date()
   d.setDate(d.getDate() + days)
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
+  return localDateString(d)
 }
 
 // Verdadeiro quando o prazo é hoje ou já passou (base local, sem hora).
