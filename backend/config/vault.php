@@ -13,9 +13,9 @@ return [
     |
     */
 
-    // FALLBACK apenas: a raiz efetiva vem de app_settings (vaults_path),
-    // editável em Configurações. Este valor só vale sem nada salvo no banco.
-    // `?:` e não default do env(): VAULTS_PATH= vazio deve cair no fallback.
+    // Definida só no deploy, nunca pela UI: vale pra todos os usuários.
+    // Precisa estar em backend/.env (o artisan serve não repassa o environment
+    // do compose). `?:` e não default do env(): VAULTS_PATH= vazio cai no fallback.
     'root' => env('VAULTS_PATH') ?: storage_path('vaults'),
 
 ];

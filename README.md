@@ -77,6 +77,7 @@ cd ~/lifegui && docker compose -f docker-compose.prod.yml restart backend
 | `SANCTUM_STATEFUL_DOMAINS` | `host[:port]` of your URL | Host the SPA runs on. |
 | `SESSION_SECURE_COOKIE` | `true` for https URLs | Sends cookies only over HTTPS. |
 | `REGISTRATION_ENABLED` | `false` | Allows new sign-ups after the first account. |
+| `VAULTS_PATH` | `/vaults` | Root folder for the Brain vaults inside the container (one subfolder per user). Applies to the whole instance; only the server administrator can change it, not the UI. The host folder is set by `VAULTS_PATH_HOST` in `.env`. |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | empty | Enable Google sign-in and Calendar. |
 
 To change the URL later, update `APP_URL`, `FRONTEND_URL`, `SESSION_DOMAIN`, `SANCTUM_STATEFUL_DOMAINS`, `SESSION_SECURE_COOKIE` and `GOOGLE_REDIRECT_URI`, then restart the backend.

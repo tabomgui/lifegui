@@ -1,16 +1,11 @@
-import { useEffect, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { toast } from 'sonner'
 import { CircleAlert, CircleCheck, FolderCog } from 'lucide-react'
-import { api, csrf } from '@/lib/api'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { api } from '@/lib/api'
 import { useEnabledModules } from '@/hooks/use-modules'
 
+// Só leitura: a raiz vale pra instância inteira e vem do deploy (VAULTS_PATH).
 interface VaultSettings {
-  vaults_path: string | null
   effective: string
   exists: boolean
   user_vault: string
@@ -26,30 +21,10 @@ function useVaultSettings(enabled: boolean) {
 }
 
 export function VaultSettings() {
-  const { t } = useTranslation(['settings', 'common'])
+  const { t } = useTranslation('settings')
   const { isEnabled } = useEnabledModules()
   const enabled = isEnabled('brain')
   const { data } = useVaultSettings(enabled)
-  const qc = useQueryClient()
-  const [path, setPath] = useState('')
-
-  useEffect(() => {
-    if (data) setPath(data.vaults_path ?? '')
-  }, [data])
-
-  const save = useMutation({
-    mutationFn: async (vaults_path: string) => {
-      await csrf()
-      return (await api.patch('/settings/vault', { vaults_path: vaults_path || null })).data
-        .data as VaultSettings
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['settings', 'vault'] })
-      qc.invalidateQueries({ queryKey: ['brain'] })
-      toast.success(t('vault.toast.saved'))
-    },
-    onError: () => toast.error(t('vault.toast.invalidPath')),
-  })
 
   if (!enabled) return null
 
@@ -68,24 +43,6 @@ export function VaultSettings() {
               {t('vault.scopeNote')}
             </div>
           </div>
-          <form
-            className="flex gap-2"
-            onSubmit={(e) => { e.preventDefault(); save.mutate(path.trim()) }}
-          >
-            <div className="flex-1 space-y-1">
-              <Label htmlFor="vaults-path" className="sr-only">{t('vault.pathLabel')}</Label>
-              <Input
-                id="vaults-path"
-                value={path}
-                onChange={(e) => setPath(e.target.value)}
-                placeholder={data ? t('vault.pathDefault', { path: data.effective }) : t('vault.pathExample')}
-                className="font-mono text-sm"
-              />
-            </div>
-            <Button type="submit" size="sm" className="h-9" disabled={save.isPending}>
-              {t('common:actions.save')}
-            </Button>
-          </form>
           {data && (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               {data.initialized ? (
