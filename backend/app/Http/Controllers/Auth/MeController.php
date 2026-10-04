@@ -14,10 +14,10 @@ class MeController extends Controller
         return new UserResource($request->user());
     }
 
-    /** Só preferências do próprio usuário; hoje, o idioma. */
+    /** Só preferências do próprio usuário: idioma e fuso. */
     public function update(UpdateMeRequest $request): UserResource
     {
-        $request->user()->update(['locale' => $request->validated('locale')]);
+        $request->user()->update($request->validated());
 
         return new UserResource($request->user());
     }

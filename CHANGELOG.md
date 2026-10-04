@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Link to the documentation site in the sidebar.
 - `PATCH /api/me` to change the signed-in user's language; `GET /api/me` now also
   returns the user's `locale`.
+- **Per-user timezone.** Users have a `timezone`, synced from the browser through
+  `PATCH /api/me` and returned by `GET /api/me`. Existing accounts start in
+  `America/Sao_Paulo`. The server uses it for "today" in streaks, MCP tools and note
+  dates, and the MCP server instructions name it instead of a fixed zone.
 
 ### Changed
 
@@ -39,10 +43,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   users. Existing notes are unchanged.
 - Events that lifegui creates in Google Calendar get their description in the user's
   language.
+- **Breaking:** the Brain vaults root can no longer be changed in Settings. It comes only
+  from `VAULTS_PATH` in `backend/.env` (default `/vaults`), and `PATCH /api/settings/vault`
+  is gone. If you had saved a custom root in Settings, set it as `VAULTS_PATH` before you
+  upgrade: the migration drops the `app_settings` table.
+- **Breaking:** note templates are matched only by category name: a note in category `X`
+  uses `Templates/X.md` from the vault, otherwise the default template. The built-in
+  aliases (`Receitas` to `Receita`, `Calistenia` to `Exercicio`, `Bateria` to
+  `Aula-Bateria`) are gone; rename those template files to keep using them.
+- One streak rule everywhere (habits page, habits dashboard, `complete_habit`,
+  `my_studies`): a done day counts, a skipped day neither counts nor breaks, a missed day
+  breaks, and today never breaks the streak. Perfect days still need every daily habit
+  done, so a skipped day breaks the perfect-day streak.
 
 ### Fixed
 
 - Weeks always start on Monday, whatever the user's language.
+- **Security:** any signed-in user could change the vaults root for the whole instance.
+- After 21:00 in São Paulo, the "Schedule" dialog suggested the next day, and server-side
+  dates (streak, `complete_habit`, note and capture dates) already used the next day.
+- Unchecking a habit today no longer resets its streak to zero.
 
 ## [1.0.0] - 2026-10-01
 

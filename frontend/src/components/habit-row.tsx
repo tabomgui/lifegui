@@ -5,6 +5,7 @@ import { useToggleHabit } from '@/hooks/use-habits'
 import { useWeekDow } from '@/components/week-stepper'
 import { DynamicIcon } from '@/components/icon'
 import { ProgressRing } from '@/components/progress-ring'
+import { localDateString } from '@/lib/dates'
 
 export function HabitRow({
   habit, summary, week, onEdit, onDelete, onArchive,
@@ -24,8 +25,7 @@ export function HabitRow({
   const streak = summary?.streak ?? 0
 
   // Dia de hoje em data LOCAL (Y-m-d) — não dá pra marcar dias futuros.
-  const now = new Date()
-  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  const todayStr = localDateString()
 
   return (
     <div className="group flex flex-col gap-2 border-b px-4 py-3 last:border-b-0 md:grid md:grid-cols-[1fr_auto] md:items-center">

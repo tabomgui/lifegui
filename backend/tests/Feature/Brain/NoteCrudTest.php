@@ -84,9 +84,9 @@ test('show de nota inexistente ou traversal dá 404', function () {
 
 // ---------- store ----------
 
-test('cria nota aplicando o template da categoria', function () {
+test('cria nota aplicando o template da categoria (Templates/{categoria}.md)', function () {
     File::ensureDirectoryExists(vaultPath().'/Templates');
-    file_put_contents(vaultPath().'/Templates/Receita.md', <<<'MD'
+    file_put_contents(vaultPath().'/Templates/Receitas.md', <<<'MD'
 ---
 tipo: receita
 tags: []
@@ -117,7 +117,7 @@ MD);
         ->assertJsonPath('data.path', 'Receitas/Bolo de cenoura.md')
         ->assertJsonPath('data.frontmatter.status', 'novo')
         ->assertJsonPath('data.frontmatter.fonte', 'https://ex.com/cenoura')
-        ->assertJsonPath('data.frontmatter.data_salvo', now()->format('Y-m-d'));
+        ->assertJsonPath('data.frontmatter.data_salvo', auth()->user()->localToday());
 
     $raw = file_get_contents(vaultPath().'/Receitas/Bolo de cenoura.md');
     expect($raw)->toContain('# Bolo de cenoura')
@@ -132,6 +132,16 @@ test('cria nota sem template usando fallback genérico', function () {
         ->assertJsonPath('data.frontmatter.status', 'novo');
 
     expect(file_exists(vaultPath().'/IA/RAG.md'))->toBeTrue();
+});
+
+test('template só casa pelo nome exato da categoria', function () {
+    // Nada de mapa embutido: Templates/Receita.md não vale pra categoria Receitas.
+    File::ensureDirectoryExists(vaultPath().'/Templates');
+    file_put_contents(vaultPath().'/Templates/Receita.md', "---\ntipo: receita\n---\n\n# {{title}}\n\n## Ingredientes\n");
+
+    $this->postJson('/api/brain/notes', ['category' => 'Receitas', 'title' => 'Pudim'])->assertCreated();
+
+    expect(file_get_contents(vaultPath().'/Receitas/Pudim.md'))->not->toContain('## Ingredientes');
 });
 
 test('sanitiza caracteres inválidos do título e rejeita duplicada', function () {
@@ -212,10 +222,10 @@ test('excluir move a nota pra .trash e limpa vínculos', function () {
 
     $this->deleteJson('/api/brain/notes/Receitas/Velha.md')
         ->assertOk()
-        ->assertJsonPath('data.path', '.trash/'.now()->format('Y-m-d').'-Velha.md');
+        ->assertJsonPath('data.path', '.trash/'.auth()->user()->localToday().'-Velha.md');
 
     expect(file_exists(vaultPath().'/Receitas/Velha.md'))->toBeFalse()
-        ->and(file_exists(vaultPath().'/.trash/'.now()->format('Y-m-d').'-Velha.md'))->toBeTrue()
+        ->and(file_exists(vaultPath().'/.trash/'.auth()->user()->localToday().'-Velha.md'))->toBeTrue()
         ->and(App\Models\NoteLink::count())->toBe(0);
 
     $this->getJson('/api/brain/notes?category=Receitas')->assertOk()->assertJsonCount(0, 'data');

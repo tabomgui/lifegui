@@ -10,22 +10,13 @@ use App\Models\Task;
 use App\Support\Vault\VaultService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class NoteController extends Controller
 {
     /**
-     * Nome do template (em Templates/) por categoria do plano original.
-     * Categorias fora do mapa tentam Templates/{categoria}.md e caem no
-     * template genérico embutido.
+     * Template genérico, usado quando a categoria não tem Templates/{categoria}.md.
      */
-    private const TEMPLATE_MAP = [
-        'IA' => 'IA',
-        'Receitas' => 'Receita',
-        'Calistenia' => 'Exercicio',
-        'Bateria' => 'Aula-Bateria',
-        'Instagram' => 'Instagram',
-    ];
-
     private const FALLBACK_TEMPLATE = <<<'MD'
 ---
 tipo: nota
@@ -115,7 +106,7 @@ MD;
 
         $raw = strtr($this->template($category), [
             '{{title}}' => $title,
-            '{{date}}' => now()->format('Y-m-d'),
+            '{{date}}' => $request->user()->localToday(),
             '{{annotations}}' => __('notes.annotations_heading'),
         ]);
 
@@ -127,7 +118,7 @@ MD;
             'tags' => $request->validated('tags'),
         ], fn ($v) => $v !== null));
         $frontmatter['status'] = 'novo';
-        $frontmatter['data_salvo'] = now()->format('Y-m-d');
+        $frontmatter['data_salvo'] = $request->user()->localToday();
 
         $body = $request->validated('body') ?? $parsed['body'];
 
@@ -163,7 +154,7 @@ MD;
             mkdir($trash, 0755, true);
         }
 
-        $target = '.trash/'.now()->format('Y-m-d').'-'.basename($path);
+        $target = '.trash/'.Auth::user()->localToday().'-'.basename($path);
         $absoluteTarget = $this->vault->resolve($target, mustExist: false);
         abort_if($absoluteTarget === null, 422, __('messages.brain.trash_missing'));
         rename($absolute, $absoluteTarget);
@@ -269,18 +260,10 @@ MD;
 
     private function template(string $category): string
     {
-        $candidates = array_unique([self::TEMPLATE_MAP[$category] ?? $category, $category]);
+        // Convenção: o template de uma categoria é Templates/{categoria}.md no vault.
+        // resolve() já confere existência; o raw mantém as {{vars}} no YAML.
+        $absolute = $this->vault->resolve("Templates/{$category}.md");
 
-        foreach ($candidates as $name) {
-            $content = $this->vault->read("Templates/{$name}.md");
-            if ($content !== null) {
-                // read() já separou; precisamos do raw pra manter {{vars}} no YAML.
-                $absolute = $this->vault->resolve("Templates/{$name}.md");
-
-                return (string) file_get_contents($absolute);
-            }
-        }
-
-        return self::FALLBACK_TEMPLATE;
+        return $absolute !== null ? (string) file_get_contents($absolute) : self::FALLBACK_TEMPLATE;
     }
 }

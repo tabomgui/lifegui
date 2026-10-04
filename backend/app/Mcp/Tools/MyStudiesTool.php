@@ -5,6 +5,7 @@ namespace App\Mcp\Tools;
 use App\Models\Habit;
 use App\Support\Calendar\CalendarNotConnectedException;
 use App\Support\Calendar\CalendarService;
+use App\Support\HabitStreak;
 use App\Support\Vault\VaultService;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
@@ -21,8 +22,6 @@ use Laravel\Mcp\Server\Tool;
 #[Description('Overview of studies: second-brain notes by status and category (with titles of what is being studied and what needs review), progress of the Study habit this week, and upcoming scheduled study blocks. Use for "how are my studies going".')]
 class MyStudiesTool extends Tool
 {
-    private const TZ = 'America/Sao_Paulo';
-
     // Nomes aceitos pro hábito de estudo (já em minúsculas pra comparação
     // case-insensitive), independente do idioma do usuário.
     private const STUDY_HABIT_NAMES = ['estudar', 'study'];
@@ -79,7 +78,7 @@ class MyStudiesTool extends Tool
         if ($habit === null) {
             $out[] = __('mcp.my_studies.habit_not_found');
         } else {
-            $hoje = CarbonImmutable::now(self::TZ);
+            $hoje = Auth::user()->localNow();
             $semana = $habit->logs()
                 ->whereBetween('date', [$hoje->startOfWeek(CarbonInterface::MONDAY)->toDateString(), $hoje->endOfWeek(CarbonInterface::SUNDAY)->toDateString()])
                 ->where('done', true)
@@ -88,14 +87,7 @@ class MyStudiesTool extends Tool
                 ? __('mcp.my_studies.progress_with_target', ['n' => $semana, 'target' => $habit->target_per_week])
                 : __('mcp.my_studies.progress', ['n' => $semana]);
 
-            // Sequência: dias consecutivos com registro, contando de ontem/hoje pra trás.
-            $dates = $habit->logs()->where('done', true)->orderByDesc('date')->pluck('date')->map(fn ($d) => $d->format('Y-m-d'))->all();
-            $streak = 0;
-            $cursor = in_array($hoje->toDateString(), $dates, true) ? $hoje : $hoje->subDay();
-            while (in_array($cursor->toDateString(), $dates, true)) {
-                $streak++;
-                $cursor = $cursor->subDay();
-            }
+            $streak = HabitStreak::current($habit->logs()->get(), $hoje->toDateString());
             $out[] = trans_choice('mcp.my_studies.streak', $streak);
         }
         $out[] = '';
@@ -110,7 +102,7 @@ class MyStudiesTool extends Tool
                 $out[] = __('mcp.my_studies.no_upcoming');
             }
             foreach ($eventos as $e) {
-                $inicio = $e['start'] ? CarbonImmutable::parse($e['start'])->setTimezone(self::TZ)->format('H:i') : '';
+                $inicio = $e['start'] ? CarbonImmutable::parse($e['start'])->setTimezone(Auth::user()->timezone)->format('H:i') : '';
                 $rec = collect($e['recurrence'] ?? [])->first(fn ($r) => str_starts_with($r, 'RRULE:'));
                 $dias = $rec && preg_match('/BYDAY=([^;]+)/', $rec, $m) ? __('mcp.my_studies.weekly_suffix', ['day' => $m[1]]) : '';
                 $out[] = __('mcp.my_studies.event_item', ['title' => $e['title'], 'time' => $inicio, 'days' => $dias]);

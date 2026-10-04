@@ -8,6 +8,7 @@ use App\Http\Requests\Brain\StoreNoteRequest;
 use App\Support\Locale;
 use App\Support\Vault\VaultService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 
 class InboxController extends Controller
 {
@@ -59,7 +60,7 @@ class InboxController extends Controller
         $this->vault->write($created['path'], $note['frontmatter'], $body);
 
         // Nunca apaga: move o original pra processados com a data no nome.
-        $target = self::INBOX.'/processados/'.now()->format('Y-m-d').'-'.basename($path);
+        $target = self::INBOX.'/processados/'.$request->user()->localToday().'-'.basename($path);
         $absoluteTarget = $this->vault->resolve($target, mustExist: false);
         abort_if($absoluteTarget === null, 422, __('messages.brain.processed_missing'));
         rename((string) $this->vault->resolve($path), $absoluteTarget);
@@ -86,7 +87,7 @@ class InboxController extends Controller
             mkdir($dir, 0755, true);
         }
 
-        $target = self::INBOX.'/descartados/'.now()->format('Y-m-d').'-'.basename($path);
+        $target = self::INBOX.'/descartados/'.Auth::user()->localToday().'-'.basename($path);
         $absoluteTarget = $this->vault->resolve($target, mustExist: false);
         abort_if($absoluteTarget === null, 422, __('messages.brain.discarded_missing'));
         rename($absolute, $absoluteTarget);

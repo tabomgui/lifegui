@@ -21,8 +21,6 @@ use Laravel\Mcp\Server\Tool;
 #[Description("Creates an event on the user's Google Calendar (primary calendar): standalone or linked to a task/habit/note. IMPORTANT: confirm title, date and time with the user before calling. Weekly recurrence via repeat_days.")]
 class ScheduleTool extends Tool
 {
-    private const TZ = 'America/Sao_Paulo';
-
     public function __construct(
         private CalendarService $calendar,
         private VaultService $vault,
@@ -57,7 +55,8 @@ class ScheduleTool extends Tool
             }
         }
 
-        $inicio = CarbonImmutable::parse($request->get('start'), self::TZ);
+        $tz = Auth::user()->timezone;
+        $inicio = CarbonImmutable::parse($request->get('start'), $tz);
         $fim = $inicio->addMinutes($request->get('duration_minutes') ?? 60);
         $dias = $request->get('repeat_days') ?? [];
 
@@ -67,7 +66,7 @@ class ScheduleTool extends Tool
                 'description' => $this->calendar->createdByDescription($tipo),
                 'start' => $inicio->toRfc3339String(),
                 'end' => $fim->toRfc3339String(),
-                'timezone' => self::TZ,
+                'timezone' => $tz,
                 'rrule' => $dias !== [] ? 'RRULE:FREQ=WEEKLY;BYDAY='.implode(',', $dias) : null,
                 'type' => $tipo,
                 'ref' => $ref,
@@ -87,7 +86,7 @@ class ScheduleTool extends Tool
     {
         return [
             'title' => $schema->string()->description('Event title.')->required(),
-            'start' => $schema->string()->description('ISO start (e.g. 2026-09-25T19:00:00). Interpreted in America/Sao_Paulo if no offset is given.')->required(),
+            'start' => $schema->string()->description("ISO start (e.g. 2026-09-25T19:00:00). Interpreted in the user's timezone if no offset is given.")->required(),
             'duration_minutes' => $schema->integer()->description('Duration in minutes (default 60).'),
             'type' => $schema->string()->enum(['event', 'task', 'habit', 'note'])->description('event = standalone (default); task/habit/note links to an item.'),
             'ref' => $schema->string()->description('Id of the task/habit or path of the note, when type is not event.'),

@@ -82,9 +82,8 @@ Route::middleware(['auth:sanctum', RestrictCaptureTokens::class])->group(functio
     Route::get('/modules', [ModuleController::class, 'index']);
     Route::patch('/modules/{key}', [ModuleController::class, 'update']);
 
-    // Configurações globais da instância (hoje: raiz dos vaults do Cérebro).
+    // Raiz dos vaults do Cérebro: só leitura (definida no deploy, VAULTS_PATH).
     Route::get('/settings/vault', [SettingsController::class, 'show']);
-    Route::patch('/settings/vault', [SettingsController::class, 'update']);
 
     // Tokens de captura (Atalho do iPhone). RestrictCaptureTokens (no grupo)
     // garante que um token vazado só consegue capturar no inbox.

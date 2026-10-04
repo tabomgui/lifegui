@@ -3,9 +3,10 @@
 namespace App\Mcp\Tools;
 
 use App\Models\Habit;
-use Carbon\CarbonImmutable;
+use App\Support\HabitStreak;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
@@ -30,7 +31,7 @@ class CompleteHabitTool extends Tool
             return Response::error(__('mcp.complete_habit.not_found', ['name' => $request->get('name'), 'active' => $nomes]));
         }
 
-        $hoje = CarbonImmutable::now('America/Sao_Paulo')->toDateString();
+        $hoje = Auth::user()->localToday();
         $log = $habit->logs()->where('date', $hoje)->first();
 
         if ($log !== null && $log->done) {
@@ -43,14 +44,7 @@ class CompleteHabitTool extends Tool
             $habit->logs()->create(['date' => $hoje, 'done' => true, 'skipped' => false]);
         }
 
-        // Sequência: dias consecutivos com registro feito, terminando hoje.
-        $dates = $habit->logs()->where('done', true)->orderByDesc('date')->pluck('date')->map(fn ($d) => $d->format('Y-m-d'))->all();
-        $streak = 0;
-        $cursor = CarbonImmutable::parse($hoje);
-        while (in_array($cursor->toDateString(), $dates, true)) {
-            $streak++;
-            $cursor = $cursor->subDay();
-        }
+        $streak = HabitStreak::current($habit->logs()->get(), $hoje);
 
         return Response::text(trans_choice('mcp.complete_habit.done', $streak, ['name' => $habit->name]));
     }

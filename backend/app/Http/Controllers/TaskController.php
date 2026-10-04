@@ -69,7 +69,7 @@ class TaskController extends Controller
         // wrong cell for anyone west of UTC (e.g. America/Sao_Paulo, UTC-3).
         $tz = $request->string('tz');
         if (! in_array((string) $tz, timezone_identifiers_list(), true)) {
-            $tz = 'UTC';
+            $tz = $request->user()->timezone;
         }
 
         $fromInput = $request->validated('from');

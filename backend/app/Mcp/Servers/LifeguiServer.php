@@ -9,6 +9,7 @@ use App\Mcp\Tools\MyDayTool;
 use App\Mcp\Tools\MyStudiesTool;
 use App\Mcp\Tools\ScheduleTool;
 use App\Mcp\Tools\SearchNotesTool;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Attributes\Version;
@@ -32,10 +33,12 @@ class LifeguiServer extends Server
 
     protected array $prompts = [];
 
-    /** Instruções no idioma do usuário (SetLocale já rodou na rota /mcp). */
+    /** Instruções no idioma e fuso do usuário (SetLocale já rodou na rota /mcp). */
     public function createContext(): ServerContext
     {
-        $this->instructions = __('mcp.instructions');
+        $this->instructions = __('mcp.instructions', [
+            'timezone' => Auth::user()?->timezone ?? config('app.timezone'),
+        ]);
 
         return parent::createContext();
     }
