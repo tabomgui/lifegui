@@ -89,10 +89,10 @@ test('descartar move a captura pra descartados sem apagar', function () {
 
     $this->deleteJson('/api/brain/inbox/00-Inbox/spam.md')
         ->assertOk()
-        ->assertJsonPath('data.path', '00-Inbox/descartados/'.now()->format('Y-m-d').'-spam.md');
+        ->assertJsonPath('data.path', '00-Inbox/descartados/'.auth()->user()->localToday().'-spam.md');
 
     expect(file_exists(vaultPath().'/00-Inbox/spam.md'))->toBeFalse()
-        ->and(file_exists(vaultPath().'/00-Inbox/descartados/'.now()->format('Y-m-d').'-spam.md'))->toBeTrue();
+        ->and(file_exists(vaultPath().'/00-Inbox/descartados/'.auth()->user()->localToday().'-spam.md'))->toBeTrue();
 
     $this->getJson('/api/brain/inbox')->assertOk()->assertJsonCount(0, 'data');
 });

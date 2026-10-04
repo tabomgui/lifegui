@@ -15,18 +15,8 @@ use Illuminate\Support\Facades\Auth;
 class NoteController extends Controller
 {
     /**
-     * Nome do template (em Templates/) por categoria do plano original.
-     * Categorias fora do mapa tentam Templates/{categoria}.md e caem no
-     * template genérico embutido.
+     * Template genérico, usado quando a categoria não tem Templates/{categoria}.md.
      */
-    private const TEMPLATE_MAP = [
-        'IA' => 'IA',
-        'Receitas' => 'Receita',
-        'Calistenia' => 'Exercicio',
-        'Bateria' => 'Aula-Bateria',
-        'Instagram' => 'Instagram',
-    ];
-
     private const FALLBACK_TEMPLATE = <<<'MD'
 ---
 tipo: nota
@@ -270,18 +260,10 @@ MD;
 
     private function template(string $category): string
     {
-        $candidates = array_unique([self::TEMPLATE_MAP[$category] ?? $category, $category]);
+        // Convenção: o template de uma categoria é Templates/{categoria}.md no vault.
+        // resolve() já confere existência; o raw mantém as {{vars}} no YAML.
+        $absolute = $this->vault->resolve("Templates/{$category}.md");
 
-        foreach ($candidates as $name) {
-            $content = $this->vault->read("Templates/{$name}.md");
-            if ($content !== null) {
-                // read() já separou; precisamos do raw pra manter {{vars}} no YAML.
-                $absolute = $this->vault->resolve("Templates/{$name}.md");
-
-                return (string) file_get_contents($absolute);
-            }
-        }
-
-        return self::FALLBACK_TEMPLATE;
+        return $absolute !== null ? (string) file_get_contents($absolute) : self::FALLBACK_TEMPLATE;
     }
 }
