@@ -2,6 +2,8 @@
 
 namespace App\Support\Vault;
 
+use Illuminate\Support\Facades\Auth;
+
 /**
  * Criação de capturas no 00-Inbox do vault — compartilhada entre a rota HTTP
  * (SPA / Atalho do iPhone) e a tool MCP `capture`.
@@ -17,22 +19,23 @@ class InboxCaptureService
      */
     public function capture(string $content, ?string $title = null): ?array
     {
+        $now = Auth::user()->localNow();
         $name = $title !== null
             ? trim(str_replace(['/', '\\', ':', '*', '?', '"', '<', '>', '|', '#', '[', ']'], '', $title))
             : '';
 
         if ($name === '') {
-            $name = 'captura-'.now()->format('Y-m-d-His');
+            $name = 'captura-'.$now->format('Y-m-d-His');
         }
 
         $path = self::INBOX."/{$name}.md";
 
         // Colisão de nome: sufixa com horário em vez de sobrescrever.
         if ($this->vault->resolve($path) !== null) {
-            $path = self::INBOX."/{$name}-".now()->format('His').'.md';
+            $path = self::INBOX."/{$name}-".$now->format('His').'.md';
         }
 
-        $frontmatter = ['data_salvo' => now()->format('Y-m-d'), 'status' => 'novo'];
+        $frontmatter = ['data_salvo' => $now->toDateString(), 'status' => 'novo'];
         $written = $this->vault->write($path, $frontmatter, $content, mustExist: false);
 
         if ($written === null) {

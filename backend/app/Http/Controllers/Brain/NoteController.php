@@ -10,6 +10,7 @@ use App\Models\Task;
 use App\Support\Vault\VaultService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class NoteController extends Controller
 {
@@ -115,7 +116,7 @@ MD;
 
         $raw = strtr($this->template($category), [
             '{{title}}' => $title,
-            '{{date}}' => now()->format('Y-m-d'),
+            '{{date}}' => $request->user()->localToday(),
             '{{annotations}}' => __('notes.annotations_heading'),
         ]);
 
@@ -127,7 +128,7 @@ MD;
             'tags' => $request->validated('tags'),
         ], fn ($v) => $v !== null));
         $frontmatter['status'] = 'novo';
-        $frontmatter['data_salvo'] = now()->format('Y-m-d');
+        $frontmatter['data_salvo'] = $request->user()->localToday();
 
         $body = $request->validated('body') ?? $parsed['body'];
 
@@ -163,7 +164,7 @@ MD;
             mkdir($trash, 0755, true);
         }
 
-        $target = '.trash/'.now()->format('Y-m-d').'-'.basename($path);
+        $target = '.trash/'.Auth::user()->localToday().'-'.basename($path);
         $absoluteTarget = $this->vault->resolve($target, mustExist: false);
         abort_if($absoluteTarget === null, 422, __('messages.brain.trash_missing'));
         rename($absolute, $absoluteTarget);

@@ -27,7 +27,7 @@ test('summary retorna 7 dias da semana com done e a contagem', function () {
 });
 
 test('streak conta dias consecutivos feitos terminando hoje (ou ontem)', function () {
-    Carbon::setTestNow('2026-08-13'); // quinta
+    Carbon::setTestNow('2026-08-13 12:00'); // quinta
     $h = Habit::factory()->for($this->user)->create();
     // seg, ter, qua feitos; hoje (qui) ainda não
     HabitLog::factory()->for($h)->create(['date' => '2026-08-10', 'done' => true]);
@@ -57,7 +57,7 @@ test('cada dia expõe skipped e done_count conta apenas done', function () {
 });
 
 test('streak trata skip como neutro (done, skip, done)', function () {
-    Carbon::setTestNow('2026-08-13'); // quinta = hoje
+    Carbon::setTestNow('2026-08-13 12:00'); // quinta = hoje
     $h = Habit::factory()->for($this->user)->create();
     HabitLog::factory()->for($h)->create(['date' => '2026-08-11', 'done' => true, 'skipped' => false]);  // anteontem: done
     HabitLog::factory()->for($h)->create(['date' => '2026-08-12', 'done' => false, 'skipped' => true]);  // ontem: skip
@@ -72,7 +72,7 @@ test('streak trata skip como neutro (done, skip, done)', function () {
 });
 
 test('streak quebra em dia perdido (done=false, skipped=false)', function () {
-    Carbon::setTestNow('2026-08-13');
+    Carbon::setTestNow('2026-08-13 12:00');
     $h = Habit::factory()->for($this->user)->create();
     HabitLog::factory()->for($h)->create(['date' => '2026-08-11', 'done' => true, 'skipped' => false]);
     HabitLog::factory()->for($h)->create(['date' => '2026-08-12', 'done' => false, 'skipped' => false]); // perdido

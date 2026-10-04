@@ -16,7 +16,8 @@ class UpdateMeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'locale' => ['required', 'string', Rule::in(Locale::SUPPORTED)],
+            'locale' => ['required_without:timezone', 'string', Rule::in(Locale::SUPPORTED)],
+            'timezone' => ['required_without:locale', 'string', 'timezone:all'],
         ];
     }
 }

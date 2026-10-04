@@ -21,8 +21,6 @@ use Laravel\Mcp\Server\Tool;
 #[Description('Overview of studies: second-brain notes by status and category (with titles of what is being studied and what needs review), progress of the Study habit this week, and upcoming scheduled study blocks. Use for "how are my studies going".')]
 class MyStudiesTool extends Tool
 {
-    private const TZ = 'America/Sao_Paulo';
-
     // Nomes aceitos pro hábito de estudo (já em minúsculas pra comparação
     // case-insensitive), independente do idioma do usuário.
     private const STUDY_HABIT_NAMES = ['estudar', 'study'];
@@ -79,7 +77,7 @@ class MyStudiesTool extends Tool
         if ($habit === null) {
             $out[] = __('mcp.my_studies.habit_not_found');
         } else {
-            $hoje = CarbonImmutable::now(self::TZ);
+            $hoje = Auth::user()->localNow();
             $semana = $habit->logs()
                 ->whereBetween('date', [$hoje->startOfWeek(CarbonInterface::MONDAY)->toDateString(), $hoje->endOfWeek(CarbonInterface::SUNDAY)->toDateString()])
                 ->where('done', true)
@@ -110,7 +108,7 @@ class MyStudiesTool extends Tool
                 $out[] = __('mcp.my_studies.no_upcoming');
             }
             foreach ($eventos as $e) {
-                $inicio = $e['start'] ? CarbonImmutable::parse($e['start'])->setTimezone(self::TZ)->format('H:i') : '';
+                $inicio = $e['start'] ? CarbonImmutable::parse($e['start'])->setTimezone(Auth::user()->timezone)->format('H:i') : '';
                 $rec = collect($e['recurrence'] ?? [])->first(fn ($r) => str_starts_with($r, 'RRULE:'));
                 $dias = $rec && preg_match('/BYDAY=([^;]+)/', $rec, $m) ? __('mcp.my_studies.weekly_suffix', ['day' => $m[1]]) : '';
                 $out[] = __('mcp.my_studies.event_item', ['title' => $e['title'], 'time' => $inicio, 'days' => $dias]);

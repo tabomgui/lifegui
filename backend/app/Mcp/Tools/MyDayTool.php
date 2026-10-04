@@ -21,8 +21,6 @@ use Laravel\Mcp\Server\Tool;
 #[Description("Summary of the user's day: overdue tasks and tasks due today, calendar events (Google Calendar), habits not done yet and pending captures in the second-brain inbox. Use for \"what do I have to do today\" or planning the day.")]
 class MyDayTool extends Tool
 {
-    private const TZ = 'America/Sao_Paulo';
-
     public function __construct(
         private VaultService $vault,
         private CalendarService $calendar,
@@ -30,9 +28,10 @@ class MyDayTool extends Tool
 
     public function handle(Request $request): Response
     {
+        $tz = Auth::user()->timezone;
         $dia = $request->get('date')
-            ? CarbonImmutable::parse($request->get('date'), self::TZ)
-            : CarbonImmutable::now(self::TZ);
+            ? CarbonImmutable::parse($request->get('date'), $tz)
+            : Auth::user()->localNow();
 
         $out = ['# '.$dia->locale(app()->getLocale())->isoFormat(__('mcp.my_day.heading_format')), ''];
 
@@ -66,7 +65,7 @@ class MyDayTool extends Tool
                 $out[] = __('mcp.my_day.no_events');
             }
             foreach ($events as $e) {
-                $start = $e['start'] ? CarbonImmutable::parse($e['start'])->setTimezone(self::TZ)->format('H:i') : '';
+                $start = $e['start'] ? CarbonImmutable::parse($e['start'])->setTimezone($tz)->format('H:i') : '';
                 $tag = $e['external'] ? '' : ' ('.($e['lifegui']['type'] ?? 'lifegui').')';
                 $out[] = "- {$start} {$e['title']}{$tag}";
             }

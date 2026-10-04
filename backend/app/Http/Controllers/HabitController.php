@@ -194,7 +194,7 @@ class HabitController extends Controller
             $from = Carbon::createFromFormat('Y-m-d', $fromInput)->startOfDay();
             $to = Carbon::createFromFormat('Y-m-d', $toInput)->startOfDay();
         } else {
-            $to = now()->startOfDay();
+            $to = Carbon::parse($request->user()->localToday());
             $from = $to->copy()->subDays(370);
         }
 

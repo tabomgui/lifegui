@@ -6,6 +6,7 @@ use App\Models\Habit;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
@@ -30,7 +31,7 @@ class CompleteHabitTool extends Tool
             return Response::error(__('mcp.complete_habit.not_found', ['name' => $request->get('name'), 'active' => $nomes]));
         }
 
-        $hoje = CarbonImmutable::now('America/Sao_Paulo')->toDateString();
+        $hoje = Auth::user()->localToday();
         $log = $habit->logs()->where('date', $hoje)->first();
 
         if ($log !== null && $log->done) {

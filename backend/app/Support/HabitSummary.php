@@ -53,7 +53,7 @@ class HabitSummary
         $logs = $habit->logs()->get()
             ->keyBy(fn ($log) => Carbon::parse($log->date)->toDateString());
 
-        $cursor = Carbon::today();
+        $cursor = Carbon::parse($habit->user->localToday());
         if (! $logs->has($cursor->toDateString())) {
             $cursor = $cursor->copy()->subDay(); // dia de graça: começa por ontem
         }

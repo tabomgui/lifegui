@@ -33,6 +33,7 @@ class UserFactory extends Factory
             // Difere do default 'en' da coluna de propósito: testes existentes
             // afirmam texto em pt-BR.
             'locale' => 'pt-BR',
+            'timezone' => 'America/Sao_Paulo',
         ];
     }
 
