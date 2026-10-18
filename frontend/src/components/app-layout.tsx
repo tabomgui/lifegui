@@ -1,7 +1,6 @@
-import { useState } from 'react'
 import type { ReactNode } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
-import { Kanban, Repeat, Brain, CalendarDays, BarChart3, Settings, Menu, X } from 'lucide-react'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { Kanban, Repeat, Brain, CalendarDays, BarChart3, Settings } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useEnabledModules, useModules } from '@/hooks/use-modules'
 import { Button } from '@/components/ui/button'
@@ -9,58 +8,111 @@ import { ModeToggle } from '@/components/mode-toggle'
 import { OnboardingWizard } from '@/components/onboarding/onboarding-wizard'
 import { useOnboarding } from '@/contexts/onboarding-context'
 import { firstEnabledRoute } from '@/components/module-route'
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarRail,
+  SidebarTrigger,
+  useSidebar,
+} from '@/components/ui/sidebar'
 
-const navClass = ({ isActive }: { isActive: boolean }) =>
-  `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium ${
-    isActive ? 'bg-accent text-foreground' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-  }`
+type NavItem = {
+  to: string
+  end?: boolean
+  label: string
+  icon: typeof Kanban
+  show: boolean
+}
 
-function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
+function isRouteActive(pathname: string, to: string, end?: boolean) {
+  if (end) return pathname === to
+  return pathname === to || pathname.startsWith(`${to}/`)
+}
+
+function AppSidebar() {
   const { user, logout } = useAuth()
   const { isEnabled } = useEnabledModules()
+  const { isMobile, setOpenMobile } = useSidebar()
+  const location = useLocation()
   const showReports = isEnabled('tasks') || isEnabled('habits') || isEnabled('brain')
+
+  function handleNavigate() {
+    if (isMobile) setOpenMobile(false)
+  }
+
+  const items: NavItem[] = [
+    { to: '/', end: true, label: 'Tarefas', icon: Kanban, show: isEnabled('tasks') },
+    { to: '/habits', label: 'Hábitos', icon: Repeat, show: isEnabled('habits') },
+    { to: '/cerebro', label: 'Cérebro', icon: Brain, show: isEnabled('brain') },
+    { to: '/agenda', label: 'Agenda', icon: CalendarDays, show: true },
+    { to: '/dashboards', label: 'Dashboards', icon: BarChart3, show: showReports },
+  ]
+
   return (
-    <>
-      <div className="flex h-14 items-center gap-2 border-b px-4">
-        <img src="/favicon.svg" alt="lifegui" className="h-7 w-7 rounded-md" />
-        <span className="text-sm font-semibold tracking-tight">lifegui</span>
-      </div>
-      <nav className="flex flex-1 flex-col gap-1 p-2">
-        {isEnabled('tasks') && (
-          <NavLink to="/" end className={navClass} onClick={onNavigate}>
-            <Kanban className="h-4 w-4" /> Tarefas
-          </NavLink>
-        )}
-        {isEnabled('habits') && (
-          <NavLink to="/habits" className={navClass} onClick={onNavigate}>
-            <Repeat className="h-4 w-4" /> Hábitos
-          </NavLink>
-        )}
-        {isEnabled('brain') && (
-          <NavLink to="/cerebro" className={navClass} onClick={onNavigate}>
-            <Brain className="h-4 w-4" /> Cérebro
-          </NavLink>
-        )}
-        <NavLink to="/agenda" className={navClass} onClick={onNavigate}>
-          <CalendarDays className="h-4 w-4" /> Agenda
-        </NavLink>
-        {showReports && (
-          <NavLink to="/dashboards" className={navClass} onClick={onNavigate}>
-            <BarChart3 className="h-4 w-4" /> Dashboards
-          </NavLink>
-        )}
-        <div className="mt-auto" />
-        <NavLink to="/configuracoes" className={navClass} onClick={onNavigate}>
-          <Settings className="h-4 w-4" /> Configurações
-        </NavLink>
-      </nav>
-      <div className="border-t p-2">
-        <div className="flex items-center justify-between gap-2 px-1">
+    <Sidebar collapsible="icon">
+      <SidebarHeader>
+        <div className="flex h-10 items-center gap-2 px-2">
+          <img src="/favicon.svg" alt="lifegui" className="h-7 w-7 shrink-0 rounded-md" />
+          <span className="truncate text-sm font-semibold tracking-tight group-data-[collapsible=icon]:hidden">
+            lifegui
+          </span>
+        </div>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {items
+                .filter((item) => item.show)
+                .map((item) => (
+                  <SidebarMenuItem key={item.to}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isRouteActive(location.pathname, item.to, item.end)}
+                      tooltip={item.label}
+                    >
+                      <NavLink to={item.to} end={item.end} onClick={handleNavigate}>
+                        <item.icon />
+                        <span>{item.label}</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={isRouteActive(location.pathname, '/configuracoes')}
+              tooltip="Configurações"
+            >
+              <NavLink to="/configuracoes" onClick={handleNavigate}>
+                <Settings />
+                <span>Configurações</span>
+              </NavLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+        <div className="flex items-center justify-between gap-2 px-2 py-1 group-data-[collapsible=icon]:hidden">
           <span className="truncate text-sm">{user?.name}</span>
           <Button variant="ghost" size="sm" onClick={logout}>Sair</Button>
         </div>
-      </div>
-    </>
+      </SidebarFooter>
+      <SidebarRail />
+    </Sidebar>
   )
 }
 
@@ -85,52 +137,18 @@ function OnboardingGate() {
 }
 
 export function AppLayout({ children, title }: { children: ReactNode; title: string }) {
-  const [menuOpen, setMenuOpen] = useState(false)
-
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* sidebar fixa (desktop) */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r bg-card/40 md:flex">
-        <SidebarContent />
-      </aside>
-
-      {/* drawer (mobile) */}
-      <div className={`fixed inset-0 z-50 md:hidden ${menuOpen ? '' : 'pointer-events-none'}`} aria-hidden={!menuOpen}>
-        <div
-          className={`absolute inset-0 bg-black/50 transition-opacity ${menuOpen ? 'opacity-100' : 'opacity-0'}`}
-          onClick={() => setMenuOpen(false)}
-        />
-        <aside
-          className={`absolute inset-y-0 left-0 flex w-64 flex-col border-r bg-background shadow-xl transition-transform ${
-            menuOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
-        >
-          <button
-            onClick={() => setMenuOpen(false)}
-            aria-label="Fechar menu"
-            className="absolute right-2 top-3 z-10 rounded-md p-1.5 text-muted-foreground hover:bg-accent"
-          >
-            <X className="h-5 w-5" />
-          </button>
-          <SidebarContent onNavigate={() => setMenuOpen(false)} />
-        </aside>
-      </div>
-
-      <div className="flex min-w-0 flex-1 flex-col">
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
         <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 md:px-6">
-          <button
-            onClick={() => setMenuOpen(true)}
-            aria-label="Abrir menu"
-            className="-ml-1 rounded-md p-1.5 hover:bg-accent md:hidden"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
+          <SidebarTrigger className="-ml-1" />
           <h1 className="flex-1 text-base font-semibold tracking-tight">{title}</h1>
           <ModeToggle />
         </header>
         {children}
-      </div>
+      </SidebarInset>
       <OnboardingGate />
-    </div>
+    </SidebarProvider>
   )
 }
