@@ -38,6 +38,14 @@ function isRouteActive(pathname: string, to: string, end?: boolean) {
   return pathname === to || pathname.startsWith(`${to}/`)
 }
 
+// App é CSR puro (sem SSR), então o SidebarProvider não lê o cookie sozinho
+// no mount; precisamos ler aqui e passar via defaultOpen pra persistir o
+// estado colapsado entre reloads.
+function readSidebarCookieState(): boolean {
+  const match = document.cookie.match(/(?:^|; )sidebar_state=([^;]*)/)
+  return match ? match[1] === 'true' : true
+}
+
 function AppSidebar() {
   const { user, logout } = useAuth()
   const { isEnabled } = useEnabledModules()
@@ -138,7 +146,7 @@ function OnboardingGate() {
 
 export function AppLayout({ children, title }: { children: ReactNode; title: string }) {
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={readSidebarCookieState()}>
       <AppSidebar />
       <SidebarInset>
         <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 md:px-6">
