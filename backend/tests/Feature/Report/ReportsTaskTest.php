@@ -1,4 +1,5 @@
 <?php
+
 use App\Models\Category;
 use App\Models\Task;
 use App\Models\User;
@@ -16,6 +17,7 @@ function taskWithCreatedAt(User $user, array $attrs, string $createdAt): Task
 {
     $t = Task::factory()->for($user)->create($attrs);
     Task::query()->whereKey($t->id)->update(['created_at' => $createdAt]);
+
     return $t->refresh();
 }
 
@@ -151,6 +153,19 @@ test('weekly spans every ISO week and counts by tz-local date inside the window'
     // tasks created by factory at now()=2026-08-11 (week 08-10).
     $res->assertJsonPath('data.weekly.0.created', 1);
     $res->assertJsonPath('data.weekly.1.created', 2);
+});
+
+test('weekly começa na segunda-feira mesmo com o usuário em pt-BR e a janela caindo num domingo', function () {
+    // $this->user (factory) tem locale pt-BR por padrão, e o SetLocale middleware
+    // roda de verdade nesse teste HTTP — o que propaga pro Carbon::setLocale()
+    // via o listener do nesbot/carbon. Pro locale pt_BR, a semana do Carbon
+    // começa no domingo; TaskReport fixa Carbon::MONDAY explicitamente, então
+    // o weekStart precisa continuar sendo a segunda anterior, não o domingo.
+    expect($this->user->locale)->toBe('pt-BR');
+
+    $res = $this->getJson('/api/reports/tasks?from=2026-10-04&to=2026-10-04&tz=UTC')->assertOk(); // 2026-10-04 é domingo
+
+    $res->assertJsonPath('data.weekly.0.weekStart', '2026-09-28');
 });
 
 test('openByCategory groups live open tasks and folds uncategorized into a synthetic bucket', function () {

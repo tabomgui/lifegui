@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { Kanban, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -21,6 +22,7 @@ import { useEnabledModules } from '@/hooks/use-modules'
  * pré-preenchido, categoria e prazo opcionais) e vincula a nota a ela.
  */
 export function TaskFromNote({ notePath, noteTitle }: { notePath: string; noteTitle: string }) {
+  const { t } = useTranslation('brain')
   const { isEnabled } = useEnabledModules()
   const { data: categories = [] } = useCategories()
   const createTask = useCreateTask()
@@ -53,10 +55,10 @@ export function TaskFromNote({ notePath, noteTitle }: { notePath: string; noteTi
         due_date: due || null,
       })
       await createLink.mutateAsync({ type: 'task', id: task.id, note_path: notePath })
-      toast.success('Tarefa criada e vinculada à nota')
+      toast.success(t('taskFromNote.success'))
       setOpen(false)
     } catch {
-      toast.error('Não foi possível criar a tarefa')
+      toast.error(t('taskFromNote.error'))
     }
   }
 
@@ -64,12 +66,12 @@ export function TaskFromNote({ notePath, noteTitle }: { notePath: string; noteTi
     <Popover open={open} onOpenChange={openForm}>
       <PopoverTrigger asChild>
         <Button type="button" variant="ghost" size="sm" className="h-7 text-xs">
-          <Plus className="mr-1 h-3.5 w-3.5" /> Criar tarefa
+          <Plus className="mr-1 h-3.5 w-3.5" /> {t('taskFromNote.trigger')}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 space-y-3">
         <div className="space-y-1.5">
-          <Label htmlFor="task-from-note-title">Título</Label>
+          <Label htmlFor="task-from-note-title">{t('taskFromNote.titleLabel')}</Label>
           <Input
             id="task-from-note-title"
             value={title}
@@ -78,16 +80,16 @@ export function TaskFromNote({ notePath, noteTitle }: { notePath: string; noteTi
           />
         </div>
         <div className="space-y-1.5">
-          <Label>Categoria</Label>
+          <Label>{t('taskFromNote.categoryLabel')}</Label>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button type="button" variant="outline" size="sm" className="w-full justify-start">
                 <Kanban className="mr-1.5 h-3.5 w-3.5" />
-                {category?.name ?? 'Sem categoria'}
+                {category?.name ?? t('taskFromNote.noCategory')}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="max-h-64 overflow-auto">
-              <DropdownMenuItem onClick={() => setCategoryId(null)}>Sem categoria</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setCategoryId(null)}>{t('taskFromNote.noCategory')}</DropdownMenuItem>
               {categories.map((c) => (
                 <DropdownMenuItem key={c.id} onClick={() => setCategoryId(c.id)}>
                   {c.name}
@@ -97,7 +99,7 @@ export function TaskFromNote({ notePath, noteTitle }: { notePath: string; noteTi
           </DropdownMenu>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="task-from-note-due">Prazo (opcional)</Label>
+          <Label htmlFor="task-from-note-due">{t('taskFromNote.dueLabel')}</Label>
           <Input
             id="task-from-note-due"
             type="date"
@@ -106,7 +108,7 @@ export function TaskFromNote({ notePath, noteTitle }: { notePath: string; noteTi
           />
         </div>
         <Button size="sm" className="w-full" onClick={submit} disabled={pending || !title.trim()}>
-          Criar e vincular
+          {t('taskFromNote.submit')}
         </Button>
       </PopoverContent>
     </Popover>

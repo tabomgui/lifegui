@@ -37,8 +37,8 @@ class ReportsController extends Controller
     }
 
     /**
-     * Resolve the validated window: tz falls back to UTC when unknown (like the
-     * heatmap); missing from/to default to the last $defaultDays ending today[tz].
+     * Resolve the validated window: tz falls back to the user's timezone when unknown
+     * (like the heatmap); missing from/to default to the last $defaultDays ending today[tz].
      *
      * @return array{0:string,1:string,2:string}
      */
@@ -46,7 +46,7 @@ class ReportsController extends Controller
     {
         $tz = (string) $request->validated('tz');
         if (! in_array($tz, timezone_identifiers_list(), true)) {
-            $tz = 'UTC';
+            $tz = $request->user()->timezone;
         }
 
         $from = $request->validated('from');

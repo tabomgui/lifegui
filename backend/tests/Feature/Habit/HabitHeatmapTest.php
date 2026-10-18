@@ -50,7 +50,17 @@ test('heatmap com from/to retorna só conclusões dentro da janela', function ()
 });
 
 test('heatmap rejeita janela maior que 400 dias', function () {
+    // Factory default é pt-BR (ver UserFactory).
     $this->getJson('/api/habits/heatmap?from=2025-01-01&to=2026-08-11')
         ->assertStatus(422)
-        ->assertJsonValidationErrors('to');
+        ->assertJsonValidationErrors('to')
+        ->assertJsonPath('errors.to.0', 'Período máximo de 400 dias.');
+});
+
+test('heatmap rejeita janela maior que 400 dias em inglês pelo idioma do usuário', function () {
+    $this->user->update(['locale' => 'en']);
+
+    $this->getJson('/api/habits/heatmap?from=2025-01-01&to=2026-08-11')
+        ->assertStatus(422)
+        ->assertJsonPath('errors.to.0', 'Maximum period of 400 days.');
 });

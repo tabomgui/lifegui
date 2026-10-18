@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { useModules, useToggleModule } from '@/hooks/use-modules'
 import { DynamicIcon } from '@/components/icon'
@@ -9,6 +10,7 @@ function versionLabel(version: string) {
 }
 
 function ModuleRow({ module }: { module: ModuleInfo }) {
+  const { t } = useTranslation(['settings', 'common'])
   const toggle = useToggleModule()
   return (
     <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
@@ -28,13 +30,17 @@ function ModuleRow({ module }: { module: ModuleInfo }) {
         <Switch
           checked={module.enabled}
           disabled={toggle.isPending}
-          aria-label={`Ativar ${module.label}`}
+          aria-label={t('modules.enable', { label: module.label })}
           onCheckedChange={(enabled) =>
             toggle.mutate(
               { key: module.key, enabled },
               {
                 onError: () =>
-                  toast.error(`Não foi possível ${enabled ? 'ativar' : 'desativar'} ${module.label}.`),
+                  toast.error(
+                    enabled
+                      ? t('modules.toast.enableError', { label: module.label })
+                      : t('modules.toast.disableError', { label: module.label }),
+                  ),
               },
             )
           }
@@ -45,17 +51,20 @@ function ModuleRow({ module }: { module: ModuleInfo }) {
 }
 
 export function ModulesSettings() {
+  const { t } = useTranslation(['settings', 'common'])
   const { data: modules = [], isLoading, isError } = useModules()
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">Ative quais módulos aparecem na barra lateral.</p>
+      <p className="text-sm text-muted-foreground">{t('modules.intro')}</p>
       {isError ? (
         <div className="rounded-lg border p-6 text-center text-sm text-muted-foreground">
-          Não foi possível carregar os módulos.
+          {t('modules.loadError')}
         </div>
       ) : isLoading ? (
-        <div className="rounded-lg border p-6 text-center text-sm text-muted-foreground">Carregando…</div>
+        <div className="rounded-lg border p-6 text-center text-sm text-muted-foreground">
+          {t('common:states.loading')}
+        </div>
       ) : (
         <div className="space-y-3">
           {modules.map((module) => (

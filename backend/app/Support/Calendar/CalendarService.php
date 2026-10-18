@@ -5,6 +5,7 @@ namespace App\Support\Calendar;
 use App\Models\User;
 use Carbon\CarbonInterface;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -108,8 +109,29 @@ class CalendarService
         }
     }
 
+    /**
+     * Descrição padrão dos eventos criados pelo lifegui (API e tool MCP
+     * schedule), no idioma do usuário — único lugar que monta esse texto.
+     */
+    public function createdByDescription(string $type): string
+    {
+        return __('messages.calendar.created_by', ['link' => $this->backlink($type)]);
+    }
+
+    private function backlink(string $type): string
+    {
+        $path = match ($type) {
+            'task' => '/',
+            'habit' => '/habits',
+            'note' => '/cerebro',
+            'event' => '/agenda',
+        };
+
+        return config('app.frontend_url').$path;
+    }
+
     /** Falha do Google vira exceção com a razão real (renderiza 502/404 no controller). */
-    private function guard(\Illuminate\Http\Client\Response $response): \Illuminate\Http\Client\Response
+    private function guard(Response $response): Response
     {
         if ($response->failed()) {
             throw CalendarApiException::fromResponse($response);
@@ -164,7 +186,7 @@ class CalendarService
 
         return [
             'id' => $event['id'],
-            'title' => $event['summary'] ?? '(sem título)',
+            'title' => $event['summary'] ?? __('messages.calendar.untitled'),
             'start' => $event['start']['dateTime'] ?? $event['start']['date'] ?? null,
             'end' => $event['end']['dateTime'] ?? $event['end']['date'] ?? null,
             'all_day' => isset($event['start']['date']),

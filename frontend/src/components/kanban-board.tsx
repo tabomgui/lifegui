@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import type { DragEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Task, TaskStatus } from '@/types/api'
 import { useMoveTask } from '@/hooks/use-tasks'
 import { TaskCard, STATUS_META } from '@/components/task-card'
@@ -7,6 +8,7 @@ import { TaskCard, STATUS_META } from '@/components/task-card'
 const COLUMNS: TaskStatus[] = ['todo', 'doing', 'done']
 
 export function KanbanBoard({ tasks }: { tasks: Task[] }) {
+  const { t } = useTranslation('tasks')
   const move = useMoveTask()
   const [over, setOver] = useState<TaskStatus | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -46,7 +48,8 @@ export function KanbanBoard({ tasks }: { tasks: Task[] }) {
             const colTasks = tasks
               .filter((t) => t.status === status)
               .sort((a, b) => Number(b.is_priority) - Number(a.is_priority) || a.position - b.position)
-            const { label, icon: Icon } = STATUS_META[status]
+            const label = t(`board.columns.${status}`)
+            const Icon = STATUS_META[status].icon
             return (
               <div key={status} className="flex min-h-0 w-full shrink-0 snap-start flex-col border-y bg-muted/30 md:w-auto md:rounded-lg md:border">
                 <div className="flex items-center justify-between px-4 py-2.5 md:px-3">
@@ -61,7 +64,7 @@ export function KanbanBoard({ tasks }: { tasks: Task[] }) {
                   {colTasks.map((t) => <TaskCard key={t.id} task={t} />)}
                   {colTasks.length === 0 && (
                     <div className="flex flex-1 items-center justify-center rounded-md border border-dashed py-6 text-xs text-muted-foreground/60">
-                      Solte tarefas aqui
+                      {t('board.empty')}
                     </div>
                   )}
                 </div>
@@ -77,7 +80,7 @@ export function KanbanBoard({ tasks }: { tasks: Task[] }) {
           <button
             key={status}
             onClick={() => goTo(i)}
-            aria-label={`Ir para ${STATUS_META[status].label}`}
+            aria-label={t('board.goToColumn', { label: t(`board.columns.${status}`) })}
             aria-current={i === activeCol}
             className={`h-1.5 rounded-full transition-all ${i === activeCol ? 'w-5 bg-primary' : 'w-1.5 bg-muted-foreground/30'}`}
           />

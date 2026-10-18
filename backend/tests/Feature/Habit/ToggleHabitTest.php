@@ -57,9 +57,24 @@ test('não permite toggle em data futura', function () {
 
     $h = Habit::factory()->for($this->user)->create();
 
+    // Factory default é pt-BR (ver UserFactory).
     $this->postJson("/api/habits/{$h->id}/toggle", ['date' => Carbon::now()->addDays(5)->toDateString()])
         ->assertStatus(422)
-        ->assertJsonValidationErrors('date');
+        ->assertJsonValidationErrors('date')
+        ->assertJsonPath('errors.date.0', 'Não dá para marcar um dia futuro.');
+
+    Carbon::setTestNow();
+});
+
+test('não permite toggle em data futura responde em inglês pelo idioma do usuário', function () {
+    Carbon::setTestNow(Carbon::parse('2026-08-11'));
+
+    $this->user->update(['locale' => 'en']);
+    $h = Habit::factory()->for($this->user)->create();
+
+    $this->postJson("/api/habits/{$h->id}/toggle", ['date' => Carbon::now()->addDays(5)->toDateString()])
+        ->assertStatus(422)
+        ->assertJsonPath('errors.date.0', "You can't mark a future day.");
 
     Carbon::setTestNow();
 });

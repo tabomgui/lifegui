@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,6 +15,7 @@ const COLORS = ['#64748b', '#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'
 export function BrainCategoryDialog({
   open, onOpenChange, category,
 }: { open: boolean; onOpenChange: (o: boolean) => void; category?: BrainCategory | null }) {
+  const { t } = useTranslation(['brain', 'common'])
   const create = useCreateBrainCategory()
   const update = useUpdateBrainCategory()
   const [name, setName] = useState('')
@@ -29,30 +31,32 @@ export function BrainCategoryDialog({
   }, [open, category])
 
   async function onSave() {
-    if (!name.trim()) return toast.error('Dê um nome à categoria')
+    if (!name.trim()) return toast.error(t('brain:categoryDialog.nameRequired'))
     try {
       if (category) await update.mutateAsync({ current: category.name, name: name.trim(), color, icon })
       else await create.mutateAsync({ name: name.trim(), color, icon })
       onOpenChange(false)
     } catch (e) {
       const status = (e as { response?: { status?: number } }).response?.status
-      toast.error(status === 409 ? 'Já existe uma categoria com esse nome' : 'Não foi possível salvar')
+      toast.error(status === 409 ? t('brain:categoryDialog.duplicateError') : t('brain:categoryDialog.saveError'))
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogHeader><DialogTitle>{category ? 'Editar' : 'Nova'} categoria</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>{category ? t('brain:categoryDialog.editTitle') : t('brain:categoryDialog.newTitle')}</DialogTitle>
+        </DialogHeader>
         <form onSubmit={(e) => { e.preventDefault(); onSave() }}>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="brain-cat-name">Nome</Label>
+              <Label htmlFor="brain-cat-name">{t('brain:categoryDialog.nameLabel')}</Label>
               <Input id="brain-cat-name" value={name} onChange={(e) => setName(e.target.value)} />
-              <p className="text-xs text-muted-foreground">Vira uma pasta no vault; renomear move as notas junto.</p>
+              <p className="text-xs text-muted-foreground">{t('brain:categoryDialog.nameHint')}</p>
             </div>
             <div className="space-y-2">
-              <Label>Cor</Label>
+              <Label>{t('brain:categoryDialog.colorLabel')}</Label>
               <div className="flex gap-2">
                 {COLORS.map((c) => (
                   <button key={c} type="button" onClick={() => setColor(c)}
@@ -62,7 +66,7 @@ export function BrainCategoryDialog({
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Ícone</Label>
+              <Label>{t('brain:categoryDialog.iconLabel')}</Label>
               <div className="grid grid-cols-8 gap-1.5">
                 {ICONS.map((i) => (
                   <button key={i} type="button" onClick={() => setIcon(i)} aria-label={i} aria-pressed={icon === i}
@@ -74,7 +78,7 @@ export function BrainCategoryDialog({
             </div>
           </div>
           <DialogFooter className="mt-4">
-            <Button type="submit" disabled={create.isPending || update.isPending}>Salvar</Button>
+            <Button type="submit" disabled={create.isPending || update.isPending}>{t('common:actions.save')}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

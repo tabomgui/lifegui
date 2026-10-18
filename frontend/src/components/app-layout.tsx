@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { Kanban, Repeat, Brain, CalendarDays, BarChart3, Settings } from 'lucide-react'
+import { Kanban, Repeat, Brain, CalendarDays, BarChart3, Settings, BookOpen } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/use-auth'
 import { useEnabledModules, useModules } from '@/hooks/use-modules'
 import { Button } from '@/components/ui/button'
@@ -8,6 +9,7 @@ import { ModeToggle } from '@/components/mode-toggle'
 import { OnboardingWizard } from '@/components/onboarding/onboarding-wizard'
 import { useOnboarding } from '@/contexts/onboarding-context'
 import { firstEnabledRoute } from '@/components/module-route'
+import { docsUrl } from '@/lib/docs'
 import {
   Sidebar,
   SidebarContent,
@@ -47,6 +49,7 @@ function readSidebarCookieState(): boolean {
 }
 
 function AppSidebar() {
+  const { t } = useTranslation('common')
   const { user, logout } = useAuth()
   const { isEnabled } = useEnabledModules()
   const { isMobile, setOpenMobile } = useSidebar()
@@ -58,11 +61,11 @@ function AppSidebar() {
   }
 
   const items: NavItem[] = [
-    { to: '/', end: true, label: 'Tarefas', icon: Kanban, show: isEnabled('tasks') },
-    { to: '/habits', label: 'Hábitos', icon: Repeat, show: isEnabled('habits') },
-    { to: '/cerebro', label: 'Cérebro', icon: Brain, show: isEnabled('brain') },
-    { to: '/agenda', label: 'Agenda', icon: CalendarDays, show: true },
-    { to: '/dashboards', label: 'Dashboards', icon: BarChart3, show: showReports },
+    { to: '/', end: true, label: t('nav.tasks'), icon: Kanban, show: isEnabled('tasks') },
+    { to: '/habits', label: t('nav.habits'), icon: Repeat, show: isEnabled('habits') },
+    { to: '/cerebro', label: t('nav.brain'), icon: Brain, show: isEnabled('brain') },
+    { to: '/agenda', label: t('nav.calendar'), icon: CalendarDays, show: true },
+    { to: '/dashboards', label: t('nav.dashboards'), icon: BarChart3, show: showReports },
   ]
 
   return (
@@ -102,21 +105,29 @@ function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip={t('nav.docs')}>
+              <a href={docsUrl()} target="_blank" rel="noreferrer">
+                <BookOpen />
+                <span>{t('nav.docs')}</span>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
             <SidebarMenuButton
               asChild
               isActive={isRouteActive(location.pathname, '/configuracoes')}
-              tooltip="Configurações"
+              tooltip={t('nav.settings')}
             >
               <NavLink to="/configuracoes" onClick={handleNavigate}>
                 <Settings />
-                <span>Configurações</span>
+                <span>{t('nav.settings')}</span>
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
         <div className="flex items-center justify-between gap-2 px-2 py-1 group-data-[collapsible=icon]:hidden">
           <span className="truncate text-sm">{user?.name}</span>
-          <Button variant="ghost" size="sm" onClick={logout}>Sair</Button>
+          <Button variant="ghost" size="sm" onClick={logout}>{t('nav.logout')}</Button>
         </div>
       </SidebarFooter>
       <SidebarRail />
@@ -145,12 +156,13 @@ function OnboardingGate() {
 }
 
 export function AppLayout({ children, title }: { children: ReactNode; title: string }) {
+  const { t } = useTranslation('common')
   return (
     <SidebarProvider defaultOpen={readSidebarCookieState()}>
       <AppSidebar />
       <SidebarInset>
         <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 md:px-6">
-          <SidebarTrigger className="-ml-1" />
+          <SidebarTrigger className="-ml-1" aria-label={t('nav.toggleSidebar')} />
           <h1 className="flex-1 text-base font-semibold tracking-tight">{title}</h1>
           <ModeToggle />
         </header>

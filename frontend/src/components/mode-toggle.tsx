@@ -1,15 +1,17 @@
 import { Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 
 export function ModeToggle() {
+  const { t } = useTranslation('common')
   const { resolvedTheme, setTheme } = useTheme()
 
   return (
     <Button
       variant="outline"
       size="icon"
-      aria-label="Alternar tema"
+      aria-label={t('nav.toggleTheme')}
       className="relative"
       onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
     >

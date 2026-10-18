@@ -8,6 +8,10 @@ class ModuleRegistry
      * Fixed registry of app modules. A per-user row in `user_modules` overrides
      * the `default` here; when no row exists the default applies.
      *
+     * label/description são resolvidos via __() a cada chamada (não em
+     * constante/array estático) pra respeitar o idioma da request atual,
+     * definido pelo middleware SetLocale antes do controller rodar.
+     *
      * @return array<int, array{key:string,label:string,description:string,icon:string,version:string,default:bool}>
      */
     public static function all(): array
@@ -15,16 +19,16 @@ class ModuleRegistry
         return [
             [
                 'key' => 'tasks',
-                'label' => 'Tarefas',
-                'description' => 'Afazeres do dia a dia.',
+                'label' => __('messages.modules.tasks.label'),
+                'description' => __('messages.modules.tasks.description'),
                 'icon' => 'kanban',
                 'version' => '0.1.0',
                 'default' => true,
             ],
             [
                 'key' => 'habits',
-                'label' => 'Hábitos',
-                'description' => 'Check-in diário e sequências.',
+                'label' => __('messages.modules.habits.label'),
+                'description' => __('messages.modules.habits.description'),
                 'icon' => 'repeat',
                 'version' => '0.1.0',
                 'default' => true,
@@ -32,8 +36,8 @@ class ModuleRegistry
             [
                 // Opt-in: depende de um vault Obsidian montado em VAULTS_PATH.
                 'key' => 'brain',
-                'label' => 'Cérebro',
-                'description' => 'Biblioteca de conteúdos e notas do vault Obsidian.',
+                'label' => __('messages.modules.brain.label'),
+                'description' => __('messages.modules.brain.description'),
                 'icon' => 'brain',
                 'version' => '0.1.0',
                 'default' => false,

@@ -64,7 +64,7 @@ test('setup cria a primeira conta e autentica', function () {
 test('setup responde 409 quando a instância já tem usuário', function () {
     User::factory()->create();
 
-    postJson('/api/setup', setupPayload(['email' => 'outro@example.com']))
+    postJson('/api/setup', setupPayload(['email' => 'outro@example.com']), ['Accept-Language' => 'pt-BR'])
         ->assertStatus(409)
         ->assertJsonPath('message', 'Esta instância já foi configurada.');
 
@@ -88,7 +88,7 @@ test('setup responde 409 quando o lock está ocupado', function () {
     $lock->get();
 
     try {
-        postJson('/api/setup', setupPayload())
+        postJson('/api/setup', setupPayload(), ['Accept-Language' => 'pt-BR'])
             ->assertStatus(409)
             ->assertJsonPath('message', 'Configuração em andamento. Tente de novo em instantes.');
 
@@ -96,4 +96,16 @@ test('setup responde 409 quando o lock está ocupado', function () {
     } finally {
         $lock->forceRelease();
     }
+});
+
+test('setup grava o locale enviado', function () {
+    postJson('/api/setup', setupPayload(['locale' => 'pt-BR']))
+        ->assertCreated()
+        ->assertJsonPath('data.locale', 'pt-BR');
+});
+
+test('setup sem locale usa o Accept-Language', function () {
+    postJson('/api/setup', setupPayload(), ['Accept-Language' => 'pt-BR'])
+        ->assertCreated()
+        ->assertJsonPath('data.locale', 'pt-BR');
 });

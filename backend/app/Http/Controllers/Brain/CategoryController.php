@@ -69,8 +69,8 @@ class CategoryController extends Controller
         $input = $this->validateCategory($request);
         $name = $input['name'];
 
-        abort_if(is_dir($this->vault->root().'/'.$name), 409, 'Já existe uma categoria com esse nome.');
-        abort_unless($this->vault->initialized(), 422, 'Vault não inicializado.');
+        abort_if(is_dir($this->vault->root().'/'.$name), 409, __('messages.brain.category_exists'));
+        abort_unless($this->vault->initialized(), 422, __('messages.brain.vault_not_initialized'));
 
         $meta = $this->vault->readCategoryMeta();
         // Congela a ordem atual antes do mkdir pra nova categoria entrar no fim.
@@ -99,7 +99,7 @@ class CategoryController extends Controller
         $name = $input['name'] ?? $category;
 
         if ($name !== $category) {
-            abort_if(is_dir($this->vault->root().'/'.$name), 409, 'Já existe uma categoria com esse nome.');
+            abort_if(is_dir($this->vault->root().'/'.$name), 409, __('messages.brain.category_exists'));
 
             DB::transaction(function () use ($category, $name) {
                 // Links apontam por caminho: renomear a pasta exige reescrever
@@ -154,7 +154,7 @@ class CategoryController extends Controller
         $dir = $this->vault->root().'/'.$category;
         $entries = array_diff(scandir($dir) ?: [], ['.', '..']);
         // Nunca apagamos conteúdo do usuário: só pasta vazia sai.
-        abort_if($entries !== [], 409, 'A categoria tem notas; mova ou conclua antes de apagar.');
+        abort_if($entries !== [], 409, __('messages.brain.category_not_empty'));
 
         rmdir($dir);
 

@@ -23,7 +23,7 @@ class ToggleHabitRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'date.before_or_equal' => 'Não dá para marcar um dia futuro.',
+            'date.before_or_equal' => __('messages.validation.future_date'),
         ];
     }
 }

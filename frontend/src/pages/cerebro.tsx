@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { Brain, Check, ChevronDown, Hash, NotebookPen, Plus } from 'lucide-react'
 import {
   DropdownMenu,
@@ -16,20 +17,22 @@ import { NewNoteDialog } from '@/components/brain/new-note-dialog'
 import { CaptureBar, InboxList } from '@/components/brain/inbox'
 import { BrainCategoryTabs, INBOX_TAB } from '@/components/brain/category-tabs'
 import { GraphView } from '@/components/brain/graph-view'
-import { NOTE_STATUSES, STATUS_DOT, STATUS_LABEL } from '@/components/brain/status'
+import { NOTE_STATUSES, STATUS_DOT, STATUS_LABEL_KEY } from '@/components/brain/status'
 import { useBrainCategories, useBrainInbox, useBrainNotes, useInitVault } from '@/hooks/use-brain'
+import { useFormat } from '@/i18n/format'
 import type { NoteStatus } from '@/types/api'
 
 // Vault ainda não existe: um clique cria a estrutura no servidor (zero touch).
 function ActivateBrain() {
+  const { t } = useTranslation('brain')
   const init = useInitVault()
 
   async function activate() {
     try {
       await init.mutateAsync()
-      toast.success('Cérebro ativado')
+      toast.success(t('activate.success'))
     } catch {
-      toast.error('Não foi possível ativar o Cérebro')
+      toast.error(t('activate.error'))
     }
   }
 
@@ -40,14 +43,13 @@ function ActivateBrain() {
           <Brain className="h-6 w-6 text-muted-foreground" />
         </div>
         <div className="space-y-1">
-          <p className="text-sm font-medium">Seu segundo cérebro ainda não existe</p>
+          <p className="text-sm font-medium">{t('activate.heading')}</p>
           <p className="text-sm text-muted-foreground">
-            O Cérebro guarda suas notas num vault Obsidian no servidor: capture links e
-            ideias no inbox, transforme em notas por categoria e conecte tudo com wikilinks.
+            {t('activate.description')}
           </p>
         </div>
         <Button onClick={activate} disabled={init.isPending}>
-          <Brain className="mr-1.5 h-4 w-4" /> Ativar Cérebro
+          <Brain className="mr-1.5 h-4 w-4" /> {t('activate.button')}
         </Button>
       </div>
     </div>
@@ -55,6 +57,8 @@ function ActivateBrain() {
 }
 
 export default function Cerebro() {
+  const { t } = useTranslation(['brain', 'common'])
+  const { compare } = useFormat()
   const { data: categoriesData, isLoading } = useBrainCategories()
   const categories = categoriesData?.data ?? []
   const initialized = categoriesData?.initialized ?? true
@@ -83,9 +87,7 @@ export default function Cerebro() {
 
   // Subfiltro por tag: chips derivados das notas visíveis da categoria.
   const [tagFilter, setTagFilter] = useState<string | null>(null)
-  const categoryTags = [...new Set(notes.flatMap((n) => n.tags))].sort((a, b) =>
-    a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }),
-  )
+  const categoryTags = [...new Set(notes.flatMap((n) => n.tags))].sort(compare)
   const visibleNotes = tagFilter ? notes.filter((n) => n.tags.includes(tagFilter)) : notes
 
   function switchTab(next: string) {
@@ -96,11 +98,11 @@ export default function Cerebro() {
   }
 
   return (
-    <AppLayout title="Cérebro">
+    <AppLayout title={t('common:nav.brain')}>
       <main className="flex min-h-0 flex-1 flex-col">
         {isLoading ? (
           <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-            Carregando…
+            {t('common:states.loading')}
           </div>
         ) : !initialized ? (
           <ActivateBrain />
@@ -144,7 +146,7 @@ export default function Cerebro() {
                           }`}
                         >
                           <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOT[s]}`} />
-                          {STATUS_LABEL[s]}
+                          {t(STATUS_LABEL_KEY[s])}
                         </button>
                       ))}
                       {categoryTags.length > 0 && (
@@ -159,7 +161,7 @@ export default function Cerebro() {
                               }`}
                             >
                               <Hash className="h-3 w-3" />
-                              {tagFilter ?? 'Tags'}
+                              {tagFilter ?? t('brain:filters.tagsLabel')}
                               <ChevronDown className="h-3 w-3 opacity-60" />
                             </button>
                           </DropdownMenuTrigger>
@@ -167,7 +169,7 @@ export default function Cerebro() {
                             {tagFilter && (
                               <>
                                 <DropdownMenuItem onClick={() => setTagFilter(null)}>
-                                  Limpar filtro
+                                  {t('brain:filters.clearFilter')}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                               </>
@@ -185,7 +187,7 @@ export default function Cerebro() {
                         </DropdownMenu>
                       )}
                       <Button size="sm" className="ml-auto h-8" onClick={() => setCreating(true)}>
-                        <Plus className="mr-1 h-3.5 w-3.5" /> Nova nota
+                        <Plus className="mr-1 h-3.5 w-3.5" /> {t('brain:newNoteButton')}
                       </Button>
                     </div>
 
@@ -196,18 +198,18 @@ export default function Cerebro() {
                         </div>
                         {q || status || tagFilter ? (
                           <p className="text-sm text-muted-foreground">
-                            Nenhuma nota com esses filtros.
+                            {t('brain:empty.noResults')}
                           </p>
                         ) : (
                           <>
                             <div className="space-y-1">
-                              <p className="text-sm font-medium">Nada em {active} ainda</p>
+                              <p className="text-sm font-medium">{t('brain:empty.categoryEmpty', { category: active })}</p>
                               <p className="text-sm text-muted-foreground">
-                                Crie a primeira nota ou capture um link no Inbox pra estudar depois.
+                                {t('brain:empty.categoryEmptyHint')}
                               </p>
                             </div>
                             <Button size="sm" variant="outline" onClick={() => setCreating(true)}>
-                              <Plus className="mr-1 h-3.5 w-3.5" /> Nova nota
+                              <Plus className="mr-1 h-3.5 w-3.5" /> {t('brain:newNoteButton')}
                             </Button>
                           </>
                         )}

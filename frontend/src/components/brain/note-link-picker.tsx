@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { FileText, Link2, Plus, TriangleAlert, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -20,6 +21,7 @@ export function NoteLinksSection({ type, id, links }: {
   id: number
   links: NoteLink[]
 }) {
+  const { t } = useTranslation('brain')
   const { isEnabled } = useEnabledModules()
   const createLink = useCreateNoteLink()
   const deleteLink = useDeleteNoteLink()
@@ -38,7 +40,7 @@ export function NoteLinksSection({ type, id, links }: {
       setOpen(false)
       setQ('')
     } catch {
-      toast.error('Não foi possível vincular')
+      toast.error(t('linkPicker.linkError'))
     }
   }
 
@@ -46,23 +48,23 @@ export function NoteLinksSection({ type, id, links }: {
     try {
       await deleteLink.mutateAsync(link.id)
     } catch {
-      toast.error('Não foi possível remover o vínculo')
+      toast.error(t('linkPicker.unlinkError'))
     }
   }
 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <Label>Notas do vault</Label>
+        <Label>{t('linkPicker.label')}</Label>
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button type="button" variant="ghost" size="sm" className="h-7 text-xs">
-              <Plus className="mr-1 h-3.5 w-3.5" /> Vincular
+              <Plus className="mr-1 h-3.5 w-3.5" /> {t('linkPicker.linkButton')}
             </Button>
           </PopoverTrigger>
           <PopoverContent align="end" className="w-72 p-2">
             <Input
-              placeholder="Buscar nota…"
+              placeholder={t('linkPicker.searchPlaceholder')}
               value={q}
               onChange={(e) => setQ(e.target.value)}
               className="mb-2 h-8 text-sm"
@@ -70,7 +72,7 @@ export function NoteLinksSection({ type, id, links }: {
             />
             <div className="max-h-48 space-y-0.5 overflow-auto">
               {options.length === 0 ? (
-                <p className="p-2 text-xs text-muted-foreground">Nenhuma nota encontrada.</p>
+                <p className="p-2 text-xs text-muted-foreground">{t('linkPicker.empty')}</p>
               ) : (
                 options.map((n) => (
                   <button
@@ -101,10 +103,10 @@ export function NoteLinksSection({ type, id, links }: {
               }`}
             >
               {link.exists ? <Link2 className="h-3 w-3" /> : <TriangleAlert className="h-3 w-3" />}
-              {link.exists ? link.title : `${link.title} (nota não encontrada)`}
+              {link.exists ? link.title : t('linkPicker.notFound', { title: link.title })}
               <button
                 type="button"
-                aria-label={`Remover vínculo com "${link.title}"`}
+                aria-label={t('linkPicker.removeAria', { title: link.title })}
                 onClick={() => remove(link)}
                 className="ml-0.5 rounded p-0.5 hover:bg-accent"
               >

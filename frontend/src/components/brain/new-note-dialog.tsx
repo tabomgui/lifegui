@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -26,6 +27,7 @@ export function NewNoteDialog({ open, category, initialTitle, initialBody, onClo
   onClose: () => void
   onCreated: (path: string) => void
 }) {
+  const { t } = useTranslation(['brain', 'common'])
   const create = useCreateNote()
   const { data: categoriesData } = useBrainCategories(open && !category)
   const categories = categoriesData?.data ?? []
@@ -63,7 +65,7 @@ export function NewNoteDialog({ open, category, initialTitle, initialBody, onClo
       onCreated(note.path)
     } catch (e) {
       const status = (e as { response?: { status?: number } }).response?.status
-      toast.error(status === 409 ? 'Já existe uma nota com esse título' : 'Não foi possível criar a nota')
+      toast.error(status === 409 ? t('brain:newNote.duplicateError') : t('brain:newNote.createError'))
     }
   }
 
@@ -71,23 +73,23 @@ export function NewNoteDialog({ open, category, initialTitle, initialBody, onClo
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose() }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{category ? `Nova nota em ${category}` : 'Nova nota'}</DialogTitle>
+          <DialogTitle>{category ? t('brain:newNote.titleIn', { category }) : t('brain:newNote.title')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label htmlFor="note-title">Título</Label>
+            <Label htmlFor="note-title">{t('brain:newNote.titleLabel')}</Label>
             <Input id="note-title" value={title} onChange={(e) => setTitle(e.target.value)} autoFocus />
           </div>
           {!category && (
             <div className="space-y-1.5">
-              <Label htmlFor="note-cat">Categoria</Label>
+              <Label htmlFor="note-cat">{t('brain:newNote.categoryLabel')}</Label>
               <select
                 id="note-cat"
                 value={cat}
                 onChange={(e) => setCat(e.target.value)}
                 className="border-input flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
               >
-                <option value="">Escolher categoria…</option>
+                <option value="">{t('brain:newNote.chooseCategoryOption')}</option>
                 {categories.map((c) => (
                   <option key={c.name} value={c.name}>{c.name}</option>
                 ))}
@@ -95,20 +97,20 @@ export function NewNoteDialog({ open, category, initialTitle, initialBody, onClo
             </div>
           )}
           <div className="space-y-1.5">
-            <Label htmlFor="note-fonte">Fonte (link, opcional)</Label>
-            <Input id="note-fonte" value={fonte} onChange={(e) => setFonte(e.target.value)} placeholder="https://…" />
+            <Label htmlFor="note-fonte">{t('brain:newNote.fonteLabel')}</Label>
+            <Input id="note-fonte" value={fonte} onChange={(e) => setFonte(e.target.value)} placeholder={t('brain:newNote.fontePlaceholder')} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="note-resumo">Resumo (opcional)</Label>
+            <Label htmlFor="note-resumo">{t('brain:newNote.resumoLabel')}</Label>
             <Input id="note-resumo" value={resumo} onChange={(e) => setResumo(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="note-tags">Tags (separadas por vírgula, opcional)</Label>
+            <Label htmlFor="note-tags">{t('brain:newNote.tagsLabel')}</Label>
             <Input id="note-tags" value={tags} onChange={(e) => setTags(e.target.value)} />
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={submit} disabled={create.isPending || !title.trim() || !effectiveCat}>Criar</Button>
+          <Button onClick={submit} disabled={create.isPending || !title.trim() || !effectiveCat}>{t('common:actions.create')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

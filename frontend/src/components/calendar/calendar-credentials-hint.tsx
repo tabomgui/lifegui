@@ -1,7 +1,6 @@
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
-
-/** URL única da doc de setup — usada em todo lugar que exibe esta dica. */
-export const CALENDAR_DOCS = 'https://github.com/tabomgui/lifegui#google-calendar'
+import { docsUrl } from '@/lib/docs'
 
 /**
  * Mensagem exibida no lugar do botão "Conectar Google Calendar" quando a
@@ -9,11 +8,15 @@ export const CALENDAR_DOCS = 'https://github.com/tabomgui/lifegui#google-calenda
  * "Missing required parameter: client_id" do Google).
  */
 export function CalendarCredentialsHint({ className }: { className?: string }) {
+  // useTranslation traduz os dois textos abaixo e, de quebra, inscreve o componente
+  // em mudanças de idioma — sem isso docsUrl() (que lê i18n.language direto, sem
+  // reatividade própria) ficaria preso no idioma da 1ª renderização.
+  const { t } = useTranslation('calendar')
   return (
     <p className={cn('text-xs text-muted-foreground', className)}>
-      Requer credenciais do Google nesta instância.{' '}
-      <a href={CALENDAR_DOCS} target="_blank" rel="noreferrer" className="underline">
-        Como configurar
+      {t('credentialsHint.text')}{' '}
+      <a href={docsUrl('/self-hosting/google-calendar')} target="_blank" rel="noreferrer" className="underline">
+        {t('credentialsHint.link')}
       </a>
     </p>
   )

@@ -1,5 +1,8 @@
+import { useMemo } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
+import { useFormat } from '@/i18n/format'
 
 // Segunda-feira (ISO) da semana que contém `date`, em 'Y-m-d'.
 export function mondayOf(date: Date): string {
@@ -16,21 +19,26 @@ export function shiftWeek(week: string, deltaWeeks: number): string {
   return d.toISOString().slice(0, 10)
 }
 
-const DOW = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
-export const WEEK_DOW = DOW
+// Abreviações dos dias da semana, segunda a domingo, no idioma ativo.
+export function useWeekDow(): string[] {
+  const { weekdayShort, locale } = useFormat()
+  return useMemo(() => [1, 2, 3, 4, 5, 6, 0].map(weekdayShort), [locale])
+}
 
 export function WeekStepper({ week, onChange }: { week: string; onChange: (w: string) => void }) {
+  const { t } = useTranslation('habits')
+  const { dayMonth } = useFormat()
   const start = new Date(week + 'T00:00:00Z')
   const end = new Date(week + 'T00:00:00Z')
   end.setUTCDate(end.getUTCDate() + 6)
-  const fmt = (d: Date) => `${d.getUTCDate()}/${d.getUTCMonth() + 1}`
+  const fmt = (d: Date) => dayMonth(d, { utc: true })
   return (
     <div className="flex items-center gap-2 text-sm">
-      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onChange(shiftWeek(week, -1))} aria-label="Semana anterior">
+      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onChange(shiftWeek(week, -1))} aria-label={t('weekStepper.previous')}>
         <ChevronLeft className="h-4 w-4" />
       </Button>
       <span className="min-w-[110px] text-center text-muted-foreground">{fmt(start)} – {fmt(end)}</span>
-      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onChange(shiftWeek(week, 1))} aria-label="Próxima semana">
+      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onChange(shiftWeek(week, 1))} aria-label={t('weekStepper.next')}>
         <ChevronRight className="h-4 w-4" />
       </Button>
     </div>

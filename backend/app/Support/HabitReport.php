@@ -4,7 +4,6 @@ namespace App\Support;
 use App\Models\Habit;
 use App\Models\HabitLog;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
 
 /**
  * Aggregations for the "Relatórios" > Habitos dashboard.
@@ -35,11 +34,16 @@ class HabitReport
         $habits = Habit::whereNull('archived_at')->orderBy('id')->get();
         $activeHabitsCount = $habits->count();
 
-        // All-time done=true logs for the active habits (reached only via scoped habit ids).
+        // All-time done/skipped logs for the active habits (reached only via scoped
+        // habit ids). Skips only matter for the per-habit streaks (HabitStreak).
         $ids = $habits->pluck('id')->all();
         $logs = empty($ids)
             ? collect()
-            : HabitLog::whereIn('habit_id', $ids)->where('done', true)->get();
+            : HabitLog::whereIn('habit_id', $ids)
+                ->where(fn ($q) => $q->where('done', true)->orWhere('skipped', true))
+                ->get();
+        $logsByHabit = $logs->groupBy('habit_id');
+        $logs = $logs->where('done', true);
 
         $doneByHabit = [];   // id => Collection<string Y-m-d> (unique, sorted)
         $doneSet = [];       // id => Collection flip: date => index (has() lookup)
@@ -85,7 +89,7 @@ class HabitReport
         $consistencyPreviousPct = $consistencyOf($prevFromS, $prevToS);
         $consistencyDelta = $consistencyPct - $consistencyPreviousPct;
 
-        // ---- perfect days (DAILY habits only) ----
+        // ---- perfect days (DAILY habits only; a skipped day is not perfect) ----
         $dailyIds = $habits->filter(fn ($h) => $h->target_per_week === null)->pluck('id')->all();
         $isPerfect = function (string $d) use ($dailyIds, $doneSet): bool {
             if (empty($dailyIds)) {
@@ -165,25 +169,16 @@ class HabitReport
             ];
         }
 
-        // ---- per-habit streaks ----
+        // ---- per-habit streaks (same rule as the habits page: HabitStreak) ----
         $perHabitStreaks = [];
         foreach ($habits as $h) {
-            $set = $doneSet[$h->id];
-            $cur = $today->copy();
-            if (! $set->has($cur->toDateString())) {
-                $cur->subDay();
-            }
-            $current = 0;
-            while ($set->has($cur->toDateString())) {
-                $current++;
-                $cur->subDay();
-            }
+            $habitLogs = $logsByHabit->get($h->id, collect());
             $perHabitStreaks[] = [
                 'habitId' => $h->id,
                 'name' => $h->name,
                 'color' => $h->color,
-                'current' => $current,
-                'best' => self::longestRun($doneByHabit[$h->id]),
+                'current' => HabitStreak::current($habitLogs, $today->toDateString()),
+                'best' => HabitStreak::best($habitLogs),
             ];
         }
 
@@ -204,24 +199,5 @@ class HabitReport
             'dailyConsistency' => $dailyConsistency,
             'perHabitStreaks' => $perHabitStreaks,
         ];
-    }
-
-    /** Longest run of consecutive calendar days in a set of Y-m-d strings. */
-    private static function longestRun(Collection $dates): int
-    {
-        if ($dates->isEmpty()) {
-            return 0;
-        }
-        $sorted = $dates->unique()->sort()->values();
-        $best = 1;
-        $run = 1;
-        for ($i = 1; $i < $sorted->count(); $i++) {
-            $prev = Carbon::parse($sorted[$i - 1]);
-            $cur = Carbon::parse($sorted[$i]);
-            $run = $prev->copy()->addDay()->toDateString() === $cur->toDateString() ? $run + 1 : 1;
-            $best = max($best, $run);
-        }
-
-        return $best;
     }
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,6 +18,7 @@ const DEFAULT_ICON = 'circle-check'
 export function HabitDialog({
   open, onOpenChange, habit,
 }: { open: boolean; onOpenChange: (o: boolean) => void; habit?: Habit | null }) {
+  const { t } = useTranslation(['habits', 'common'])
   const create = useCreateHabit()
   const update = useUpdateHabit()
   const [name, setName] = useState('')
@@ -34,7 +36,7 @@ export function HabitDialog({
   }, [open, habit])
 
   async function onSave() {
-    if (!name.trim()) return toast.error('Dê um nome ao hábito')
+    if (!name.trim()) return toast.error(t('habits:dialog.nameRequired'))
     // Trata vazio ou 0 como "sem meta"; o backend só aceita 1..7.
     const parsed = Number(target)
     const target_per_week = target && parsed >= 1 ? parsed : null
@@ -43,26 +45,26 @@ export function HabitDialog({
       else await create.mutateAsync({ name, icon, color, target_per_week })
       onOpenChange(false)
     } catch {
-      toast.error('Não foi possível salvar')
+      toast.error(t('habits:dialog.saveError'))
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogHeader><DialogTitle>{habit ? 'Editar' : 'Novo'} hábito</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{habit ? t('habits:dialog.editTitle') : t('habits:dialog.newTitle')}</DialogTitle></DialogHeader>
         <form onSubmit={(e) => { e.preventDefault(); onSave() }} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="habit-name">Nome</Label>
+            <Label htmlFor="habit-name">{t('habits:dialog.nameLabel')}</Label>
             <Input id="habit-name" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="habit-target">Meta semanal (opcional, 1–7)</Label>
+            <Label htmlFor="habit-target">{t('habits:dialog.targetLabel')}</Label>
             <Input id="habit-target" type="number" min={1} max={7} value={target}
-              onChange={(e) => setTarget(e.target.value)} placeholder="sem meta" />
+              onChange={(e) => setTarget(e.target.value)} placeholder={t('habits:noTarget')} />
           </div>
           <div className="space-y-2">
-            <Label>Cor</Label>
+            <Label>{t('habits:dialog.colorLabel')}</Label>
             <div className="flex gap-2">
               {COLORS.map((c) => (
                 <button key={c} type="button" onClick={() => setColor(c)}
@@ -72,7 +74,7 @@ export function HabitDialog({
             </div>
           </div>
           <div className="space-y-2">
-            <Label>Ícone</Label>
+            <Label>{t('habits:dialog.iconLabel')}</Label>
             <div className="grid grid-cols-8 gap-1.5">
               {ICONS.map((i) => (
                 <button key={i} type="button" onClick={() => setIcon(i)} aria-label={i} aria-pressed={icon === i}
@@ -87,7 +89,7 @@ export function HabitDialog({
             <ScheduleSection type="habit" refId={String(habit.id)} title={habit.name} defaultRecurring />
           )}
           <DialogFooter className="mt-2">
-            <Button type="submit">Salvar</Button>
+            <Button type="submit">{t('common:actions.save')}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

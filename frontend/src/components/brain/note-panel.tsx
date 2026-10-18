@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import ReactMarkdown, { defaultUrlTransform } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { CodeXml, CornerUpRight, ExternalLink, Eye, Kanban, Pencil, Repeat, Scissors, Trash2 } from 'lucide-react'
 import { NoteEditor, type NoteEditorApi } from '@/components/brain/note-editor'
 import { ScheduleSection } from '@/components/calendar/schedule-section'
@@ -17,7 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { NOTE_STATUSES, STATUS_BADGE, STATUS_LABEL } from '@/components/brain/status'
+import { NOTE_STATUSES, STATUS_BADGE, STATUS_LABEL_KEY } from '@/components/brain/status'
 import { useBrainNote, useBrainNotes, useDeleteNote, useUpdateNote } from '@/hooks/use-brain'
 import type { NoteStatus } from '@/types/api'
 
@@ -34,6 +35,7 @@ export function NotePanel({ path, onNavigate, onClose }: {
   onNavigate: (path: string) => void
   onClose: () => void
 }) {
+  const { t } = useTranslation(['brain', 'common', 'calendar'])
   const { data: note } = useBrainNote(path)
   const { data: allNotes = [] } = useBrainNotes()
   const update = useUpdateNote()
@@ -84,7 +86,7 @@ export function NotePanel({ path, onNavigate, onClose }: {
     try {
       await update.mutateAsync({ path: note.path, frontmatter: { status } })
     } catch {
-      toast.error('Não foi possível atualizar o status')
+      toast.error(t('brain:panel.statusError'))
     }
   }
 
@@ -93,21 +95,21 @@ export function NotePanel({ path, onNavigate, onClose }: {
     try {
       await update.mutateAsync({ path: note.path, body: currentContent() })
       setEditing(false)
-      toast.success('Nota salva')
+      toast.success(t('brain:panel.saveSuccess'))
     } catch {
-      toast.error('Não foi possível salvar')
+      toast.error(t('brain:panel.saveError'))
     }
   }
 
   async function deleteNote() {
     if (!note) return
-    if (!confirm(`Excluir "${note.title}"? Vai pra .trash no vault (recuperável pelo Obsidian).`)) return
+    if (!confirm(t('brain:panel.deleteConfirm', { title: note.title }))) return
     try {
       await del.mutateAsync(note.path)
-      toast.success('Nota movida pra lixeira')
+      toast.success(t('brain:panel.deleteSuccess'))
       onClose()
     } catch {
-      toast.error('Não foi possível excluir')
+      toast.error(t('brain:panel.deleteError'))
     }
   }
 
@@ -115,7 +117,7 @@ export function NotePanel({ path, onNavigate, onClose }: {
     if (rawMode) {
       const el = textareaRef.current
       if (!el || el.selectionStart === el.selectionEnd) {
-        toast.error('Selecione um trecho pra extrair')
+        toast.error(t('brain:panel.selectTextError'))
         return
       }
       setExtract({
@@ -126,7 +128,7 @@ export function NotePanel({ path, onNavigate, onClose }: {
     } else {
       const text = editorApiRef.current?.getSelectionText() ?? ''
       if (!text.trim()) {
-        toast.error('Selecione um trecho pra extrair')
+        toast.error(t('brain:panel.selectTextError'))
         return
       }
       setExtract({ text })
@@ -142,7 +144,7 @@ export function NotePanel({ path, onNavigate, onClose }: {
       editorApiRef.current?.replaceSelection(link)
     }
     setExtract(null)
-    toast.success('Trecho extraído — salve a nota pra gravar o link')
+    toast.success(t('brain:panel.extractSuccess'))
   }
 
   return (
@@ -159,13 +161,13 @@ export function NotePanel({ path, onNavigate, onClose }: {
                       type="button"
                       className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${note.status ? STATUS_BADGE[note.status] : 'bg-muted text-muted-foreground'}`}
                     >
-                      {note.status ? STATUS_LABEL[note.status] : 'Sem status'}
+                      {note.status ? t(STATUS_LABEL_KEY[note.status]) : t('brain:panel.noStatus')}
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start">
                     {NOTE_STATUSES.map((s) => (
                       <DropdownMenuItem key={s} onClick={() => setStatus(s)}>
-                        {STATUS_LABEL[s]}
+                        {t(STATUS_LABEL_KEY[s])}
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
@@ -177,7 +179,7 @@ export function NotePanel({ path, onNavigate, onClose }: {
                     rel="noreferrer"
                     className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
                   >
-                    <ExternalLink className="h-3 w-3" /> fonte
+                    <ExternalLink className="h-3 w-3" /> {t('brain:panel.sourceLink')}
                   </a>
                 )}
                 <TagEditor path={note.path} tags={note.tags} />
@@ -185,18 +187,18 @@ export function NotePanel({ path, onNavigate, onClose }: {
                   {editing ? (
                     <div className="flex gap-1.5">
                       <Button size="sm" variant="ghost" onClick={startExtract}
-                        title="Extrair trecho selecionado pra uma nota nova">
-                        <Scissors className="mr-1 h-3.5 w-3.5" /> Extrair
+                        title={t('brain:panel.extractTitle')}>
+                        <Scissors className="mr-1 h-3.5 w-3.5" /> {t('brain:panel.extract')}
                       </Button>
                       <Button size="sm" variant="ghost" onClick={toggleRaw}
-                        title={rawMode ? 'Voltar pro editor' : 'Editar como texto puro'}>
-                        <CodeXml className="mr-1 h-3.5 w-3.5" /> {rawMode ? 'Editor' : 'Texto'}
+                        title={rawMode ? t('brain:panel.backToEditorTitle') : t('brain:panel.editAsRawTitle')}>
+                        <CodeXml className="mr-1 h-3.5 w-3.5" /> {rawMode ? t('brain:panel.editorLabel') : t('brain:panel.rawLabel')}
                       </Button>
                       <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
-                        <Eye className="mr-1 h-3.5 w-3.5" /> Cancelar
+                        <Eye className="mr-1 h-3.5 w-3.5" /> {t('common:actions.cancel')}
                       </Button>
                       <Button size="sm" onClick={saveBody} disabled={update.isPending}>
-                        Salvar
+                        {t('common:actions.save')}
                       </Button>
                     </div>
                   ) : (
@@ -207,13 +209,13 @@ export function NotePanel({ path, onNavigate, onClose }: {
                         className="text-muted-foreground hover:text-destructive"
                         onClick={deleteNote}
                         disabled={del.isPending}
-                        aria-label={`Excluir ${note.title}`}
-                        title="Excluir nota"
+                        aria-label={t('brain:panel.deleteAria', { title: note.title })}
+                        title={t('brain:panel.deleteTitle')}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                       <Button size="sm" variant="ghost" onClick={() => { setDraft(note.body); setEditorKey((k) => k + 1); setEditing(true) }}>
-                        <Pencil className="mr-1 h-3.5 w-3.5" /> Editar
+                        <Pencil className="mr-1 h-3.5 w-3.5" /> {t('common:actions.edit')}
                       </Button>
                     </div>
                   )}
@@ -258,7 +260,7 @@ export function NotePanel({ path, onNavigate, onClose }: {
                             <a
                               href="#"
                               onClick={(e) => { e.preventDefault(); setGhostTitle(target) }}
-                              title="Nota ainda não existe — clique pra criar"
+                              title={t('brain:panel.wikilinkMissingTitle')}
                               className="cursor-pointer text-muted-foreground underline decoration-dashed underline-offset-2"
                             >
                               {children}
@@ -277,10 +279,10 @@ export function NotePanel({ path, onNavigate, onClose }: {
 
             {!editing && (
               <div className="space-y-2 border-t p-3">
-                <ScheduleSection type="note" refId={note.path} title={`Estudar: ${note.title}`} />
+                <ScheduleSection type="note" refId={note.path} title={t('calendar:studyNote', { title: note.title })} />
                 {note.backlinks.length > 0 && (
                   <div>
-                    <p className="mb-1.5 text-xs font-medium text-muted-foreground">Mencionada em</p>
+                    <p className="mb-1.5 text-xs font-medium text-muted-foreground">{t('brain:panel.mentionedIn')}</p>
                     <div className="flex flex-wrap gap-1.5">
                       {note.backlinks.map((b) => (
                         <button
@@ -299,7 +301,7 @@ export function NotePanel({ path, onNavigate, onClose }: {
                 )}
                 <div>
                   <div className="mb-1.5 flex items-center justify-between">
-                    <p className="text-xs font-medium text-muted-foreground">Vinculado a</p>
+                    <p className="text-xs font-medium text-muted-foreground">{t('brain:panel.linkedTo')}</p>
                     <TaskFromNote notePath={note.path} noteTitle={note.title} />
                   </div>
                   {note.links.length > 0 ? (
@@ -316,7 +318,7 @@ export function NotePanel({ path, onNavigate, onClose }: {
                     </div>
                   ) : (
                     <p className="text-xs text-muted-foreground/70">
-                      Nenhuma tarefa ou hábito vinculado ainda.
+                      {t('brain:panel.noLinks')}
                     </p>
                   )}
                 </div>

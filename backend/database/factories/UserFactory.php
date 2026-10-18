@@ -30,6 +30,10 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            // Difere do default 'en' da coluna de propósito: testes existentes
+            // afirmam texto em pt-BR.
+            'locale' => 'pt-BR',
+            'timezone' => 'America/Sao_Paulo',
         ];
     }
 

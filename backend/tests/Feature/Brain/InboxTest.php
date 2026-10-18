@@ -89,10 +89,10 @@ test('descartar move a captura pra descartados sem apagar', function () {
 
     $this->deleteJson('/api/brain/inbox/00-Inbox/spam.md')
         ->assertOk()
-        ->assertJsonPath('data.path', '00-Inbox/descartados/'.now()->format('Y-m-d').'-spam.md');
+        ->assertJsonPath('data.path', '00-Inbox/descartados/'.auth()->user()->localToday().'-spam.md');
 
     expect(file_exists(vaultPath().'/00-Inbox/spam.md'))->toBeFalse()
-        ->and(file_exists(vaultPath().'/00-Inbox/descartados/'.now()->format('Y-m-d').'-spam.md'))->toBeTrue();
+        ->and(file_exists(vaultPath().'/00-Inbox/descartados/'.auth()->user()->localToday().'-spam.md'))->toBeTrue();
 
     $this->getJson('/api/brain/inbox')->assertOk()->assertJsonCount(0, 'data');
 });
@@ -103,4 +103,34 @@ test('descartar rejeita path fora do inbox, já descartado e inexistente', funct
     $this->deleteJson('/api/brain/inbox/Receitas/Bolo.md')->assertNotFound();
     $this->deleteJson('/api/brain/inbox/00-Inbox/descartados/x.md')->assertNotFound();
     $this->deleteJson('/api/brain/inbox/00-Inbox/nao-existe.md')->assertNotFound();
+});
+
+test('virar nota em inglês anexa abaixo de My notes', function () {
+    $this->user->update(['locale' => 'en']);
+    File::ensureDirectoryExists(vaultPath().'/Livros');
+    makeNote('00-Inbox/duna.md', [], "ler Duna\n");
+
+    $this->postJson('/api/brain/inbox/00-Inbox/duna.md/promote', [
+        'category' => 'Livros',
+        'title' => 'Duna',
+    ])->assertCreated();
+
+    expect(file_get_contents(vaultPath().'/Livros/Duna.md'))
+        ->toMatch('/## My notes\s*\n+ler Duna/');
+});
+
+test('virar nota em inglês ainda reconhece Minhas anotações no template', function () {
+    $this->user->update(['locale' => 'en']);
+    File::ensureDirectoryExists(vaultPath().'/Livros');
+    File::ensureDirectoryExists(vaultPath().'/Templates');
+    file_put_contents(vaultPath().'/Templates/Livros.md', "---\ntipo: livro\n---\n\n# {{title}}\n\n## Minhas anotações\n\n");
+    makeNote('00-Inbox/duna.md', [], "ler Duna\n");
+
+    $this->postJson('/api/brain/inbox/00-Inbox/duna.md/promote', [
+        'category' => 'Livros',
+        'title' => 'Duna',
+    ])->assertCreated();
+
+    expect(file_get_contents(vaultPath().'/Livros/Duna.md'))
+        ->toMatch('/## Minhas anotações\s*\n+ler Duna/');
 });

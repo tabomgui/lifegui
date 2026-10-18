@@ -20,15 +20,15 @@ class CalendarApiException extends RuntimeException
 
     public static function fromResponse(Response $response): self
     {
-        $reason = $response->json('error.message') ?? $response->reason() ?? 'erro desconhecido';
+        $reason = $response->json('error.message') ?? $response->reason() ?? __('messages.calendar.unknown_error');
 
         $message = match (true) {
             str_contains($reason, 'has not been used in project'),
-            str_contains($reason, 'is disabled') => 'A Google Calendar API está desativada no projeto do Google Cloud. Ative-a e tente de novo.',
+            str_contains($reason, 'is disabled') => __('messages.calendar.api_disabled'),
             $response->status() === 401,
-            str_contains($reason, 'insufficient') => 'O Google recusou o acesso à agenda. Desconecte e conecte de novo em Configurações.',
-            $response->status() === 404 => 'Evento não encontrado no Google Calendar.',
-            default => 'O Google Calendar recusou a operação: '.$reason,
+            str_contains($reason, 'insufficient') => __('messages.calendar.insufficient_access'),
+            $response->status() === 404 => __('messages.calendar.event_not_found'),
+            default => __('messages.calendar.api_error', ['reason' => $reason]),
         };
 
         return new self($response->status() === 404 ? 404 : 502, $message);

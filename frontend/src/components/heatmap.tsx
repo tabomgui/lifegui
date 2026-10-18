@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-
-const MONTHS_ABBR = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
+import { useTranslation } from 'react-i18next'
+import { useFormat } from '@/i18n/format'
+import { localDateString } from '@/lib/dates'
 
 // Estrutura de dados do heatmap (igual pra tarefas e hábitos).
 export interface HeatmapData {
@@ -29,17 +30,6 @@ function addDays(date: Date, days: number): Date {
   return copy
 }
 
-function formatLocalDate(date: Date): string {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
-}
-
-function fmtDayMonth(date: Date): string {
-  return `${date.getDate()} de ${MONTHS_ABBR[date.getMonth()]}`
-}
-
 function level(count: number): 0 | 1 | 2 | 3 | 4 {
   if (count === 0) return 0
   if (count <= 1) return 1
@@ -65,21 +55,22 @@ const NUM_TEXT: Record<0 | 1 | 2 | 3 | 4, string> = {
   4: 'text-white dark:text-emerald-950',
 }
 
-const DOW_LABELS: Record<number, string> = { 1: 'Seg', 3: 'Qua', 5: 'Sex' }
+// Linhas da grade (0=dom..6=sáb) que levam um rótulo de dia da semana.
+const DOW_LABEL_ROWS: readonly number[] = [1, 3, 5]
 
-function titleFor(count: number, date: Date, copy: HeatmapCopy): string {
-  const day = fmtDayMonth(date)
+function titleFor(count: number, day: string, copy: HeatmapCopy): string {
   return count > 0 ? copy.cell(count, day) : copy.empty(day)
 }
 
 function Legend() {
+  const { t } = useTranslation('common')
   return (
     <div className="flex items-center justify-end gap-1.5 text-[10px] text-muted-foreground">
-      <span>Menos</span>
+      <span>{t('heatmap.less')}</span>
       {([0, 1, 2, 3, 4] as const).map((lvl) => (
         <div key={lvl} className={`h-[11px] w-[11px] rounded-sm ${LEVEL_CLASSES[lvl]}`} />
       ))}
-      <span>Mais</span>
+      <span>{t('heatmap.more')}</span>
     </div>
   )
 }
@@ -92,21 +83,22 @@ function DetailedView({ from, totalDays, counts, copy }: {
   counts: Record<string, number>
   copy: HeatmapCopy
 }) {
+  const { dayMonth } = useFormat()
   const days = Array.from({ length: totalDays }, (_, i) => addDays(from, i))
   return (
     <div className="flex flex-wrap justify-center gap-1.5">
       {days.map((d) => {
-        const count = counts[formatLocalDate(d)] ?? 0
+        const count = counts[localDateString(d)] ?? 0
         const lvl = level(count)
         return (
           <div
-            key={formatLocalDate(d)}
-            title={titleFor(count, d, copy)}
+            key={localDateString(d)}
+            title={titleFor(count, dayMonth(d), copy)}
             className={`flex h-11 w-10 flex-col items-center justify-center rounded-md ${LEVEL_CLASSES[lvl]}`}
           >
             <span className={`text-sm font-bold ${NUM_TEXT[lvl]}`}>{count || ''}</span>
             <span className={`text-[9px] ${count > 0 ? NUM_TEXT[lvl] : 'text-muted-foreground'} opacity-90`}>
-              {d.getDate()}/{d.getMonth() + 1}
+              {dayMonth(d)}
             </span>
           </div>
         )
@@ -123,6 +115,7 @@ function GridView({ from, to, counts, copy }: {
   counts: Record<string, number>
   copy: HeatmapCopy
 }) {
+  const { weekdayShort, monthShort, dayMonth } = useFormat()
   const ref = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(0)
 
@@ -157,8 +150,10 @@ function GridView({ from, to, counts, copy }: {
     const month = week[0].getMonth()
     const show = month !== prevMonth
     if (show) prevMonth = month
-    return show ? MONTHS_ABBR[month] : null
+    return show ? monthShort(week[0]) : null
   })
+
+  const dowLabel = (row: number) => (DOW_LABEL_ROWS.includes(row) ? weekdayShort(row) : '')
 
   const cellStyle = { width: size, height: size }
 
@@ -169,7 +164,7 @@ function GridView({ from, to, counts, copy }: {
           <div className="flex flex-col" style={{ gap: GAP, paddingTop: 16 }}>
             {Array.from({ length: 7 }, (_, row) => (
               <div key={row} className="flex items-center text-[10px] text-muted-foreground" style={{ height: size, width: LABEL_COL - 4 }}>
-                {DOW_LABELS[row] ?? ''}
+                {dowLabel(row)}
               </div>
             ))}
           </div>
@@ -187,12 +182,12 @@ function GridView({ from, to, counts, copy }: {
                   {week.map((date, j) => {
                     const placeholder = date < from || date > to
                     if (placeholder) return <div key={j} style={cellStyle} />
-                    const count = counts[formatLocalDate(date)] ?? 0
+                    const count = counts[localDateString(date)] ?? 0
                     return (
                       <div
                         key={j}
                         style={cellStyle}
-                        title={titleFor(count, date, copy)}
+                        title={titleFor(count, dayMonth(date), copy)}
                         className={`rounded-sm ${LEVEL_CLASSES[level(count)]}`}
                       />
                     )

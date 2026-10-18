@@ -72,6 +72,10 @@ it('desconecta revogando o token no Google e limpando as colunas', function () {
 });
 
 it('a exceção renderiza como 409 com mensagem clara', function () {
+    // Teste de unidade: não passa por SetLocale (que roda nos grupos de rota),
+    // então fixamos o idioma manualmente pra checar a tradução pt-BR.
+    app()->setLocale('pt_BR');
+
     $response = (new CalendarNotConnectedException)->render();
 
     expect($response->getStatusCode())->toBe(409)

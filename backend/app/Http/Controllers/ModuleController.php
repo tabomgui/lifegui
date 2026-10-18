@@ -34,7 +34,7 @@ class ModuleController extends Controller
         $module = ModuleRegistry::find($key);
 
         if ($module === null) {
-            abort(404, 'Unknown module.');
+            abort(404, __('messages.modules.unknown'));
         }
 
         $enabled = $request->validated('enabled');

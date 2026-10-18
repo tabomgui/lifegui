@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { ArrowDown, ArrowUp, type LucideIcon } from 'lucide-react'
+import { useFormat } from '@/i18n/format'
 import { cn } from '@/lib/utils'
 
 interface StatTileProps {
@@ -74,12 +75,13 @@ export function StatTile({
   icon: Icon,
   sparkline,
 }: StatTileProps) {
+  const { number } = useFormat()
   const hasDelta = delta !== null && delta !== undefined
   const dir: 'up' | 'down' | null = !hasDelta ? null : delta > 0 ? 'up' : delta < 0 ? 'down' : null
   const good = dir === null ? null : dir === deltaGood
-  // pt-BR comma decimals (Intl), not the raw JS dot-decimal number-to-string.
+  // Decimais no formato do idioma ativo (Intl), não o dot-decimal bruto do JS.
   const deltaText = hasDelta
-    ? `${delta > 0 ? '+' : ''}${delta.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}${deltaLabel ? ` ${deltaLabel}` : ''}`
+    ? `${delta > 0 ? '+' : ''}${number(delta, { maximumFractionDigits: 1 })}${deltaLabel ? ` ${deltaLabel}` : ''}`
     : ''
 
   return (

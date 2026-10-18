@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\AppSetting;
 use App\Models\User;
 use App\Support\Vault\VaultService;
 use Illuminate\Support\Facades\File;
@@ -15,48 +14,34 @@ afterEach(function () {
     File::deleteDirectory($this->vaultRoot);
 });
 
-test('mostra a configuração com fallback quando não há valor salvo', function () {
+test('mostra a raiz do deploy e o vault do usuário', function () {
     File::ensureDirectoryExists($this->vaultRoot.'/'.$this->user->id);
 
     $this->getJson('/api/settings/vault')
         ->assertOk()
-        ->assertJsonPath('data.vaults_path', null)
-        ->assertJsonPath('data.effective', $this->vaultRoot)
-        ->assertJsonPath('data.exists', true)
-        ->assertJsonPath('data.initialized', true);
+        ->assertExactJson(['data' => [
+            'effective' => $this->vaultRoot,
+            'exists' => true,
+            'user_vault' => $this->vaultRoot.'/'.$this->user->id,
+            'initialized' => true,
+        ]]);
 });
 
-test('salva a raiz e o VaultService passa a usá-la', function () {
-    $other = sys_get_temp_dir().'/lifegui-vault-alt-'.uniqid();
-    File::ensureDirectoryExists($other.'/'.$this->user->id);
-
-    $this->patchJson('/api/settings/vault', ['vaults_path' => $other])
+test('indica vault ainda não inicializado', function () {
+    $this->getJson('/api/settings/vault')
         ->assertOk()
-        ->assertJsonPath('data.vaults_path', $other)
-        ->assertJsonPath('data.effective', $other)
-        ->assertJsonPath('data.initialized', true);
-
-    expect(app(VaultService::class)->root())->toBe($other.'/'.$this->user->id);
-
-    File::deleteDirectory($other);
+        ->assertJsonPath('data.exists', false)
+        ->assertJsonPath('data.initialized', false);
 });
 
-test('valor vazio limpa e volta pro fallback', function () {
-    AppSetting::put('vaults_path', '/qualquer/coisa');
+test('nenhum usuário consegue trocar a raiz dos vaults', function () {
+    $this->patchJson('/api/settings/vault', ['vaults_path' => '/etc'])
+        ->assertStatus(405);
 
-    $this->patchJson('/api/settings/vault', ['vaults_path' => null])
-        ->assertOk()
-        ->assertJsonPath('data.vaults_path', null)
-        ->assertJsonPath('data.effective', $this->vaultRoot);
-});
-
-test('rejeita caminho relativo ou com traversal', function () {
-    $this->patchJson('/api/settings/vault', ['vaults_path' => 'relativo/x'])->assertStatus(422);
-    $this->patchJson('/api/settings/vault', ['vaults_path' => '/tmp/../etc'])->assertStatus(422);
+    expect(app(VaultService::class)->root())->toBe($this->vaultRoot.'/'.$this->user->id);
 });
 
 test('exige autenticação', function () {
     $this->app['auth']->forgetGuards();
     $this->getJson('/api/settings/vault')->assertUnauthorized();
-    $this->patchJson('/api/settings/vault', [])->assertUnauthorized();
 });

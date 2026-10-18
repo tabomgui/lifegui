@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Navigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useModules, enabledSet } from '@/hooks/use-modules'
 import type { ModuleInfo, ModuleKey } from '@/types/api'
 
@@ -20,8 +21,9 @@ export function firstEnabledRoute(modules: ModuleInfo[] | undefined): string {
 }
 
 function ModulesLoading() {
+  const { t } = useTranslation('common')
   return (
-    <div className="flex h-screen items-center justify-center text-muted-foreground">Carregando…</div>
+    <div className="flex h-screen items-center justify-center text-muted-foreground">{t('states.loading')}</div>
   )
 }
 

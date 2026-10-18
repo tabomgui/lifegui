@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Carbon\CarbonImmutable;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -29,6 +30,8 @@ class User extends Authenticatable
         'password',
         'google_id',
         'avatar',
+        'locale',
+        'timezone',
     ];
 
     /**
@@ -56,5 +59,17 @@ class User extends Authenticatable
             'google_calendar_connected_at' => 'datetime',
             'onboarded_at' => 'datetime',
         ];
+    }
+
+    /** Agora no fuso do usuário: base de todo "hoje" calculado no servidor. */
+    public function localNow(): CarbonImmutable
+    {
+        return CarbonImmutable::now($this->timezone ?: config('app.timezone'));
+    }
+
+    /** Data-calendário (Y-m-d) de hoje no fuso do usuário. */
+    public function localToday(): string
+    {
+        return $this->localNow()->toDateString();
     }
 }

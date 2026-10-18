@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { useModules, useToggleModule } from '@/hooks/use-modules'
 import { useInitVault } from '@/hooks/use-brain'
@@ -7,6 +8,7 @@ import { StepHeader } from '@/components/onboarding/step-header'
 import type { ModuleInfo } from '@/types/api'
 
 export function ModulesStep() {
+  const { t } = useTranslation(['onboarding', 'common'])
   const { data: modules = [], isLoading, isError } = useModules()
   const toggle = useToggleModule()
   const initVault = useInitVault()
@@ -15,7 +17,7 @@ export function ModulesStep() {
     try {
       await toggle.mutateAsync({ key: module.key, enabled })
     } catch {
-      toast.error(`Não foi possível ${enabled ? 'ativar' : 'desativar'} ${module.label}`)
+      toast.error(t(enabled ? 'modules.enableError' : 'modules.disableError', { label: module.label }))
       return
     }
     // O Cérebro precisa do vault criado no servidor; o init é idempotente.
@@ -23,23 +25,20 @@ export function ModulesStep() {
       try {
         await initVault.mutateAsync()
       } catch {
-        toast.error('Cérebro ativado, mas o vault não foi criado. Tente de novo em Configurações.')
+        toast.error(t('modules.vaultError'))
       }
     }
   }
 
   return (
     <div className="space-y-4">
-      <StepHeader
-        title="Escolha seus módulos"
-        description="Ative só o que fizer sentido agora. Dá pra mudar depois em Configurações."
-      />
+      <StepHeader title={t('modules.title')} description={t('modules.description')} />
       {isError ? (
         <div className="rounded-lg border p-6 text-center text-sm text-muted-foreground">
-          Não foi possível carregar os módulos.
+          {t('modules.loadError')}
         </div>
       ) : isLoading ? (
-        <p className="text-sm text-muted-foreground">Carregando…</p>
+        <p className="text-sm text-muted-foreground">{t('common:states.loading')}</p>
       ) : (
         <div className="space-y-2">
           {modules.map((m) => (
@@ -57,7 +56,7 @@ export function ModulesStep() {
                 checked={m.enabled}
                 disabled={toggle.isPending || initVault.isPending}
                 onCheckedChange={(v) => onToggle(m, v)}
-                aria-label={`Ativar ${m.label}`}
+                aria-label={t('modules.toggleLabel', { label: m.label })}
               />
             </div>
           ))}

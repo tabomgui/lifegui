@@ -1,5 +1,8 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import type { HabitStat } from '@/types/api'
+import { useFormat } from '@/i18n/format'
 
 const SIZE = 320
 const CENTER = SIZE / 2
@@ -20,16 +23,17 @@ function angleFor(i: number, n: number): number {
 
 // Denominador claro no tooltip: hábito diário conta dias do período;
 // hábito com meta semanal mostra a meta em vez de um esperado fracionário.
-function detailFor(h: HabitStat): string {
+function detailFor(h: HabitStat, t: TFunction<'habits'>): string {
   if (h.target_per_week == null) {
     const days = Math.round(h.expected)
-    return `${h.done_count} de ${days} dias`
+    return t('radar.daysDetail', { done: h.done_count, count: days })
   }
-  const label = h.done_count === 1 ? 'feito' : 'feitos'
-  return `${h.done_count} ${label} · meta ${h.target_per_week}×/sem`
+  return t('radar.targetDetail', { count: h.done_count, target: h.target_per_week })
 }
 
 export function HabitRadarChart({ habits }: { habits: HabitStat[] }) {
+  const { t } = useTranslation('habits')
+  const { list } = useFormat()
   const [hovered, setHovered] = useState<number | null>(null)
   const n = habits.length
 
@@ -43,7 +47,7 @@ export function HabitRadarChart({ habits }: { habits: HabitStat[] }) {
 
   const dataPolygon = axes.map((a) => `${a.value.x},${a.value.y}`).join(' ')
 
-  const ariaLabel = `Radar de aderência: ${habits.map((h) => `${h.name} ${h.rate}%`).join(', ')}`
+  const ariaLabel = t('radar.ariaLabel', { list: list(habits.map((h) => `${h.name} ${h.rate}%`)) })
 
   return (
     <div className="flex justify-center">
@@ -137,7 +141,7 @@ export function HabitRadarChart({ habits }: { habits: HabitStat[] }) {
               top: `${(axes[hovered].value.y / SIZE) * 100}%`,
             }}
           >
-            {axes[hovered].habit.name} — {axes[hovered].habit.rate}% · {detailFor(axes[hovered].habit)}
+            {axes[hovered].habit.name} — {axes[hovered].habit.rate}% · {detailFor(axes[hovered].habit, t)}
           </div>
         )}
       </div>
@@ -146,8 +150,9 @@ export function HabitRadarChart({ habits }: { habits: HabitStat[] }) {
 }
 
 export function HabitRadar({ habits }: { habits: HabitStat[] }) {
+  const { t } = useTranslation('habits')
   if (habits.length === 0) {
-    return <p className="p-6 text-center text-sm text-muted-foreground">Nenhum hábito para exibir.</p>
+    return <p className="p-6 text-center text-sm text-muted-foreground">{t('radar.empty')}</p>
   }
   return <HabitRadarChart habits={habits} />
 }

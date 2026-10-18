@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import ForceGraph2D from 'react-force-graph-2d'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { api } from '@/lib/api'
 
 interface GraphNode {
@@ -36,6 +37,7 @@ export function GraphView({ onOpenNote, onCreateNote }: {
   onOpenNote: (path: string) => void
   onCreateNote: (title: string) => void
 }) {
+  const { t } = useTranslation('brain')
   const { data } = useBrainGraph()
   const containerRef = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState({ w: 0, h: 0 })
@@ -70,7 +72,7 @@ export function GraphView({ onOpenNote, onCreateNote }: {
   if (data && data.nodes.length === 0) {
     return (
       <div className="flex h-full items-center justify-center p-6 text-center text-sm text-muted-foreground">
-        Sem notas ainda — o grafo nasce quando suas notas começarem a se ligar com [[links]].
+        {t('graph.empty')}
       </div>
     )
   }
@@ -85,7 +87,7 @@ export function GraphView({ onOpenNote, onCreateNote }: {
           showTags ? 'bg-secondary text-foreground' : 'bg-card text-muted-foreground hover:bg-accent'
         }`}
       >
-        # Tags
+        {t('graph.tagsToggle')}
       </button>
       {size.w > 0 && (
         <ForceGraph2D

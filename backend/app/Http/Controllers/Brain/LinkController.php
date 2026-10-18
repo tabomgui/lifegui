@@ -23,7 +23,7 @@ class LinkController extends Controller
         $linkable = $class::query()->findOrFail($request->validated('id'));
 
         $notePath = $request->validated('note_path');
-        abort_if($vault->resolve($notePath) === null, 422, 'Nota não encontrada no vault.');
+        abort_if($vault->resolve($notePath) === null, 422, __('messages.brain.note_not_found'));
 
         // Idempotente: repetir o vínculo devolve o existente.
         $link = NoteLink::query()->firstOrCreate([

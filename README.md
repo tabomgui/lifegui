@@ -4,7 +4,9 @@
 
 ![lifegui dashboards](.github/assets/dashboards.png)
 
-> The interface is in Brazilian Portuguese.
+> The interface is available in English and Brazilian Portuguese. Each user picks a language in Settings.
+
+**Documentation:** [docs-lifegui.hengen.com.br](https://docs-lifegui.hengen.com.br) (English and Brazilian Portuguese). Source in [tabomgui/lifegui-docs](https://github.com/tabomgui/lifegui-docs).
 
 ## Quick start
 
@@ -75,6 +77,7 @@ cd ~/lifegui && docker compose -f docker-compose.prod.yml restart backend
 | `SANCTUM_STATEFUL_DOMAINS` | `host[:port]` of your URL | Host the SPA runs on. |
 | `SESSION_SECURE_COOKIE` | `true` for https URLs | Sends cookies only over HTTPS. |
 | `REGISTRATION_ENABLED` | `false` | Allows new sign-ups after the first account. |
+| `VAULTS_PATH` | `/vaults` | Root folder for the Brain vaults inside the container (one subfolder per user). Applies to the whole instance; only the server administrator can change it, not the UI. The host folder is set by `VAULTS_PATH_HOST` in `.env`. |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | empty | Enable Google sign-in and Calendar. |
 
 To change the URL later, update `APP_URL`, `FRONTEND_URL`, `SESSION_DOMAIN`, `SANCTUM_STATEFUL_DOMAINS`, `SESSION_SECURE_COOKIE` and `GOOGLE_REDIRECT_URI`, then restart the backend.
@@ -134,7 +137,7 @@ The MCP endpoint is `https://life.example.com/mcp`. Clients sign in with your li
 - **Claude Code:** `claude mcp add --transport http lifegui https://life.example.com/mcp`
 - **ChatGPT:** in developer mode, create a connector with the endpoint URL.
 
-Tools: today's agenda, study progress, note search, inbox capture, create a task, complete a habit and schedule an event.
+Tools: `my_day`, `my_studies`, `search_notes`, `capture`, `create_task`, `complete_habit` and `schedule`. Answers follow your language setting.
 
 ## Updating
 

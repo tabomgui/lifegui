@@ -172,3 +172,17 @@ it('delete tolera evento já apagado (410)', function () {
 
     Http::assertSent(fn ($request) => $request->method() === 'DELETE');
 });
+
+it('evento sem summary usa o título genérico traduzido', function () {
+    // Chamada direta ao serviço: não passa por SetLocale (que roda nos grupos
+    // de rota), então fixamos o idioma manualmente.
+    fakeToken([
+        'www.googleapis.com/calendar/v3/*' => Http::response(['id' => 'ev', 'start' => ['date' => '2026-09-24'], 'end' => ['date' => '2026-09-25']]),
+    ]);
+
+    app()->setLocale('pt_BR');
+    expect(app(CalendarService::class)->get($this->user, 'ev')['title'])->toBe('(sem título)');
+
+    app()->setLocale('en');
+    expect(app(CalendarService::class)->get($this->user, 'ev')['title'])->toBe('(untitled)');
+});
