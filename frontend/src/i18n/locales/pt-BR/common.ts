@@ -33,8 +33,7 @@ export default {
     settings: 'Configurações',
     docs: 'Documentação',
     logout: 'Sair',
-    openMenu: 'Abrir menu',
-    closeMenu: 'Fechar menu',
+    toggleSidebar: 'Alternar barra lateral',
     toggleTheme: 'Alternar tema',
   },
   period: {

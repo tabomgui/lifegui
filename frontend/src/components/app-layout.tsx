@@ -1,7 +1,6 @@
-import { useState } from 'react'
 import type { ReactNode } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
-import { Kanban, Repeat, Brain, CalendarDays, BarChart3, Settings, BookOpen, Menu, X } from 'lucide-react'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { Kanban, Repeat, Brain, CalendarDays, BarChart3, Settings, BookOpen } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/use-auth'
 import { useEnabledModules, useModules } from '@/hooks/use-modules'
@@ -11,62 +10,128 @@ import { OnboardingWizard } from '@/components/onboarding/onboarding-wizard'
 import { useOnboarding } from '@/contexts/onboarding-context'
 import { firstEnabledRoute } from '@/components/module-route'
 import { docsUrl } from '@/lib/docs'
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarRail,
+  SidebarTrigger,
+  useSidebar,
+} from '@/components/ui/sidebar'
 
-const navClass = ({ isActive }: { isActive: boolean }) =>
-  `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium ${
-    isActive ? 'bg-accent text-foreground' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-  }`
+type NavItem = {
+  to: string
+  end?: boolean
+  label: string
+  icon: typeof Kanban
+  show: boolean
+}
 
-function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
+function isRouteActive(pathname: string, to: string, end?: boolean) {
+  if (end) return pathname === to
+  return pathname === to || pathname.startsWith(`${to}/`)
+}
+
+// App é CSR puro (sem SSR), então o SidebarProvider não lê o cookie sozinho
+// no mount; precisamos ler aqui e passar via defaultOpen pra persistir o
+// estado colapsado entre reloads.
+function readSidebarCookieState(): boolean {
+  const match = document.cookie.match(/(?:^|; )sidebar_state=([^;]*)/)
+  return match ? match[1] === 'true' : true
+}
+
+function AppSidebar() {
   const { t } = useTranslation('common')
   const { user, logout } = useAuth()
   const { isEnabled } = useEnabledModules()
+  const { isMobile, setOpenMobile } = useSidebar()
+  const location = useLocation()
   const showReports = isEnabled('tasks') || isEnabled('habits') || isEnabled('brain')
+
+  function handleNavigate() {
+    if (isMobile) setOpenMobile(false)
+  }
+
+  const items: NavItem[] = [
+    { to: '/', end: true, label: t('nav.tasks'), icon: Kanban, show: isEnabled('tasks') },
+    { to: '/habits', label: t('nav.habits'), icon: Repeat, show: isEnabled('habits') },
+    { to: '/cerebro', label: t('nav.brain'), icon: Brain, show: isEnabled('brain') },
+    { to: '/agenda', label: t('nav.calendar'), icon: CalendarDays, show: true },
+    { to: '/dashboards', label: t('nav.dashboards'), icon: BarChart3, show: showReports },
+  ]
+
   return (
-    <>
-      <div className="flex h-14 items-center gap-2 border-b px-4">
-        <img src="/favicon.svg" alt="lifegui" className="h-7 w-7 rounded-md" />
-        <span className="text-sm font-semibold tracking-tight">lifegui</span>
-      </div>
-      <nav className="flex flex-1 flex-col gap-1 p-2">
-        {isEnabled('tasks') && (
-          <NavLink to="/" end className={navClass} onClick={onNavigate}>
-            <Kanban className="h-4 w-4" /> {t('nav.tasks')}
-          </NavLink>
-        )}
-        {isEnabled('habits') && (
-          <NavLink to="/habits" className={navClass} onClick={onNavigate}>
-            <Repeat className="h-4 w-4" /> {t('nav.habits')}
-          </NavLink>
-        )}
-        {isEnabled('brain') && (
-          <NavLink to="/cerebro" className={navClass} onClick={onNavigate}>
-            <Brain className="h-4 w-4" /> {t('nav.brain')}
-          </NavLink>
-        )}
-        <NavLink to="/agenda" className={navClass} onClick={onNavigate}>
-          <CalendarDays className="h-4 w-4" /> {t('nav.calendar')}
-        </NavLink>
-        {showReports && (
-          <NavLink to="/dashboards" className={navClass} onClick={onNavigate}>
-            <BarChart3 className="h-4 w-4" /> {t('nav.dashboards')}
-          </NavLink>
-        )}
-        <div className="mt-auto" />
-        <a href={docsUrl()} target="_blank" rel="noreferrer" className={navClass({ isActive: false })}>
-          <BookOpen className="h-4 w-4" /> {t('nav.docs')}
-        </a>
-        <NavLink to="/configuracoes" className={navClass} onClick={onNavigate}>
-          <Settings className="h-4 w-4" /> {t('nav.settings')}
-        </NavLink>
-      </nav>
-      <div className="border-t p-2">
-        <div className="flex items-center justify-between gap-2 px-1">
+    <Sidebar collapsible="icon">
+      <SidebarHeader>
+        <div className="flex h-10 items-center gap-2 px-2">
+          <img src="/favicon.svg" alt="lifegui" className="h-7 w-7 shrink-0 rounded-md" />
+          <span className="truncate text-sm font-semibold tracking-tight group-data-[collapsible=icon]:hidden">
+            lifegui
+          </span>
+        </div>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {items
+                .filter((item) => item.show)
+                .map((item) => (
+                  <SidebarMenuItem key={item.to}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isRouteActive(location.pathname, item.to, item.end)}
+                      tooltip={item.label}
+                    >
+                      <NavLink to={item.to} end={item.end} onClick={handleNavigate}>
+                        <item.icon />
+                        <span>{item.label}</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip={t('nav.docs')}>
+              <a href={docsUrl()} target="_blank" rel="noreferrer">
+                <BookOpen />
+                <span>{t('nav.docs')}</span>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={isRouteActive(location.pathname, '/configuracoes')}
+              tooltip={t('nav.settings')}
+            >
+              <NavLink to="/configuracoes" onClick={handleNavigate}>
+                <Settings />
+                <span>{t('nav.settings')}</span>
+              </NavLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+        <div className="flex items-center justify-between gap-2 px-2 py-1 group-data-[collapsible=icon]:hidden">
           <span className="truncate text-sm">{user?.name}</span>
           <Button variant="ghost" size="sm" onClick={logout}>{t('nav.logout')}</Button>
         </div>
-      </div>
-    </>
+      </SidebarFooter>
+      <SidebarRail />
+    </Sidebar>
   )
 }
 
@@ -92,52 +157,18 @@ function OnboardingGate() {
 
 export function AppLayout({ children, title }: { children: ReactNode; title: string }) {
   const { t } = useTranslation('common')
-  const [menuOpen, setMenuOpen] = useState(false)
-
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* sidebar fixa (desktop) */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r bg-card/40 md:flex">
-        <SidebarContent />
-      </aside>
-
-      {/* drawer (mobile) */}
-      <div className={`fixed inset-0 z-50 md:hidden ${menuOpen ? '' : 'pointer-events-none'}`} aria-hidden={!menuOpen}>
-        <div
-          className={`absolute inset-0 bg-black/50 transition-opacity ${menuOpen ? 'opacity-100' : 'opacity-0'}`}
-          onClick={() => setMenuOpen(false)}
-        />
-        <aside
-          className={`absolute inset-y-0 left-0 flex w-64 flex-col border-r bg-background shadow-xl transition-transform ${
-            menuOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
-        >
-          <button
-            onClick={() => setMenuOpen(false)}
-            aria-label={t('nav.closeMenu')}
-            className="absolute right-2 top-3 z-10 rounded-md p-1.5 text-muted-foreground hover:bg-accent"
-          >
-            <X className="h-5 w-5" />
-          </button>
-          <SidebarContent onNavigate={() => setMenuOpen(false)} />
-        </aside>
-      </div>
-
-      <div className="flex min-w-0 flex-1 flex-col">
+    <SidebarProvider defaultOpen={readSidebarCookieState()}>
+      <AppSidebar />
+      <SidebarInset>
         <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 md:px-6">
-          <button
-            onClick={() => setMenuOpen(true)}
-            aria-label={t('nav.openMenu')}
-            className="-ml-1 rounded-md p-1.5 hover:bg-accent md:hidden"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
+          <SidebarTrigger className="-ml-1" aria-label={t('nav.toggleSidebar')} />
           <h1 className="flex-1 text-base font-semibold tracking-tight">{title}</h1>
           <ModeToggle />
         </header>
         {children}
-      </div>
+      </SidebarInset>
       <OnboardingGate />
-    </div>
+    </SidebarProvider>
   )
 }

@@ -30,8 +30,7 @@ export default {
     settings: 'Settings',
     docs: 'Documentation',
     logout: 'Sign out',
-    openMenu: 'Open menu',
-    closeMenu: 'Close menu',
+    toggleSidebar: 'Toggle sidebar',
     toggleTheme: 'Toggle theme',
   },
   period: {
