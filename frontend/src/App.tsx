@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from '@/contexts/auth-context'
 import { OnboardingProvider } from '@/contexts/onboarding-context'
+import { ConfirmProvider } from '@/contexts/confirm-context'
 import { ProtectedRoute } from '@/components/protected-route'
 import { ModuleRoute, IndexRoute, ReportsRoute } from '@/components/module-route'
 import { Toaster } from '@/components/ui/sonner'
@@ -19,6 +20,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <OnboardingProvider>
+          <ConfirmProvider>
           <Routes>
             <Route path="/setup" element={<Setup />} />
             <Route path="/login" element={<Login />} />
@@ -36,6 +38,7 @@ export default function App() {
               <Route path="/configuracoes" element={<Configuracoes />} />
             </Route>
           </Routes>
+          </ConfirmProvider>
         </OnboardingProvider>
         <Toaster />
       </AuthProvider>

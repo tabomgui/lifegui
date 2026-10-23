@@ -11,6 +11,7 @@ export default {
     add: 'Adicionar',
     save: 'Salvar',
     cancel: 'Cancelar',
+    confirm: 'Confirmar',
     delete: 'Excluir',
     edit: 'Editar',
     create: 'Criar',

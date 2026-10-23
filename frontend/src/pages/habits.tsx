@@ -17,9 +17,11 @@ import {
 import { DynamicIcon } from '@/components/icon'
 import type { Habit } from '@/types/api'
 import { toast } from 'sonner'
+import { useConfirm } from '@/contexts/confirm-context'
 
 export default function Habits() {
   const { t } = useTranslation(['common', 'habits'])
+  const confirm = useConfirm()
   const weekDow = useWeekDow()
   const [week, setWeek] = useState(() => mondayOf(new Date()))
   const { data: habits = [], isLoading } = useHabits()
@@ -36,7 +38,13 @@ export default function Habits() {
   function openEdit(h: Habit) { setEditing(h); setDialogOpen(true) }
 
   async function remove(h: Habit) {
-    if (!confirm(t('habits:confirmDelete', { name: h.name }))) return
+    const ok = await confirm({
+      title: t('habits:confirmDeleteTitle'),
+      description: t('habits:confirmDelete', { name: h.name }),
+      confirmLabel: t('common:actions.delete'),
+      destructive: true,
+    })
+    if (!ok) return
     try { await del.mutateAsync(h.id) } catch { toast.error(t('habits:toast.deleteError')) }
   }
 

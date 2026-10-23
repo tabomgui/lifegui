@@ -11,6 +11,7 @@ export default {
   empty: {
     noHabits: 'Nenhum hábito ainda. Crie o primeiro acima.',
   },
+  confirmDeleteTitle: 'Apagar hábito',
   confirmDelete: 'Apagar o hábito "{{name}}"?',
   archived: {
     toggle: 'Arquivados',
