@@ -157,6 +157,13 @@ MD;
         $target = '.trash/'.Auth::user()->localToday().'-'.basename($path);
         $absoluteTarget = $this->vault->resolve($target, mustExist: false);
         abort_if($absoluteTarget === null, 422, __('messages.brain.trash_missing'));
+        // Antes de mover: quem linka pra ela perde o [[wikilink]] (vira texto),
+        // senão o grafo fica com um nó fantasma órfão.
+        $title = basename($path, '.md');
+        foreach ($this->backlinks($path) as $backlink) {
+            $this->vault->unlinkWikilinks($backlink['path'], $title);
+        }
+
         rename($absolute, $absoluteTarget);
 
         // Vínculos com tarefas/hábitos apontam pro path antigo: limpa.

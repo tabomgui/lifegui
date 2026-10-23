@@ -168,6 +168,36 @@ class VaultService
     }
 
     /**
+     * Desfaz os [[wikilinks]] de uma nota que apontam pro título dado, trocando
+     * cada um pelo texto visível ([[Alvo|rótulo]] vira "rótulo"; [[Alvo]] e
+     * [[Alvo#âncora]] viram "Alvo" como foi escrito). Mexe só no arquivo cru,
+     * sem re-serializar o frontmatter. Retorna se algo mudou.
+     */
+    public function unlinkWikilinks(string $relative, string $title): bool
+    {
+        $absolute = $this->resolve($relative);
+        if ($absolute === null) {
+            return false;
+        }
+
+        $raw = (string) file_get_contents($absolute);
+        $pattern = '/\[\[\s*('.preg_quote($title, '/').')\s*(?:#[^\]|\n]*)?(?:\|([^\]\n]*))?\]\]/iu';
+        $updated = preg_replace_callback(
+            $pattern,
+            fn (array $m) => trim(($m[2] ?? '') !== '' ? $m[2] : $m[1]),
+            $raw,
+        );
+
+        if ($updated === null || $updated === $raw) {
+            return false;
+        }
+
+        file_put_contents($absolute, $updated);
+
+        return true;
+    }
+
+    /**
      * Metadados de UI das categorias (ordem, ícone, cor) — vivem no próprio
      * vault, em .lifegui/categories.json: o Obsidian ignora o dotfile e o
      * arquivo sincroniza junto com as notas. Conteúdo continua sendo só .md.
