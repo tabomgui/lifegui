@@ -231,6 +231,26 @@ test('excluir move a nota pra .trash e limpa vínculos', function () {
     $this->getJson('/api/brain/notes?category=Receitas')->assertOk()->assertJsonCount(0, 'data');
 });
 
+test('excluir desfaz os wikilinks das outras notas pra ela, sem deixar nó fantasma', function () {
+    makeNote('Receitas/Frango.md', ['status' => 'novo']);
+    makeNote('Receitas/Cardápio.md', ['status' => 'novo', 'tags' => ['semana']],
+        "Segunda: [[Frango]] grelhado.\nTerça: [[frango|o mesmo frango]] de novo.\nQuarta: [[Frango#Preparo]].\nVer [[Peixe]].\n");
+    makeNote('IA/Prompt.md', ['status' => 'novo'], "Sem relação com [[Pão]].\n");
+
+    $this->deleteJson('/api/brain/notes/Receitas/Frango.md')->assertOk();
+
+    $cardapio = file_get_contents(vaultPath().'/Receitas/Cardápio.md');
+    expect($cardapio)->toContain("Segunda: Frango grelhado.\n")
+        ->toContain("Terça: o mesmo frango de novo.\n")
+        ->toContain("Quarta: Frango.\n")
+        ->toContain("Ver [[Peixe]].\n")
+        ->toContain("tags: [semana]");
+    expect(file_get_contents(vaultPath().'/IA/Prompt.md'))->toContain('[[Pão]]');
+
+    $titles = collect($this->getJson('/api/brain/graph')->json('data.nodes'))->pluck('title');
+    expect($titles)->not->toContain('Frango')->toContain('Peixe');
+});
+
 test('excluir rejeita inbox, .trash e nota inexistente', function () {
     makeNote('00-Inbox/captura.md');
 
