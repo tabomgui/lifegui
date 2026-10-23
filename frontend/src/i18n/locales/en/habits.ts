@@ -8,6 +8,7 @@ export default {
   empty: {
     noHabits: 'No habits yet. Create the first one above.',
   },
+  confirmDeleteTitle: 'Delete habit',
   confirmDelete: 'Delete the habit "{{name}}"?',
   archived: {
     toggle: 'Archived',

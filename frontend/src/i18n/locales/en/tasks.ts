@@ -24,6 +24,7 @@ export default {
     deleteCategory: 'Delete {{name}}',
     searchAria: 'Search tasks',
     searchPlaceholder: 'Search tasks…',
+    deleteConfirmTitle: 'Delete category',
     deleteConfirm: 'Delete "{{name}}"? Tasks will be left without a category.',
     movedToCategory: 'Moved to {{name}}',
     moveCategoryError: 'Could not move the task',

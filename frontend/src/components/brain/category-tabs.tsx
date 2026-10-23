@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { BrainCategoryDialog } from '@/components/brain/category-dialog'
 import { useDeleteBrainCategory, useReorderBrainCategories } from '@/hooks/use-brain'
+import { useConfirm } from '@/contexts/confirm-context'
 import type { BrainCategory } from '@/types/api'
 import { toast } from 'sonner'
 
@@ -32,7 +33,8 @@ export function BrainCategoryTabs({
   graphMode: boolean
   onToggleGraph: () => void
 }) {
-  const { t } = useTranslation('brain')
+  const { t } = useTranslation(['brain', 'common'])
+  const confirm = useConfirm()
   const del = useDeleteBrainCategory()
   const reorder = useReorderBrainCategories()
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -44,7 +46,13 @@ export function BrainCategoryTabs({
   function openEdit(c: BrainCategory) { setEditing(c); setDialogOpen(true) }
 
   async function remove(c: BrainCategory) {
-    if (!confirm(t('tabs.deleteConfirm', { name: c.name }))) return
+    const ok = await confirm({
+      title: t('tabs.deleteConfirmTitle'),
+      description: t('tabs.deleteConfirm', { name: c.name }),
+      confirmLabel: t('common:actions.delete'),
+      destructive: true,
+    })
+    if (!ok) return
     try {
       await del.mutateAsync(c.name)
       if (active === c.name) onChange(categories.find((x) => x.name !== c.name)?.name ?? INBOX_TAB)

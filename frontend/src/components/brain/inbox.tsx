@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useBrainInbox, useCaptureInbox, useDiscardInbox, usePromoteInbox } from '@/hooks/use-brain'
+import { useConfirm } from '@/contexts/confirm-context'
 import type { BrainCategory, InboxItem } from '@/types/api'
 
 export function CaptureBar() {
@@ -168,13 +169,20 @@ function LinkifiedPreview({ text }: { text: string }) {
 
 export function InboxList({ categories }: { categories: BrainCategory[] }) {
   const { t } = useTranslation('brain')
+  const confirm = useConfirm()
   const { data } = useBrainInbox()
   const items = data?.data ?? []
   const [promoting, setPromoting] = useState<InboxItem | null>(null)
   const discard = useDiscardInbox()
 
   async function discardItem(item: InboxItem) {
-    if (!confirm(t('inbox.discardConfirm', { title: item.title }))) return
+    const ok = await confirm({
+      title: t('inbox.discardConfirmTitle'),
+      description: t('inbox.discardConfirm', { title: item.title }),
+      confirmLabel: t('inbox.discardTitle'),
+      destructive: true,
+    })
+    if (!ok) return
     try {
       await discard.mutateAsync(item.path)
       toast.success(t('inbox.discardSuccess'))

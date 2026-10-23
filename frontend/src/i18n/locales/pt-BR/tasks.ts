@@ -27,6 +27,7 @@ export default {
     deleteCategory: 'Apagar {{name}}',
     searchAria: 'Buscar tarefas',
     searchPlaceholder: 'Buscar tarefas…',
+    deleteConfirmTitle: 'Apagar categoria',
     deleteConfirm: 'Apagar "{{name}}"? As tarefas ficam sem categoria.',
     movedToCategory: 'Movida para {{name}}',
     moveCategoryError: 'Não foi possível mover a tarefa',

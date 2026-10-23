@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { NOTE_STATUSES, STATUS_BADGE, STATUS_LABEL_KEY } from '@/components/brain/status'
 import { useBrainNote, useBrainNotes, useDeleteNote, useUpdateNote } from '@/hooks/use-brain'
+import { useConfirm } from '@/contexts/confirm-context'
 import type { NoteStatus } from '@/types/api'
 
 // Converte [[wikilinks]] em links markdown com esquema próprio pra interceptar
@@ -36,6 +37,7 @@ export function NotePanel({ path, onNavigate, onClose }: {
   onClose: () => void
 }) {
   const { t } = useTranslation(['brain', 'common', 'calendar'])
+  const confirm = useConfirm()
   const { data: note } = useBrainNote(path)
   const { data: allNotes = [] } = useBrainNotes()
   const update = useUpdateNote()
@@ -103,7 +105,13 @@ export function NotePanel({ path, onNavigate, onClose }: {
 
   async function deleteNote() {
     if (!note) return
-    if (!confirm(t('brain:panel.deleteConfirm', { title: note.title }))) return
+    const ok = await confirm({
+      title: t('brain:panel.deleteTitle'),
+      description: t('brain:panel.deleteConfirm', { title: note.title }),
+      confirmLabel: t('common:actions.delete'),
+      destructive: true,
+    })
+    if (!ok) return
     try {
       await del.mutateAsync(note.path)
       toast.success(t('brain:panel.deleteSuccess'))

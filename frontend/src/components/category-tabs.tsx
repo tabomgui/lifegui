@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useCategories, useDeleteCategory, useReorderCategories } from '@/hooks/use-categories'
 import { useTasks, useUpdateTaskCategory } from '@/hooks/use-tasks'
+import { useConfirm } from '@/contexts/confirm-context'
 import { CategoryDialog } from '@/components/category-dialog'
 import { DynamicIcon } from '@/components/icon'
 import { isOverdueOrToday } from '@/lib/due-date'
@@ -31,7 +32,8 @@ export function CategoryTabs({
   search: string
   onSearchChange: (value: string) => void
 }) {
-  const { t } = useTranslation('tasks')
+  const { t } = useTranslation(['tasks', 'common'])
+  const confirm = useConfirm()
   const { data: categories = [] } = useCategories()
   const { data: tasks = [] } = useTasks()
   const del = useDeleteCategory()
@@ -51,7 +53,13 @@ export function CategoryTabs({
   function openNew() { setEditing(null); setDialogOpen(true) }
   function openEdit(c: Category) { setEditing(c); setDialogOpen(true) }
   async function remove(c: Category) {
-    if (!confirm(t('tabs.deleteConfirm', { name: c.name }))) return
+    const ok = await confirm({
+      title: t('tabs.deleteConfirmTitle'),
+      description: t('tabs.deleteConfirm', { name: c.name }),
+      confirmLabel: t('common:actions.delete'),
+      destructive: true,
+    })
+    if (!ok) return
     try { await del.mutateAsync(c.id); if (active === c.id) onChange('all') }
     catch { toast.error(t('toast.categoryDeleteError')) }
   }

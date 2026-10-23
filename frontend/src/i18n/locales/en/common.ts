@@ -8,6 +8,7 @@ export default {
     add: 'Add',
     save: 'Save',
     cancel: 'Cancel',
+    confirm: 'Confirm',
     delete: 'Delete',
     edit: 'Edit',
     create: 'Create',
