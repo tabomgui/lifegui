@@ -11,7 +11,8 @@ COPY composer.json composer.lock ./
 RUN composer install --no-interaction --prefer-dist --no-scripts --no-autoloader
 
 COPY . .
-RUN composer dump-autoload --optimize
+RUN composer dump-autoload --optimize \
+    && chown -R www-data:www-data storage bootstrap/cache
 
 COPY docker/php-fpm.d/www.conf /usr/local/etc/php-fpm.d/www.conf
 COPY docker/php-fpm.d/mcp.conf /usr/local/etc/php-fpm.d/mcp.conf
