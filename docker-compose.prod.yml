@@ -43,10 +43,10 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-root}
       VAULTS_PATH: /vaults
     # Gera APP_KEY/chaves do Passport se faltarem, roda migrations e sobe o servidor.
-    command: sh -c "(grep -q '^APP_KEY=base64' .env || php artisan key:generate --force) && ([ -f storage/oauth/oauth-private.key ] || php artisan passport:keys) && php artisan config:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
-    # A imagem alpine não tem curl: o próprio PHP consulta o /up do Laravel.
+    command: sh -c "(grep -q '^APP_KEY=base64' .env || php artisan key:generate --force) && ([ -f storage/oauth/oauth-private.key ] || php artisan passport:keys) && php artisan config:clear && php artisan migrate --force && php-fpm --nodaemonize"
+    # Sem HTTP na 8000 (fastcgi agora): confirma que o pool www (9000) responde.
     healthcheck:
-      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://localhost:8000/up') === false ? 1 : 0);"]
+      test: ["CMD-SHELL", "SCRIPT_NAME=/ping SCRIPT_FILENAME=/ping REQUEST_METHOD=GET cgi-fcgi -bind -connect 127.0.0.1:9000"]
       interval: 10s
       timeout: 5s
       retries: 12
