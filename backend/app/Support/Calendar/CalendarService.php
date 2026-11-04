@@ -142,7 +142,7 @@ class CalendarService
 
     private function http(User $user): PendingRequest
     {
-        return Http::withToken($this->tokens->accessToken($user))->acceptJson();
+        return Http::withToken($this->tokens->accessToken($user))->acceptJson()->timeout(10);
     }
 
     /** Monta o corpo aceito pela API a partir do shape interno. */

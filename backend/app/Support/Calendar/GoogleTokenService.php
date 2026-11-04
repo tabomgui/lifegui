@@ -36,7 +36,7 @@ class GoogleTokenService
         if ($user->google_calendar_refresh_token) {
             // Revogação é best-effort: se o Google falhar, desconecta localmente
             // mesmo assim (o usuário pode revogar pelo painel do Google).
-            Http::asForm()->post(self::REVOKE_URL, ['token' => $user->google_calendar_refresh_token]);
+            Http::asForm()->timeout(10)->post(self::REVOKE_URL, ['token' => $user->google_calendar_refresh_token]);
         }
 
         $this->forget($user);
@@ -44,7 +44,7 @@ class GoogleTokenService
 
     private function refresh(User $user): string
     {
-        $response = Http::asForm()->post(self::TOKEN_URL, [
+        $response = Http::asForm()->timeout(10)->post(self::TOKEN_URL, [
             'client_id' => config('services.google.client_id'),
             'client_secret' => config('services.google.client_secret'),
             'refresh_token' => $user->google_calendar_refresh_token,
