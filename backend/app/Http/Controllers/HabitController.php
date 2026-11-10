@@ -196,7 +196,8 @@ class HabitController extends Controller
         }
 
         // Inclui hábitos arquivados: as conclusões passadas continuam contando no histórico.
-        $habitIds = Habit::pluck('id');
+        $habitId = $request->validated('habit_id');
+        $habitIds = $habitId ? [$habitId] : Habit::pluck('id');
 
         $rows = HabitLog::whereIn('habit_id', $habitIds)
             ->where('done', true)
