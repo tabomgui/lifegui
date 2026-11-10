@@ -16,9 +16,12 @@ export function useTaskHeatmap(from: string, to: string) {
 
 // habit_logs.date já é data-calendário local, então o heatmap de hábitos não
 // precisa de timezone (diferente do de tarefas, que bucketiza completed_at UTC).
-export function useHabitHeatmap(from: string, to: string) {
+// `habitId` filtra pra um hábito só (usado na página de detalhe); omitido, agrega
+// todos os hábitos do usuário (usado no relatório).
+export function useHabitHeatmap(from: string, to: string, habitId?: number) {
   return useQuery({
-    queryKey: ['habits', 'heatmap', from, to],
-    queryFn: async () => (await api.get('/habits/heatmap', { params: { from, to } })).data.data as HabitHeatmap,
+    queryKey: ['habits', 'heatmap', from, to, habitId],
+    queryFn: async () =>
+      (await api.get('/habits/heatmap', { params: { from, to, habit_id: habitId } })).data.data as HabitHeatmap,
   })
 }
