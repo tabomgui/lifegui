@@ -35,9 +35,11 @@ class HabitSummary
 
         return [
             'habit_id' => $habit->id,
+            'type' => 'positive',
             'target_per_week' => $habit->target_per_week,
             'done_count' => $doneCount,
             'streak' => HabitStreak::current($logs, $today),
+            'best' => HabitStreak::best($logs),
             'days' => $days,
         ];
     }
