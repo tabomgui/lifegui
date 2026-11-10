@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, csrf } from '@/lib/api'
-import type { Habit, HabitDay, HabitSummary } from '@/types/api'
+import type { Habit, HabitDay, AnyHabitSummary } from '@/types/api'
 
 const HABITS = ['habits']
 const summaryKey = (week: string) => ['habits', 'summary', week]
@@ -17,14 +17,14 @@ export function useHabits(archived = false, enabled = true) {
 export function useHabitSummary(week: string) {
   return useQuery({
     queryKey: summaryKey(week),
-    queryFn: async () => (await api.get(`/habits/summary?week=${week}`)).data.data as HabitSummary[],
+    queryFn: async () => (await api.get(`/habits/summary?week=${week}`)).data.data as AnyHabitSummary[],
   })
 }
 
 export function useCreateHabit() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (input: Pick<Habit, 'name' | 'icon' | 'color' | 'target_per_week'>) => {
+    mutationFn: async (input: Pick<Habit, 'name' | 'icon' | 'type' | 'color' | 'target_per_week' | 'estimated_daily_cost'>) => {
       await csrf()
       return (await api.post('/habits', input)).data.data as Habit
     },
@@ -37,7 +37,7 @@ export function useCreateHabit() {
 export function useUpdateHabit() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, ...input }: Partial<Pick<Habit, 'name' | 'icon' | 'color' | 'target_per_week'>> & { id: number }) => {
+    mutationFn: async ({ id, ...input }: Partial<Pick<Habit, 'name' | 'icon' | 'type' | 'color' | 'target_per_week' | 'estimated_daily_cost'>> & { id: number }) => {
       await csrf()
       return (await api.patch(`/habits/${id}`, input)).data.data as Habit
     },
@@ -90,10 +90,10 @@ export function useToggleHabit(week: string) {
     },
     onMutate: async ({ habitId, date, state }) => {
       await qc.cancelQueries({ queryKey: key })
-      const prev = qc.getQueryData<HabitSummary[]>(key)
-      qc.setQueryData<HabitSummary[]>(key, (old) =>
+      const prev = qc.getQueryData<AnyHabitSummary[]>(key)
+      qc.setQueryData<AnyHabitSummary[]>(key, (old) =>
         (old ?? []).map((h) => {
-          if (h.habit_id !== habitId) return h
+          if (h.habit_id !== habitId || h.type !== 'positive') return h
           const days = h.days.map((d) => (d.date === date ? applyState(d, state) : d))
           return { ...h, days, done_count: days.filter((d) => d.done).length }
         }),
