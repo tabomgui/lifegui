@@ -8,6 +8,14 @@ export default {
     name: 'Hábito',
     weekSuffix: '· semana',
   },
+  sections: {
+    today: 'Hoje',
+    whenPossible: 'Quando puder',
+    quitting: 'Largando',
+  },
+  todaySummary: '{{done}} de {{total}} feitos hoje',
+  toggleArchived: 'Arquivados',
+  restore: 'Restaurar',
   empty: {
     noHabits: 'Nenhum hábito ainda. Crie o primeiro acima.',
   },

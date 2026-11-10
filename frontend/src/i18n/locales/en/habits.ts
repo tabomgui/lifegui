@@ -5,6 +5,14 @@ export default {
     name: 'Habit',
     weekSuffix: '· week',
   },
+  sections: {
+    today: 'Today',
+    whenPossible: 'When possible',
+    quitting: 'Quitting',
+  },
+  todaySummary: '{{done}} of {{total}} done today',
+  toggleArchived: 'Archived',
+  restore: 'Restore',
   empty: {
     noHabits: 'No habits yet. Create the first one above.',
   },
