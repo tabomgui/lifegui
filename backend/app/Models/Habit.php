@@ -12,11 +12,15 @@ class Habit extends Model
     use HasFactory, BelongsToUser;
 
     // user_id listado só para factories/for(); controllers usam sempre ->validated().
-    protected $fillable = ['name', 'icon', 'target_per_week', 'color', 'archived_at', 'user_id'];
+    protected $fillable = ['name', 'icon', 'type', 'target_per_week', 'color', 'estimated_daily_cost', 'archived_at', 'user_id'];
 
     protected function casts(): array
     {
-        return ['archived_at' => 'datetime', 'target_per_week' => 'integer'];
+        return [
+            'archived_at' => 'datetime',
+            'target_per_week' => 'integer',
+            'estimated_daily_cost' => 'decimal:2',
+        ];
     }
 
     public function logs(): HasMany
