@@ -88,15 +88,3 @@ test('streak quebra em dia perdido (done=false, skipped=false)', function () {
 test('week inválida é rejeitada (422)', function () {
     $this->getJson('/api/habits/summary?week=xx')->assertStatus(422);
 });
-
-test('summary retorna bloco de hábito negativo pra habit type=negative', function () {
-    $habit = Habit::factory()->for($this->user)->create(['type' => 'negative', 'estimated_daily_cost' => 5, 'created_at' => now()->subDays(10)]);
-
-    $response = $this->actingAs($this->user)->getJson('/api/habits/summary?week='.now()->startOfWeek()->toDateString());
-
-    $response->assertOk();
-    $entry = collect($response->json('data'))->firstWhere('habit_id', $habit->id);
-    expect($entry['type'])->toBe('negative')
-        ->and($entry)->toHaveKeys(['dias_sem', 'recorde', 'total_dias_sem', 'recomecos', 'economia', 'marcos'])
-        ->and($entry)->not->toHaveKey('streak');
-});

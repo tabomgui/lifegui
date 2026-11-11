@@ -12,10 +12,8 @@ class UpdateHabitRequest extends FormRequest
         return [
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'icon' => ['nullable', 'string', 'max:64'],
-            'type' => ['sometimes', 'required', 'in:positive,negative'],
             'target_per_week' => ['nullable', 'integer', 'min:1', 'max:7'],
             'color' => ['nullable', 'string', 'max:32'],
-            'estimated_daily_cost' => ['required_if:type,negative', 'nullable', 'numeric', 'min:0'],
         ];
     }
 }

@@ -11,7 +11,6 @@ use App\Http\Requests\Habit\UpdateHabitRequest;
 use App\Http\Resources\HabitResource;
 use App\Models\Habit;
 use App\Models\HabitLog;
-use App\Support\HabitNegativeSummary;
 use App\Support\HabitSummary;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
@@ -128,12 +127,10 @@ class HabitController extends Controller
         $weekStart = Carbon::parse($request->validated('week'));
         $today = $request->user()->localToday();
 
-        // Histórico inteiro (o streak/dias-sem precisa) numa query só, pra todos os hábitos.
+        // Histórico inteiro (o streak precisa) numa query só, pra todos os hábitos.
         $habits = Habit::whereNull('archived_at')->with('logs')->orderBy('id')->get();
 
-        $data = $habits->map(fn (Habit $habit) => $habit->type === 'negative'
-            ? HabitNegativeSummary::forHabit($habit, $habit->logs, $today)
-            : HabitSummary::forHabit($habit, $weekStart, $habit->logs, $today));
+        $data = $habits->map(fn (Habit $habit) => HabitSummary::forHabit($habit, $weekStart, $habit->logs, $today));
 
         return response()->json(['data' => $data]);
     }
