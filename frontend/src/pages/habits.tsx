@@ -1,176 +1,117 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Plus, Archive, RotateCcw, ChevronRight, Check } from 'lucide-react'
+import { Plus, Archive, RotateCcw } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { AppLayout } from '@/components/app-layout'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import { HabitDialog } from '@/components/habit-dialog'
-import { DynamicIcon } from '@/components/icon'
-import { useAuth } from '@/hooks/use-auth'
-import { useFormat } from '@/i18n/format'
+import { HabitRow } from '@/components/habit-row'
+import { HabitTodayCard } from '@/components/habit-today-card'
+import { WeekStepper, useWeekDow, mondayOf } from '@/components/week-stepper'
 import {
   useHabits,
   useHabitSummary,
-  useToggleHabit,
+  useDeleteHabit,
+  useArchiveHabit,
   useUnarchiveHabit,
 } from '@/hooks/use-habits'
-import { mondayOf } from '@/components/week-stepper-utils'
-import { localDateString } from '@/lib/dates'
-import type { Habit, HabitSummary } from '@/types/api'
-
-function ProgressRing({ done, total, size = 64 }: { done: number; total: number; size?: number }) {
-  const radius = size / 2 - 4
-  const circumference = 2 * Math.PI * radius
-  const pct = total > 0 ? done / total : 0
-  const c = size / 2
-  return (
-    <svg width={size} height={size} className="shrink-0">
-      <g transform={`rotate(-90 ${c} ${c})`}>
-        <circle cx={c} cy={c} r={radius} className="stroke-muted" strokeWidth={4} fill="none" />
-        <circle cx={c} cy={c} r={radius} className="stroke-emerald-500" strokeWidth={4} fill="none"
-          strokeDasharray={circumference} strokeDashoffset={circumference * (1 - pct)} strokeLinecap="round" />
-      </g>
-      <text x={c} y={c} textAnchor="middle" dominantBaseline="central" className="fill-foreground text-sm font-semibold">
-        {done}/{total}
-      </text>
-    </svg>
-  )
-}
-
-function HabitListRow({ habit, summary, onToggle, onOpen }: {
-  habit: Habit
-  summary: HabitSummary | undefined
-  onToggle: () => void
-  onOpen: () => void
-}) {
-  const { t } = useTranslation('habits')
-  const today = localDateString(new Date())
-  const doneToday = summary?.days.find((d) => d.date === today)?.done ?? false
-  const tint = { backgroundColor: `${habit.color}22`, color: habit.color }
-
-  const subtitle = summary
-    ? (!habit.target_per_week || habit.target_per_week >= 7
-        ? t('row.streakDays', { count: summary.streak })
-        : t('row.weekProgress', { done: summary.done_count, target: habit.target_per_week }))
-    : null
-
-  return (
-    <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm transition-shadow hover:shadow-md">
-      <button
-        onClick={onToggle}
-        aria-pressed={doneToday}
-        style={doneToday ? undefined : tint}
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 ${doneToday ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-transparent'}`}
-      >
-        {doneToday ? <Check className="h-4 w-4" /> : <DynamicIcon name={habit.icon} className="h-4 w-4" />}
-      </button>
-      <button onClick={onOpen} className="flex min-w-0 flex-1 items-center justify-between gap-2 text-left">
-        <div className="min-w-0">
-          <p className={`truncate text-sm font-medium ${doneToday ? 'text-muted-foreground line-through' : ''}`}>{habit.name}</p>
-          {subtitle && <p className="truncate text-xs text-muted-foreground">{subtitle}</p>}
-        </div>
-        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-      </button>
-    </div>
-  )
-}
+import { DynamicIcon } from '@/components/icon'
+import type { Habit } from '@/types/api'
+import { toast } from 'sonner'
 
 export default function Habits() {
   const { t } = useTranslation(['common', 'habits'])
-  const { user } = useAuth()
-  const format = useFormat()
-  const navigate = useNavigate()
-  const week = mondayOf(new Date())
-  const { data: habits = [] } = useHabits()
+  const weekDow = useWeekDow()
+  const [week, setWeek] = useState(() => mondayOf(new Date()))
+  const { data: habits = [], isLoading } = useHabits()
   const { data: summaries = [] } = useHabitSummary(week)
-  const toggle = useToggleHabit(week)
+  const del = useDeleteHabit()
+  const archive = useArchiveHabit()
   const unarchive = useUnarchiveHabit()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<Habit | null>(null)
   const [showArchived, setShowArchived] = useState(false)
   const { data: archived = [] } = useHabits(true, showArchived)
 
-  const summaryByHabit = new Map(summaries.map((s) => [s.habit_id, s]))
-  const today = localDateString(new Date())
-
-  const dailyHabits = habits.filter((h) => !h.target_per_week || h.target_per_week >= 7)
-  const flexibleHabits = habits.filter((h) => h.target_per_week && h.target_per_week < 7)
-
-  const doneToday = dailyHabits.filter((h) => {
-    const s = summaryByHabit.get(h.id)
-    return s?.days.find((d) => d.date === today)?.done
-  }).length
-
   function openNew() { setEditing(null); setDialogOpen(true) }
+  function openEdit(h: Habit) { setEditing(h); setDialogOpen(true) }
 
-  function toggleToday(habit: Habit) {
-    toggle.mutate({ habitId: habit.id, date: today })
+  async function remove(h: Habit) {
+    if (!confirm(t('habits:confirmDelete', { name: h.name }))) return
+    try { await del.mutateAsync(h.id) } catch { toast.error(t('habits:toast.deleteError')) }
   }
 
-  function Section({ title, items }: { title: string; items: Habit[] }) {
-    if (items.length === 0) return null
-    return (
-      <div className="space-y-2">
-        <h2 className="text-sm font-semibold text-muted-foreground">{title}</h2>
-        <div className="space-y-2">
-          {items.map((h) => (
-            <HabitListRow key={h.id} habit={h} summary={summaryByHabit.get(h.id)}
-              onToggle={() => toggleToday(h)} onOpen={() => navigate(`/habits/${h.id}`)} />
-          ))}
-        </div>
-      </div>
-    )
+  async function onArchive(h: Habit) {
+    try { await archive.mutateAsync(h.id); toast.success(t('habits:toast.archived', { name: h.name })) }
+    catch { toast.error(t('habits:toast.archiveError')) }
+  }
+
+  async function onRestore(h: Habit) {
+    try { await unarchive.mutateAsync(h.id); toast.success(t('habits:toast.restored', { name: h.name })) }
+    catch { toast.error(t('habits:toast.restoreError')) }
   }
 
   return (
     <AppLayout title={t('common:nav.habits')}>
       <main className="min-h-0 flex-1 overflow-auto p-4 md:p-6">
-        <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-[1fr_280px]">
-          <div className="space-y-5 md:order-1">
-            <div>
-              <h1 className="text-xl font-semibold">
-                {t('habits:greeting', { name: user?.name?.split(' ')[0] ?? '' })}
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                {format.date(new Date(), { weekday: 'long', day: 'numeric', month: 'long' })}
-              </p>
-            </div>
-            <div className="flex items-center justify-between gap-3 md:hidden">
-              <ProgressRing done={doneToday} total={dailyHabits.length || 1} />
-              <Button size="sm" onClick={openNew}><Plus className="mr-1 h-4 w-4" />{t('habits:newHabit')}</Button>
-            </div>
-            <Section title={t('habits:sections.today')} items={dailyHabits} />
-            <Section title={t('habits:sections.whenPossible')} items={flexibleHabits} />
-            {habits.length === 0 && (
-              <div className="rounded-md border border-dashed p-8 text-center text-sm text-muted-foreground">
-                {t('habits:empty.noHabits')}
+        <div className="mx-auto max-w-4xl space-y-5">
+          <HabitTodayCard habits={habits} />
+
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <WeekStepper week={week} onChange={setWeek} />
+            <Button size="sm" onClick={openNew}>
+              <Plus className="mr-1.5 h-4 w-4" /> {t('habits:newHabit')}
+            </Button>
+          </div>
+
+          <div className="overflow-hidden rounded-lg border bg-card">
+            <div className="grid grid-cols-[1fr_auto] items-center gap-2 border-b bg-muted/40 px-4 py-2 text-xs font-medium text-muted-foreground">
+              <span>{t('habits:table.name')} <span className="text-muted-foreground/60">{t('habits:table.weekSuffix')}</span></span>
+              <div className="hidden gap-1.5 md:flex">
+                {weekDow.map((d, i) => <span key={i} className="w-8 text-center">{d}</span>)}
               </div>
+            </div>
+            {isLoading ? (
+              <div className="p-6 text-center text-sm text-muted-foreground">{t('common:states.loading')}</div>
+            ) : habits.length === 0 ? (
+              <div className="p-8 text-center text-sm text-muted-foreground">{t('habits:empty.noHabits')}</div>
+            ) : (
+              habits.map((h) => (
+                <HabitRow key={h.id} habit={h} week={week}
+                  summary={summaries.find((s) => s.habit_id === h.id)}
+                  onEdit={openEdit} onDelete={remove} onArchive={onArchive} />
+              ))
             )}
-            {archived.length > 0 && (
-              <div className="space-y-2 pt-4">
-                <Button variant="ghost" size="sm" onClick={() => setShowArchived((v) => !v)}>
-                  <Archive className="mr-1 h-4 w-4" />{t('habits:toggleArchived')}
-                </Button>
-                {showArchived && archived.map((h) => (
-                  <div key={h.id} className="flex items-center justify-between rounded-md border p-2 text-sm">
-                    <span>{h.name}</span>
-                    <Button variant="ghost" size="sm" onClick={() => unarchive.mutate(h.id)}>
-                      <RotateCcw className="mr-1 h-3.5 w-3.5" />{t('habits:restore')}
-                    </Button>
-                  </div>
-                ))}
+          </div>
+
+          <div>
+            <button
+              onClick={() => setShowArchived((v) => !v)}
+              aria-expanded={showArchived}
+              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <Archive className="h-3.5 w-3.5" /> {t('habits:archived.toggle')}
+            </button>
+            {showArchived && (
+              <div className="mt-2 space-y-1 rounded-lg border bg-card/40 p-3">
+                {archived.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">{t('habits:archived.empty')}</p>
+                ) : (
+                  archived.map((h) => (
+                    <div key={h.id} className="flex items-center gap-3 rounded-md px-1 py-1.5">
+                      <DynamicIcon name={h.icon} className="h-4 w-4 shrink-0" style={{ color: h.color }} />
+                      <span className="flex-1 truncate text-sm">{h.name}</span>
+                      <Button size="sm" variant="ghost" onClick={() => onRestore(h)}>
+                        <RotateCcw className="mr-1.5 h-3.5 w-3.5" /> {t('habits:archived.restore')}
+                      </Button>
+                    </div>
+                  ))
+                )}
               </div>
             )}
           </div>
-          <Card className="hidden h-fit flex-col items-center gap-4 p-6 shadow-sm transition-shadow hover:shadow-md md:order-2 md:flex md:sticky md:top-6">
-            <ProgressRing done={doneToday} total={dailyHabits.length || 1} size={96} />
-            <p className="text-center text-sm text-muted-foreground">{t('habits:todaySummary', { done: doneToday, total: dailyHabits.length })}</p>
-            <Button className="w-full" onClick={openNew}><Plus className="mr-1 h-4 w-4" />{t('habits:newHabit')}</Button>
-          </Card>
         </div>
+        <HabitDialog open={dialogOpen} onOpenChange={setDialogOpen} habit={editing} />
       </main>
-      <HabitDialog open={dialogOpen} onOpenChange={setDialogOpen} habit={editing} />
     </AppLayout>
   )
 }

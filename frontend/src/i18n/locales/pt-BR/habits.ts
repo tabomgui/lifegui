@@ -8,25 +8,10 @@ export default {
     name: 'Hábito',
     weekSuffix: '· semana',
   },
-  sections: {
-    today: 'Hoje',
-    whenPossible: 'Quando puder',
-  },
-  todaySummary: '{{done}} de {{total}} feitos hoje',
-  greeting: 'Olá, {{name}}',
-  toggleArchived: 'Arquivados',
-  restore: 'Restaurar',
   empty: {
     noHabits: 'Nenhum hábito ainda. Crie o primeiro acima.',
   },
   confirmDelete: 'Apagar o hábito "{{name}}"?',
-  notFound: 'Hábito não encontrado.',
-  detail: {
-    strength: 'Força do hábito',
-    currentStreak: 'Sequência atual',
-    best: 'Recorde',
-    noSlack: 'Sem folga',
-  },
   archived: {
     toggle: 'Arquivados',
     empty: 'Nenhum hábito arquivado.',
@@ -46,9 +31,6 @@ export default {
     deleteAria: 'Apagar {{name}}',
     progressWithTarget: '{{done}}/{{target}} esta semana',
     progressNoTarget: '{{done}} esta semana',
-    streakDays_one: '{{count}} dia seguido',
-    streakDays_other: '{{count}} dias seguidos',
-    weekProgress: '{{done}} de {{target}} nesta semana',
     state: {
       future: 'futuro',
       done: 'feito',

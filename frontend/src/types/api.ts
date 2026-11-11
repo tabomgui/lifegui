@@ -117,7 +117,6 @@ export interface HabitSummary {
   target_per_week: number | null
   done_count: number
   streak: number
-  best: number
   days: HabitDay[]
 }
 

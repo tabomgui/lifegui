@@ -57,27 +57,6 @@ test('heatmap rejeita janela maior que 400 dias', function () {
         ->assertJsonPath('errors.to.0', 'Período máximo de 400 dias.');
 });
 
-test('heatmap com habit_id conta só o hábito informado', function () {
-    $a = Habit::factory()->for($this->user)->create();
-    $b = Habit::factory()->for($this->user)->create();
-    HabitLog::factory()->for($a)->create(['date' => '2026-08-10', 'done' => true]);
-    HabitLog::factory()->for($b)->create(['date' => '2026-08-10', 'done' => true]);
-
-    $response = $this->getJson("/api/habits/heatmap?from=2026-08-01&to=2026-08-31&habit_id={$a->id}")->assertOk();
-
-    $response->assertJsonPath('data.counts.2026-08-10', 1);
-    $response->assertJsonPath('data.total', 1);
-});
-
-test('heatmap rejeita habit_id de outro usuário', function () {
-    $other = User::factory()->create();
-    $h = Habit::factory()->for($other)->create();
-
-    $this->getJson("/api/habits/heatmap?from=2026-08-01&to=2026-08-31&habit_id={$h->id}")
-        ->assertStatus(422)
-        ->assertJsonValidationErrors('habit_id');
-});
-
 test('heatmap rejeita janela maior que 400 dias em inglês pelo idioma do usuário', function () {
     $this->user->update(['locale' => 'en']);
 

@@ -5,25 +5,10 @@ export default {
     name: 'Habit',
     weekSuffix: '· week',
   },
-  sections: {
-    today: 'Today',
-    whenPossible: 'When possible',
-  },
-  todaySummary: '{{done}} of {{total}} done today',
-  greeting: 'Hello, {{name}}',
-  toggleArchived: 'Archived',
-  restore: 'Restore',
   empty: {
     noHabits: 'No habits yet. Create the first one above.',
   },
   confirmDelete: 'Delete the habit "{{name}}"?',
-  notFound: 'Habit not found.',
-  detail: {
-    strength: 'Habit strength',
-    currentStreak: 'Current streak',
-    best: 'Best',
-    noSlack: 'No slack',
-  },
   archived: {
     toggle: 'Archived',
     empty: 'No archived habits.',
@@ -43,9 +28,6 @@ export default {
     deleteAria: 'Delete {{name}}',
     progressWithTarget: '{{done}}/{{target}} this week',
     progressNoTarget: '{{done}} this week',
-    streakDays_one: '{{count}} day in a row',
-    streakDays_other: '{{count}} days in a row',
-    weekProgress: '{{done}} of {{target}} this week',
     state: {
       future: 'future',
       done: 'done',

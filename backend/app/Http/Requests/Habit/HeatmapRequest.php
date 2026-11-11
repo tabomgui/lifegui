@@ -5,7 +5,6 @@ namespace App\Http\Requests\Habit;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Carbon;
-use Illuminate\Validation\Rule;
 
 class HeatmapRequest extends FormRequest
 {
@@ -16,7 +15,6 @@ class HeatmapRequest extends FormRequest
         return [
             'from' => ['nullable', 'date_format:Y-m-d'],
             'to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:from'],
-            'habit_id' => ['nullable', 'integer', Rule::exists('habits', 'id')->where('user_id', $this->user()->id)],
         ];
     }
 

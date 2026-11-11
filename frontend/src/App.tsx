@@ -9,7 +9,6 @@ import Login from '@/pages/login'
 import Register from '@/pages/register'
 import Dashboard from '@/pages/dashboard'
 import Habits from '@/pages/habits'
-import HabitDetail from '@/pages/habit-detail'
 import Cerebro from '@/pages/cerebro'
 import Agenda from '@/pages/agenda'
 import Dashboards from '@/pages/dashboards'
@@ -29,7 +28,6 @@ export default function App() {
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<IndexRoute><Dashboard /></IndexRoute>} />
               <Route path="/habits" element={<ModuleRoute module="habits"><Habits /></ModuleRoute>} />
-              <Route path="/habits/:id" element={<ModuleRoute module="habits"><HabitDetail /></ModuleRoute>} />
               <Route path="/cerebro" element={<ModuleRoute module="brain"><Cerebro /></ModuleRoute>} />
               <Route path="/agenda" element={<Agenda />} />
               <Route path="/dashboards" element={<ReportsRoute><Dashboards /></ReportsRoute>} />
