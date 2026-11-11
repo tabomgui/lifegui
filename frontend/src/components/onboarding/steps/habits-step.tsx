@@ -25,7 +25,7 @@ export function HabitsStep() {
 
   async function add(s: HabitSuggestion, name: string) {
     try {
-      await create.mutateAsync({ name, icon: s.icon, color: s.color, type: 'positive', target_per_week: targets[s.key], estimated_daily_cost: null })
+      await create.mutateAsync({ name, icon: s.icon, color: s.color, target_per_week: targets[s.key] })
     } catch {
       toast.error(t('errors.createFailed', { name }))
     }

@@ -47,10 +47,8 @@ export interface Habit {
   id: number
   name: string
   icon: string
-  type: 'positive' | 'negative'
   target_per_week: number | null
   color: string
-  estimated_daily_cost: string | null
   archived_at: string | null
   note_links?: NoteLink[]
 }
@@ -116,31 +114,12 @@ export interface HabitDay {
 
 export interface HabitSummary {
   habit_id: number
-  type: 'positive'
   target_per_week: number | null
   done_count: number
   streak: number
   best: number
   days: HabitDay[]
 }
-
-export interface HabitMilestone {
-  dias: number
-  atingido: boolean
-}
-
-export interface HabitNegativeSummary {
-  habit_id: number
-  type: 'negative'
-  dias_sem: number
-  recorde: number
-  total_dias_sem: number
-  recomecos: number
-  economia: number
-  marcos: HabitMilestone[]
-}
-
-export type AnyHabitSummary = HabitSummary | HabitNegativeSummary
 
 export interface TaskHeatmap {
   from: string

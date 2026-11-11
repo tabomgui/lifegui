@@ -25,8 +25,6 @@ export function HabitDialog({
   const [icon, setIcon] = useState(DEFAULT_ICON)
   const [color, setColor] = useState(COLORS[0])
   const [target, setTarget] = useState<string>('')
-  const [type, setType] = useState<'positive' | 'negative'>('positive')
-  const [estimatedCost, setEstimatedCost] = useState<string>('')
 
   useEffect(() => {
     if (open) {
@@ -34,8 +32,6 @@ export function HabitDialog({
       setIcon(habit?.icon ?? DEFAULT_ICON)
       setColor(habit?.color ?? COLORS[0])
       setTarget(habit?.target_per_week ? String(habit.target_per_week) : '')
-      setType(habit?.type ?? 'positive')
-      setEstimatedCost(habit?.estimated_daily_cost ?? '')
     }
   }, [open, habit])
 
@@ -44,10 +40,9 @@ export function HabitDialog({
     // Trata vazio ou 0 como "sem meta"; o backend só aceita 1..7.
     const parsed = Number(target)
     const target_per_week = target && parsed >= 1 ? parsed : null
-    const estimated_daily_cost = type === 'negative' && estimatedCost ? estimatedCost : null
     try {
-      if (habit) await update.mutateAsync({ id: habit.id, name, icon, color, type, target_per_week, estimated_daily_cost })
-      else await create.mutateAsync({ name, icon, color, type, target_per_week, estimated_daily_cost })
+      if (habit) await update.mutateAsync({ id: habit.id, name, icon, color, target_per_week })
+      else await create.mutateAsync({ name, icon, color, target_per_week })
       onOpenChange(false)
     } catch {
       toast.error(t('habits:dialog.saveError'))
@@ -64,29 +59,10 @@ export function HabitDialog({
             <Input id="habit-name" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label>{t('habits:dialog.typeLabel')}</Label>
-            <div className="flex gap-2">
-              <Button type="button" variant={type === 'positive' ? 'default' : 'outline'} onClick={() => setType('positive')}>
-                {t('habits:dialog.typePositive')}
-              </Button>
-              <Button type="button" variant={type === 'negative' ? 'default' : 'outline'} onClick={() => setType('negative')}>
-                {t('habits:dialog.typeNegative')}
-              </Button>
-            </div>
+            <Label htmlFor="habit-target">{t('habits:dialog.targetLabel')}</Label>
+            <Input id="habit-target" type="number" min={1} max={7} value={target}
+              onChange={(e) => setTarget(e.target.value)} placeholder={t('habits:noTarget')} />
           </div>
-          {type === 'negative' ? (
-            <div className="space-y-2">
-              <Label htmlFor="habit-cost">{t('habits:dialog.estimatedCostLabel')}</Label>
-              <Input id="habit-cost" type="number" min={0} step="0.01" value={estimatedCost}
-                onChange={(e) => setEstimatedCost(e.target.value)} placeholder="0.00" />
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <Label htmlFor="habit-target">{t('habits:dialog.targetLabel')}</Label>
-              <Input id="habit-target" type="number" min={1} max={7} value={target}
-                onChange={(e) => setTarget(e.target.value)} placeholder={t('habits:noTarget')} />
-            </div>
-          )}
           <div className="space-y-2">
             <Label>{t('habits:dialog.colorLabel')}</Label>
             <div className="flex gap-2">
@@ -109,7 +85,7 @@ export function HabitDialog({
             </div>
           </div>
           {habit && <NoteLinksSection type="habit" id={habit.id} links={habit.note_links ?? []} />}
-          {habit && type === 'positive' && (
+          {habit && (
             <ScheduleSection type="habit" refId={String(habit.id)} title={habit.name} defaultRecurring />
           )}
           <DialogFooter className="mt-2">

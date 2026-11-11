@@ -1,12 +1,10 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Trash2, Pencil, PiggyBank, Lightbulb } from 'lucide-react'
+import { ArrowLeft, Trash2, Pencil } from 'lucide-react'
 import { useState } from 'react'
 import { AppLayout } from '@/components/app-layout'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
 import { DynamicIcon } from '@/components/icon'
 import { HabitDialog } from '@/components/habit-dialog'
 import { HabitHeatmap } from '@/components/habit-heatmap'
@@ -72,11 +70,7 @@ export default function HabitDetail() {
             <h1 className="text-lg font-semibold">{habit.name}</h1>
           </div>
 
-          {habit.type === 'negative' && summary?.type === 'negative' ? (
-            <NegativeHabitView summary={summary} dailyCost={habit.estimated_daily_cost} />
-          ) : summary?.type === 'positive' ? (
-            <PositiveHabitView habitId={habit.id} summary={summary} />
-          ) : null}
+          {summary && <PositiveHabitView habitId={habit.id} summary={summary} />}
         </div>
       </main>
       <HabitDialog open={editOpen} onOpenChange={setEditOpen} habit={habit} />
@@ -109,51 +103,6 @@ function PositiveHabitView({ habitId, summary }: { habitId: number; summary: { s
           <HabitHeatmap data={heatmap} />
         </Card>
       )}
-    </div>
-  )
-}
-
-function NegativeHabitView({ summary, dailyCost }: {
-  summary: { dias_sem: number; recorde: number; total_dias_sem: number; recomecos: number; economia: number; marcos: { dias: number; atingido: boolean }[] }
-  dailyCost: string | null
-}) {
-  const { t } = useTranslation('habits')
-  const proximoMarco = summary.marcos.find((m) => !m.atingido)
-
-  return (
-    <div className="space-y-5">
-      <Card className="space-y-3 p-6 text-center">
-        <p className="text-4xl font-bold">{summary.dias_sem}</p>
-        <p className="text-sm text-muted-foreground">{t('detail.daysWithout')}</p>
-        {proximoMarco && (
-          <div className="space-y-1">
-            <Progress value={(summary.dias_sem / proximoMarco.dias) * 100} />
-            <p className="text-xs text-muted-foreground">
-              {t('detail.nextMilestone', { days: proximoMarco.dias, remaining: proximoMarco.dias - summary.dias_sem })}
-            </p>
-          </div>
-        )}
-      </Card>
-      {dailyCost && (
-        <Card className="flex items-center gap-3 p-4">
-          <PiggyBank className="h-5 w-5 text-muted-foreground" />
-          <p className="text-sm">{t('detail.savings', { amount: summary.economia.toFixed(2) })}</p>
-        </Card>
-      )}
-      <Card className="flex items-start gap-3 p-4">
-        <Lightbulb className="h-5 w-5 shrink-0 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">{t('detail.whenCraving')}</p>
-      </Card>
-      <div className="grid grid-cols-3 gap-3">
-        <StatTile label={t('detail.best')} value={summary.recorde} />
-        <StatTile label={t('detail.totalDaysWithout')} value={summary.total_dias_sem} />
-        <StatTile label={t('detail.relapses')} value={summary.recomecos} />
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {summary.marcos.map((m) => (
-          <Badge key={m.dias} variant={m.atingido ? 'default' : 'outline'}>{m.dias} {t('detail.days')}</Badge>
-        ))}
-      </div>
     </div>
   )
 }
